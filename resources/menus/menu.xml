@@ -1,19 +1,11 @@
 <menu id="MainMenu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <menu-item id="home_try" label="Home Try (5pts)" />
-        <menu-item id="away_try"
-        label="Away Try (5pts)" />
-        <menu-item id="home_conv" label="Home Conversion (2pts)" />
-        <menu-item
-        id="away_conv" label="Away Conversion (2pts)" />
-        <menu-item id="home_pen"
-        label="Home Penalty (3pts)" />
-        <menu-item id="away_pen" label="Away Penalty (3pts)" />
-        <menu-item
-        id="home_drop" label="Home Drop Goal (3pts)" />
-        <menu-item id="away_drop"
-        label="Away Drop Goal (3pts)" />
-        <menu-item id="start_half2" label="Start 2nd Half" />
-        <menu-item
-        id="end_game" label="End Game" />
+    <menu-item id="record_score" label="Record Score" />
+    <menu-item id="pause_clock" label="Pause/Resume Clock" />
+    <menu-item id="record_card" label="Record Card" />
+    <menu-item id="start_half2" label="Start 2nd Half" />
+    <menu-item id="end_game" label="End Game" />
+    <menu-item id="undo_last" label="Undo Last Score" />
+    <menu-item id="adjust_score" label="Adjust Score" />
+    <menu-item id="toggle_lock" label="Toggle Lock" />
 </menu>
