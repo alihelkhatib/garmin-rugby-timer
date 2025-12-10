@@ -52,8 +52,11 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
-        // Up/next -> card dialog
-        view.showCardDialog();
+        if (view.gameState == STATE_CONVERSION) {
+            view.handleConversionMiss();
+        } else {
+            view.showCardDialog();
+        }
         return true;
     }
 
@@ -61,8 +64,11 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
-        // Down/previous -> score dialog
-        view.showScoreDialog();
+        if (view.gameState == STATE_CONVERSION) {
+            view.handleConversionSuccess();
+        } else {
+            view.showScoreDialog();
+        }
         return true;
     }
 }

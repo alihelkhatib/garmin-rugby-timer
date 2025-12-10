@@ -45,6 +45,7 @@ class RugbyTimerView extends WatchUi.View {
     var lastPersistTime;
     var conversionTime7s;
     var conversionTime15s;
+    var conversionTeam; // Holds which team currently has the conversion attempt (true=home, false=away)
     var penaltyKickTime;
     var useConversionTimer;
     var usePenaltyTimer;
@@ -147,6 +148,7 @@ class RugbyTimerView extends WatchUi.View {
         if (useConversionTimer == null) { useConversionTimer = true; }
         if (usePenaltyTimer == null) { usePenaltyTimer = true; }
         lastActionTs = 0;
+        conversionTeam = null;
         pausedState = null;
         yellowHomeTimes = [];
         yellowAwayTimes = [];
@@ -598,6 +600,7 @@ class RugbyTimerView extends WatchUi.View {
         saveState();
         Storage.setValue("gameStateData", null);
         WatchUi.requestUpdate();
+        conversionTeam = null;
     }
 
     // Updates timers/durations per rugby 7s vs 15s selection.
@@ -632,6 +635,20 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(self), WatchUi.SLIDE_UP);
     }
 
+    function handleConversionSuccess() {
+        if (gameState != STATE_CONVERSION || conversionTeam == null) {
+            return;
+        }
+        recordConversion(conversionTeam);
+    }
+
+    function handleConversionMiss() {
+        if (gameState != STATE_CONVERSION) {
+            return;
+        }
+        endConversionWithoutScore();
+    }
+
     // Attempt to resume a persisted match session.
     function loadSavedState() {
         var data = Storage.getValue("gameStateData") as Lang.Dictionary;
@@ -654,7 +671,9 @@ class RugbyTimerView extends WatchUi.View {
                 penaltyKickTime = data["penaltyKickTime"];
                 useConversionTimer = data["useConversionTimer"];
                 usePenaltyTimer = data["usePenaltyTimer"];
-                  var yHomeArr = data["yellowHomeTimes"];
+                var savedConversion = data["conversionTeam"];
+                conversionTeam = savedConversion;
+                var yHomeArr = data["yellowHomeTimes"];
                   if (yHomeArr != null) {
                       yellowHomeTimes = normalizeYellowTimers(yHomeArr);
                   } else {
@@ -714,6 +733,7 @@ class RugbyTimerView extends WatchUi.View {
             "penaltyKickTime" => penaltyKickTime,
             "useConversionTimer" => useConversionTimer,
             "usePenaltyTimer" => usePenaltyTimer,
+            "conversionTeam" => conversionTeam,
             "yellowHomeTimes" => yellowHomeTimes,
             "yellowAwayTimes" => yellowAwayTimes,
             "yellowHomeLabelCounter" => yellowHomeLabelCounter,
@@ -864,6 +884,7 @@ class RugbyTimerView extends WatchUi.View {
         
         // Only start conversion countdown if game is playing
         if (gameState == STATE_PLAYING && useConversionTimer) {
+            conversionTeam = isHome;
             startConversionCountdown();
         }
         WatchUi.requestUpdate();
@@ -878,6 +899,7 @@ class RugbyTimerView extends WatchUi.View {
         }
         lastEvents.add({:type => :conversion, :home => isHome});
         trimEvents();
+        conversionTeam = null;
         if (gameState == STATE_CONVERSION) {
             startKickoffCountdown();
         }
@@ -1018,6 +1040,7 @@ class RugbyTimerView extends WatchUi.View {
 
     // After a conversion attempt ends, prepare the kickoff countdown.
     function startKickoffCountdown() {
+        conversionTeam = null;
         gameState = STATE_KICKOFF;
         countdownSeconds = KICKOFF_TIME;
         lastUpdate = System.getTimer();
