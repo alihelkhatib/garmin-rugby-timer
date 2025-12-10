@@ -24,5 +24,6 @@
 
 ## Commit & Pull Request Guidelines
 - Keep each commit focused and describe it in present tense (examples: “Clarify timer layout comments,” “Add 40×40 launcher icon,” “Update contributor docs”). Avoid bundling unrelated fixes.
+- Every substantive code or resource change must be followed by its own git commit so the history remains easy to trace.
 - A PR should include a short summary, the key files touched, and the manual tests executed (mention the `monkeyc` command used and any simulator checks). Add screenshots only if they illustrate a UI change.
 - Link to the relevant `log.md` entry if the change follows from a previous session, and mention any outstanding items for the next contributor at the end of the PR description.
