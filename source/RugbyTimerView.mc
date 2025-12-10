@@ -398,7 +398,7 @@ class RugbyTimerView extends WatchUi.View {
             gameTime = gameTime + delta;
         }
 
-        if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
+        if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
             countdownRemaining = countdownRemaining - delta;
             if (countdownRemaining < 0) { countdownRemaining = 0; }
             if (countdownRemaining <= 30 && countdownRemaining > 0 && !thirtySecondAlerted) {
@@ -406,13 +406,15 @@ class RugbyTimerView extends WatchUi.View {
                 triggerThirtySecondVibe();
             }
 
-            if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
+            if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
                 countdownSeconds = countdownSeconds - delta;
                 if (countdownSeconds <= 0) {
                     countdownSeconds = 0;
                     if (gameState == STATE_CONVERSION) {
                         startKickoffCountdown();
-                    } else {
+                    } else if (gameState == STATE_PENALTY) {
+                        resumePlay();
+                    } else { // kickoff
                         resumePlay();
                     }
                 }
@@ -430,14 +432,6 @@ class RugbyTimerView extends WatchUi.View {
                 } else {
                     endGame();
                 }
-            }
-        } else if (gameState == STATE_KICKOFF) {
-            countdownSeconds = countdownSeconds - delta;
-            if (countdownSeconds < 0) { countdownSeconds = 0; }
-
-            if (countdownSeconds <= 0) {
-                countdownSeconds = 0;
-                resumePlay();
             }
         }
         lastUpdate = now;
