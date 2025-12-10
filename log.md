@@ -3,6 +3,9 @@
 ## [2025-12-11] Score Spacing Fix
 - Lowered the tries indicators in `source/RugbyTimerView.mc` so they no longer overlap the main score digits on the Fenix 6 layout.
 
+## [2025-12-12] Try Placement Refinement
+- Shifted `triesY` to `height * 0.36` in `source/RugbyTimerView.mc` to add more breathing room under the scores and keep the try text clear of the digits.
+
 ## [2025-12-10] Layout Resilience
 - Reworked `RugbyTimerView` so the half text, tries, and timers position themselves without overlapping even when multiple card timers are active, and card timers now space dynamically below the main clocks.
 - Noted the adaptive layout strategy in `project_technical_document.md` so future contributors understand the spacing guarantees.
