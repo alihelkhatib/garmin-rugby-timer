@@ -18,6 +18,7 @@
 - Score dialog: team → score type, limited during conversion timer (made/miss).
 - Card tracking: multiple yellow timers per team, red timers (permanent for 7s). Display stacks with numbering.
 - Persistence: periodic state saves plus final summary stored at game end (`lastGameSummary`).
+- Event log: score and discipline events are recorded with timestamps and surfaced through the Event Log menu so referees can export a human-readable timeline to Storage for post-match review.
 - Layout and rendering: positions for the scoreboard, main timers, and card timers adjust dynamically so the game/countdown clocks stay visible even when several card timers stack below, with the main game clock in gray just above the half indicator and the countdown/bonus timer near the bottom.
 - Card timer metadata: only the first two yellow entries per side render while extras keep counting invisibly, and each dictionary entry carries its `Y#` label and vibration flag so the numbering persists across swaps and loads.
 - Haptic alert at 30 seconds remaining when the countdown is active (if supported).
@@ -38,6 +39,7 @@ Requires Connect IQ SDK 8.x (path configured via `monkeybrains.jar`).
 - Monitor `log.md` for session recap before continuing.
 - Keep `source/` contents updated; `monkey.jungle` points there.
 - Use storage keys consistently (e.g., `gameStateData`, `lastGameSummary`).
+- The `eventLogExport` storage key stores the human-readable timeline saved from the Event Log menu and can be read by companion apps for sync/sharing.
 
 ## Next Steps (Example)
 1. Add haptics for conversion completion.

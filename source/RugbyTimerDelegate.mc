@@ -1,5 +1,6 @@
 using Toybox.WatchUi;
 using Toybox.System;
+using Toybox.Lang;
 
 class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     var view;
@@ -105,6 +106,8 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             return;
         } else if (item.getId() == :toggle_lock) {
             view.toggleLock();
+        } else if (item.getId() == :view_log) {
+            view.showEventLog();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
@@ -334,6 +337,47 @@ class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
     function onBack() {
         // Keep prompting on next show until a choice is made
         view.promptedGameType = false;
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+class EventLogMenu extends WatchUi.Menu2 {
+    function initialize(entries) {
+        Menu2.initialize({:title=>"Event Log"});
+        var itemsAdded = 0;
+        if (entries != null && entries.size() > 0) {
+            var start = entries.size() > 20 ? entries.size() - 20 : 0;
+            for (var idx = start; idx < entries.size(); idx = idx + 1) {
+                var entry = entries[idx] as Lang.Dictionary;
+                var time = (entry != null && entry[:time] != null) ? entry[:time] : "--:--";
+                var desc = (entry != null && entry[:desc] != null) ? entry[:desc] : "";
+                addItem(new WatchUi.MenuItem(time + " – " + desc, null, :log_entry, null));
+                itemsAdded += 1;
+            }
+        }
+        if (itemsAdded == 0) {
+            addItem(new WatchUi.MenuItem("No events recorded", null, :log_entry, null));
+        }
+        addItem(new WatchUi.MenuItem("Save Log", null, :save_log, null));
+    }
+}
+
+class EventLogDelegate extends WatchUi.Menu2InputDelegate {
+    var view;
+
+    function initialize(v) {
+        Menu2InputDelegate.initialize();
+        view = v;
+    }
+
+    function onSelect(item) {
+        if (item.getId() == :save_log) {
+            view.exportEventLog();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        }
+    }
+
+    function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }

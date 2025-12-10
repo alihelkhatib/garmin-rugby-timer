@@ -41,6 +41,7 @@ class RugbyTimerView extends WatchUi.View {
     var promptedGameType;
     var gpsTrack;
     var lastEvents;
+    var eventLogEntries;
     var isLocked;
     var lastPersistTime;
     var conversionTime7s;
@@ -77,6 +78,8 @@ class RugbyTimerView extends WatchUi.View {
     const PENALTY_KICK_TIME = 60; // 60 seconds for penalty kicks
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
+    const EVENT_LOG_LIMIT = 64;
+    const EVENT_LOG_STORAGE_KEY = "eventLogExport";
     
     // Primary initialization: load persisted settings, zero all counters, and prepare timers.
     function initialize() {
@@ -140,6 +143,7 @@ class RugbyTimerView extends WatchUi.View {
         promptedGameType = false;
         gpsTrack = [];
         lastEvents = [];
+        eventLogEntries = [];
         isLocked = false;
         lastPersistTime = 0;
         if (conversionTime7s == null) { conversionTime7s = CONVERSION_TIME_7S; }
@@ -608,6 +612,7 @@ class RugbyTimerView extends WatchUi.View {
         gameStartTime = null;
         lastUpdate = null;
         lastEvents = [];
+        eventLogEntries = [];
         saveState();
         Storage.setValue("gameStateData", null);
         WatchUi.requestUpdate();
@@ -657,7 +662,11 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState != STATE_CONVERSION) {
             return;
         }
+        if (conversionTeam != null) {
+            appendEventLogEntry((conversionTeam ? "Home" : "Away") + " Conversion Miss");
+        }
         endConversionWithoutScore();
+        WatchUi.requestUpdate();
     }
 
     // Attempt to resume a persisted match session.
@@ -774,6 +783,10 @@ class RugbyTimerView extends WatchUi.View {
             "redHomePermanent" => redHomePermanent,
             "redAwayPermanent" => redAwayPermanent
         };
+        var eventLogText = buildEventLogText();
+        if (eventLogText.length() > 0) {
+            summary["eventLog"] = eventLogText;
+        }
         Storage.setValue("lastGameSummary", summary);
     }
 
@@ -898,6 +911,7 @@ class RugbyTimerView extends WatchUi.View {
             conversionTeam = isHome;
             startConversionCountdown();
         }
+        appendEventLogEntry((isHome ? "Home" : "Away") + " Try");
         WatchUi.requestUpdate();
     }
 
@@ -914,6 +928,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_CONVERSION) {
             startKickoffCountdown();
         }
+        appendEventLogEntry((isHome ? "Home" : "Away") + " Conversion (made)");
         WatchUi.requestUpdate();
     }
 
@@ -931,6 +946,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_PLAYING && usePenaltyTimer) {
             startPenaltyCountdown();
         }
+        appendEventLogEntry((isHome ? "Home" : "Away") + " Penalty Goal");
         WatchUi.requestUpdate();
     }
 
@@ -943,21 +959,26 @@ class RugbyTimerView extends WatchUi.View {
         }
         lastEvents.add({:type => :drop, :home => isHome});
         trimEvents();
+        appendEventLogEntry((isHome ? "Home" : "Away") + " Drop Goal");
         WatchUi.requestUpdate();
     }
     
     // Add a yellow-card timer entry, tracking its label and vibration state.
     function recordYellowCard(isHome) {
         var duration = is7s ? 120 : 600;
+        var label = null;
+        var teamName = isHome ? "Home" : "Away";
         if (isHome) {
             yellowHomeLabelCounter += 1;
-            var label = "Y" + yellowHomeLabelCounter.toString();
+            label = "Y" + yellowHomeLabelCounter.toString();
             yellowHomeTimes.add({ "remaining" => duration, "vibeTriggered" => false, "label" => label });
         } else {
             yellowAwayLabelCounter += 1;
-            var label = "Y" + yellowAwayLabelCounter.toString();
+            label = "Y" + yellowAwayLabelCounter.toString();
             yellowAwayTimes.add({ "remaining" => duration, "vibeTriggered" => false, "label" => label });
         }
+        var labelSuffix = (label != null) ? " (" + label + ")" : "";
+        appendEventLogEntry(teamName + " Yellow Card" + labelSuffix);
         WatchUi.requestUpdate();
     }
 
@@ -981,6 +1002,7 @@ class RugbyTimerView extends WatchUi.View {
                 redAwayPermanent = false;
             }
         }
+        appendEventLogEntry((isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
         WatchUi.requestUpdate();
     }
     
@@ -1039,6 +1061,57 @@ class RugbyTimerView extends WatchUi.View {
         if (lastEvents.size() > 20) {
             lastEvents.remove(0);
         }
+    }
+
+    // Event log helpers store human-readable lines with timestamps for export/review.
+    function buildEventLogLines() {
+        var lines = [];
+        if (eventLogEntries == null) {
+            return lines;
+        }
+        for (var i = 0; i < eventLogEntries.size(); i = i + 1) {
+            var entry = eventLogEntries[i] as Lang.Dictionary;
+            if (entry == null) {
+                continue;
+            }
+            var time = entry[:time];
+            var desc = entry[:desc];
+            lines.add((time != null ? time : "--:--") + " – " + (desc != null ? desc : ""));
+        }
+        return lines;
+    }
+
+    function buildEventLogText() {
+        var lines = buildEventLogLines();
+        var text = "";
+        for (var i = 0; i < lines.size(); i = i + 1) {
+            if (i > 0) { text = text + "\n"; }
+            text = text + lines[i];
+        }
+        return text;
+    }
+
+    function appendEventLogEntry(description) {
+        if (description == null) {
+            return;
+        }
+        if (eventLogEntries == null) {
+            eventLogEntries = [];
+        }
+        var timestamp = formatTime(gameTime);
+        eventLogEntries.add({:time => timestamp, :desc => description});
+        if (eventLogEntries.size() > EVENT_LOG_LIMIT) {
+            eventLogEntries.remove(0);
+        }
+    }
+
+    function exportEventLog() {
+        var text = buildEventLogText();
+        Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
+    }
+
+    function showEventLog() {
+        WatchUi.pushView(new EventLogMenu(eventLogEntries), new EventLogDelegate(self), WatchUi.SLIDE_UP);
     }
 
     // Begin the conversion timer window when a try is scored.
