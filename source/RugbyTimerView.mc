@@ -551,7 +551,11 @@ class RugbyTimerView extends WatchUi.View {
         }
         var digits = label;
         if (digits.length() > 0 && digits[0] == "Y") {
-            digits = digits.substr(1);
+            var trimmed = "";
+            for (var idx = 1; idx < digits.length(); idx = idx + 1) {
+                trimmed = trimmed + digits[idx];
+            }
+            digits = trimmed;
         }
         if (digits.length() == 0) {
             return 0;
