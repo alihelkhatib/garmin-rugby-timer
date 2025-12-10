@@ -77,6 +77,7 @@ class RugbyTimerView extends WatchUi.View {
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
     
+    // Primary initialization: load persisted settings, zero all counters, and prepare timers.
     function initialize() {
         View.initialize();
         
@@ -161,10 +162,12 @@ class RugbyTimerView extends WatchUi.View {
         loadSavedState();
     }
 
+    // Layout callback needed by WatchUi; just delegates to the main layout definition.
     function onLayout(dc) {
         setLayout(Rez.Layouts.MainLayout(dc));
     }
 
+    // Display callback: begin the periodic update loop and prompt for game type once on screen.
     function onShow() {
         if (updateTimer == null) {
             updateTimer = new Timer.Timer();
@@ -178,6 +181,7 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     // Simple debounce for adjustments/quick actions
+    // Simple debounce gate to prevent rapid repeated actions from hardware buttons.
     function isActionAllowed() {
         var now = System.getTimer();
         if (lastActionTs == null || now - lastActionTs > 300) {
@@ -364,6 +368,7 @@ class RugbyTimerView extends WatchUi.View {
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
+    // Periodic tick that keeps the clocks, card timers, and persistence in sync.
     function updateGame() as Void {
         try {
             var now = System.getTimer();
@@ -440,6 +445,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Convert raw seconds into a zero-padded MM:SS string for display.
     function formatTime(seconds) {
         if (seconds < 0) {
             seconds = 0;
@@ -449,6 +455,7 @@ class RugbyTimerView extends WatchUi.View {
         return mins.format("%02d") + ":" + secs.format("%02d");
     }
 
+    // Plays the thirty-second warning haptic when the countdown drops below 30s.
     function triggerThirtySecondVibe() {
         if (Attention has :vibrate) {
             var vibeProfiles = [
@@ -458,6 +465,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
     
+    // Alerts the referee when a yellow timer is about to expire (below 10s).
     function triggerYellowTimerVibe() {
         if (Attention has :vibrate) {
             var vibeProfiles = [
@@ -467,6 +475,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
     
+    // Helper that displays a short M:SS string for cards while hiding zeros.
     function formatShortTime(seconds) {
         if (seconds <= 0) {
             return "--";
@@ -476,6 +485,7 @@ class RugbyTimerView extends WatchUi.View {
         return mins.toString() + ":" + secs.format("%02d");
     }
 
+    // Tick and prune yellow timers; hidden entries still count down in the background.
     function updateYellowTimers(list, delta) {
         var newList = [];
         for (var i = 0; i < list.size(); i = i + 1) {
@@ -495,6 +505,7 @@ class RugbyTimerView extends WatchUi.View {
         return newList;
     }
 
+    // Guard when reading saved state so each timer has both remaining time and label metadata.
     function normalizeYellowTimers(list) {
         var normalized = [];
         for (var i = 0; i < list.size(); i = i + 1) {
@@ -520,6 +531,7 @@ class RugbyTimerView extends WatchUi.View {
         return normalized;
     }
 
+    // Track the highest yellow label seen so new cards keep their sequential numbering.
     function computeYellowLabelCounter(list) {
         var maxLabel = 0;
         for (var i = 0; i < list.size(); i = i + 1) {
@@ -544,6 +556,7 @@ class RugbyTimerView extends WatchUi.View {
         return maxLabel;
     }
 
+    // Parse the numeric portion of a label like “Y3” so counters increment safely.
     function parseLabelNumber(label) {
         if (label == null) {
             return 0;
@@ -566,6 +579,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Called when the match ends or is reset to start fresh state.
     function resetGame() {
         stopRecording();
         gameState = STATE_IDLE;
@@ -586,6 +600,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Updates timers/durations per rugby 7s vs 15s selection.
     function setGameType(is7sFlag) {
         is7s = is7sFlag;
         Storage.setValue("rugby7s", is7sFlag);
@@ -596,10 +611,12 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Presents the menu asking whether the match is 7s or 15s.
     function showGameTypePrompt() {
         WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(self), WatchUi.SLIDE_UP);
     }
 
+    // Launches the score dialog stack; respects the locked state.
     function showScoreDialog() {
         if (isLocked) {
             return;
@@ -607,6 +624,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(self), WatchUi.SLIDE_UP);
     }
 
+    // Launches the card/discipline dialog (swap button assigned externally).
     function showCardDialog() {
         if (isLocked) {
             return;
@@ -614,6 +632,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(self), WatchUi.SLIDE_UP);
     }
 
+    // Attempt to resume a persisted match session.
     function loadSavedState() {
         var data = Storage.getValue("gameStateData") as Lang.Dictionary;
         if (data != null) {
@@ -675,6 +694,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Persist all derived game/session values so restart can pick them up.
     function saveState() {
         var snapshot = {
             "homeScore" => homeScore,
@@ -706,6 +726,7 @@ class RugbyTimerView extends WatchUi.View {
         Storage.setValue("gameStateData", snapshot);
     }
 
+    // Capture the final match summary before exiting the session.
     function finalizeGameData() {
         var summary = {
             "homeScore" => homeScore,
@@ -725,6 +746,7 @@ class RugbyTimerView extends WatchUi.View {
         Storage.setValue("lastGameSummary", summary);
     }
 
+    // Kick off the match clock and transition into STATE_PLAYING.
     function startGame() {
         if (gameState == STATE_IDLE) {
             var now = System.getTimer();
@@ -745,6 +767,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Freeze the countdown timer while leaving gameTime intact.
     function pauseGame() {
         if (gameState == STATE_PLAYING) {
             gameState = STATE_PAUSED;
@@ -753,6 +776,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Resume play from a paused state.
     function resumeGame() {
         if (gameState == STATE_PAUSED) {
             gameState = STATE_PLAYING;
@@ -761,6 +785,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Convenience to stop both countdown and special timers for interruptions.
     function pauseClock() {
         if (gameState != STATE_PAUSED) {
             pausedState = gameState;
@@ -770,6 +795,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Resume the countdown and special timers after a pause.
     function resumeClock() {
         if (gameState == STATE_PAUSED) {
             if (pausedState != null) {
@@ -783,6 +809,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Continue live play after a conversion/penalty timer finishes.
     function resumePlay() {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
@@ -790,6 +817,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Switch state to halftime once first 40 minutes finish.
     function enterHalfTime() {
         gameState = STATE_HALFTIME;
         lastUpdate = null;
@@ -797,6 +825,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Reset clocks/flags when beginning the second half.
     function startSecondHalf() {
         if (gameState == STATE_HALFTIME) {
             halfNumber = 2;
@@ -810,6 +839,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Wrap up the match, finalize data, and stop GPS recording.
     function endGame() {
         gameState = STATE_ENDED;
         lastUpdate = null;
@@ -820,6 +850,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Score helpers: tries add five points plus conversion clock.
     function recordTry(isHome) {
         if (isHome) {
             homeScore += 5;
@@ -838,6 +869,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Conversion attempt scoring (2 points) triggered by the conversion state.
     function recordConversion(isHome) {
         if (isHome) {
             homeScore += 2;
@@ -852,6 +884,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Track penalty goals/drops and optionally start a penalty timer.
     function recordPenalty(isHome) {
         if (isHome) {
             homeScore += 3;
@@ -868,6 +901,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Drop goal scoring is 3 points without extra timers.
     function recordDropGoal(isHome) {
         if (isHome) {
             homeScore += 3;
@@ -879,6 +913,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
     
+    // Add a yellow-card timer entry, tracking its label and vibration state.
     function recordYellowCard(isHome) {
         var duration = is7s ? 120 : 600;
         if (isHome) {
@@ -893,6 +928,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Handle red cards (permanent for 7s, timed for 15s).
     function recordRedCard(isHome) {
         if (is7s) {
             if (isHome) {
@@ -915,6 +951,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
     
+    // Adjust either team’s score with bounds to avoid negative values.
     function adjustScore(isHome, delta) {
         if (isHome) {
             homeScore = (homeScore + delta < 0) ? 0 : homeScore + delta;
@@ -925,6 +962,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
     
+    // Undo mechanism for the last scoring event to support simple corrections.
     function undoLastEvent() {
         if (lastEvents.size() == 0) {
             return false;
@@ -963,12 +1001,14 @@ class RugbyTimerView extends WatchUi.View {
         return true;
     }
     
+    // Keep the event history capped so persistence/storage stays light.
     function trimEvents() {
         if (lastEvents.size() > 20) {
             lastEvents.remove(0);
         }
     }
 
+    // Begin the conversion timer window when a try is scored.
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
@@ -976,6 +1016,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // After a conversion attempt ends, prepare the kickoff countdown.
     function startKickoffCountdown() {
         gameState = STATE_KICKOFF;
         countdownSeconds = KICKOFF_TIME;
@@ -983,6 +1024,7 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Launches the penalty kick countdown display/clock.
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;
         countdownSeconds = penaltyKickTime;
@@ -990,12 +1032,14 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    // Cleanly exit a conversion phase when no score is recorded.
     function endConversionWithoutScore() {
         if (gameState == STATE_CONVERSION) {
             startKickoffCountdown();
         }
     }
 
+    // Begin GPS/activity recording tied to the `SPORT_RUGBY` session.
     function startRecording() {
         if (session == null) {
             session = ActivityRecording.createSession({
@@ -1006,6 +1050,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Stop the GPS/activity recording safely.
     function stopRecording() {
         if (session != null && session.isRecording()) {
             session.stop();
@@ -1014,11 +1059,13 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Lock/unlock the UI so accidental button presses can't change state.
     function toggleLock() {
         isLocked = !isLocked;
         WatchUi.requestUpdate();
     }
 
+    // GPS position callback that feeds the activity recording and tracking storyline.
     function updatePosition(info) {
         positionInfo = info;
         if (info has :speed && info.speed != null) {
@@ -1041,6 +1088,7 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Clean up resources when the view is hidden.
     function onHide() {
         if (updateTimer != null) {
             updateTimer.stop();
