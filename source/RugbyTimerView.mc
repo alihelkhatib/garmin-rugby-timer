@@ -186,11 +186,9 @@ class RugbyTimerView extends WatchUi.View {
     function onUpdate(dc) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        
+
         var width = dc.getWidth();
         var height = dc.getHeight();
-        
-        // Choose fonts based on resolution so things stay readable without overlap
         var scoreFont;
         var triesFont;
         var halfFont;
@@ -198,117 +196,131 @@ class RugbyTimerView extends WatchUi.View {
         var countdownFont;
         var stateFont;
         var hintFont;
-        if (width <= 240) { // 6S
+        var cardFont;
+
+        if (width <= 240) {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_NUMBER_MILD;
-            countdownFont = Graphics.FONT_NUMBER_MILD;
-            stateFont = Graphics.FONT_SMALL;
-            hintFont = Graphics.FONT_XTINY;
-        } else if (width <= 260) { // 6 / 6 Pro
-            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
-            triesFont = Graphics.FONT_XTINY;
-            halfFont = Graphics.FONT_XTINY;
+            cardFont = Graphics.FONT_SMALL;
             timerFont = Graphics.FONT_NUMBER_HOT;
             countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
-        } else { // 6X
+        } else if (width <= 260) {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_SMALL;
             halfFont = Graphics.FONT_XTINY;
+            cardFont = Graphics.FONT_MEDIUM;
+            timerFont = Graphics.FONT_NUMBER_HOT;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
+            stateFont = Graphics.FONT_SMALL;
+            hintFont = Graphics.FONT_XTINY;
+        } else {
+            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
+            triesFont = Graphics.FONT_MEDIUM;
+            halfFont = Graphics.FONT_XTINY;
+            cardFont = Graphics.FONT_MEDIUM;
             timerFont = Graphics.FONT_NUMBER_HOT;
             countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         }
-        
-        // Relative Y positions (fractions of screen height)
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var triesY = height * 0.32;
-        var cardsY = height * 0.37;
-        var baseTimerY = height * 0.48;
-        var baseCountdownY = height * 0.66;
+
+        var scoreY = height * 0.08;
+        var halfY = height * 0.15;
+        var triesY = height * 0.24;
+        var baseTimerY = height * 0.54;
+        var timerSpacing = height * 0.18;
+        var minTimerY = triesY + height * 0.12;
         var timerY = baseTimerY;
-        var countdownY = baseCountdownY;
-        var stateY = height * 0.82;
-        var hintY = height * 0.92;
-        
+        if (timerY > height * 0.6) {
+            timerY = height * 0.6;
+        }
+        if (timerY < minTimerY) {
+            timerY = minTimerY;
+        }
+        var countdownY = timerY + timerSpacing;
+
+        var cardBottomMargin = height * 0.04;
+        var cardPadding = height * 0.08;
+        var minCardStep = height * 0.035;
+        var defaultCardStep = height * 0.08;
+        var homeCardRows = yellowHomeTimes.size() + ((redHome > 0 || redHomePermanent) ? 1 : 0);
+        var awayCardRows = yellowAwayTimes.size() + ((redAway > 0 || redAwayPermanent) ? 1 : 0);
+        var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
+        var countdownLimit = height - cardBottomMargin - cardPadding;
+        if (maxCardRows > 0) {
+            countdownLimit = countdownLimit - (maxCardRows * minCardStep);
+        }
+        if (countdownY > countdownLimit) {
+            var shift = countdownY - countdownLimit;
+            timerY = timerY - shift;
+            if (timerY < minTimerY) {
+                timerY = minTimerY;
+            }
+            countdownY = timerY + timerSpacing;
+            if (countdownY > countdownLimit) {
+                countdownY = countdownLimit;
+            }
+        }
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        
-        // Scores
         dc.drawText(width / 4, scoreY, scoreFont, homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Half indicator
         var halfStr = "Half " + halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Tries
         dc.drawText(width / 4, triesY, triesFont, homeTries.toString() + "T", Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, triesY, triesFont, awayTries.toString() + "T", Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Lock indicator
         if (isLocked) {
             dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
         }
 
-        // Card status line (only show if active/permanent)
-        var homeCardRows = yellowHomeTimes.size() + ((redHome > 0 || redHomePermanent) ? 1 : 0);
-        var awayCardRows = yellowAwayTimes.size() + ((redAway > 0 || redAwayPermanent) ? 1 : 0);
-        var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
-        if (maxCardRows > 0) {
-            var homeLine = 0;
-            var awayLine = 0;
-            var lineStep = height * 0.1;
-            var cardFont = Graphics.FONT_MEDIUM;
-            for (var i = 0; i < yellowHomeTimes.size(); i = i + 1) {
-                var y = yellowHomeTimes[i];
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, "Y" + (i + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
-                homeLine += 1;
-            }
-            for (var i = 0; i < yellowAwayTimes.size(); i = i + 1) {
-                var y = yellowAwayTimes[i];
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, "Y" + (i + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
-                awayLine += 1;
-            }
-            if (redHome > 0 || redHomePermanent) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, redHomePermanent ? "R:PERM" : "R:" + formatShortTime(redHome), Graphics.TEXT_JUSTIFY_CENTER);
-                homeLine += 1;
-            }
-            if (redAway > 0 || redAwayPermanent) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, redAwayPermanent ? "R:PERM" : "R:" + formatShortTime(redAway), Graphics.TEXT_JUSTIFY_CENTER);
-                awayLine += 1;
-            }
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            var cardAreaBottom = cardsY + maxCardRows * lineStep;
-            var candidateTimerY = cardAreaBottom + height * 0.06;
-            var timerLimit = (stateY - height * 0.3);
-            timerY = (baseTimerY > candidateTimerY) ? baseTimerY : candidateTimerY;
-            timerY = (timerY < timerLimit) ? timerY : timerLimit;
-            var countdownCandidate = timerY + height * 0.2;
-            var countdownLimit = stateY - height * 0.12;
-            countdownY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
-        }
-        
-        // Game time
         var timeStr = formatTime(gameTime);
         dc.drawText(width / 2, timerY, timerFont, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Countdown timer
         var countdownStr = formatTime(countdownRemaining);
         var countdownColor = countdownRemaining <= 60 ? Graphics.COLOR_RED : (dimMode ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_LT_GRAY);
         dc.setColor(countdownColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        
-        // State/status block
+
+        var cardLineStep = defaultCardStep;
+        if (maxCardRows > 0) {
+            var availableAfterCountdown = height - cardBottomMargin - (countdownY + cardPadding);
+            if (availableAfterCountdown < 0) {
+                availableAfterCountdown = 0;
+            }
+            if (cardLineStep * maxCardRows > availableAfterCountdown) {
+                cardLineStep = availableAfterCountdown / maxCardRows;
+            }
+            if (cardLineStep < minCardStep) {
+                cardLineStep = minCardStep;
+            } else if (cardLineStep > defaultCardStep) {
+                cardLineStep = defaultCardStep;
+            }
+        }
+        var cardStartY = (maxCardRows > 0) ? (countdownY + cardPadding) : (height - cardBottomMargin);
+
+        var stateY = height * 0.82;
+        var stateMargin = height * 0.08;
+        if (cardStartY - stateY < stateMargin) {
+            stateY = cardStartY - stateMargin;
+        }
+        var stateMinimum = countdownY + height * 0.06;
+        if (stateY < stateMinimum) {
+            stateY = stateMinimum;
+        }
+
+        var hintY = stateY + height * 0.045;
+        var hintLimit = cardStartY - height * 0.02;
+        if (hintY > hintLimit) {
+            hintY = hintLimit;
+        }
+        var hintMinimum = stateY + height * 0.02;
+        if (hintY < hintMinimum) {
+            hintY = hintMinimum;
+        }
+
         if (gameState == STATE_PAUSED) {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (gameState == STATE_CONVERSION) {
@@ -327,8 +339,35 @@ class RugbyTimerView extends WatchUi.View {
         } else if (gameState == STATE_IDLE) {
             dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
         }
-        
-        // Hint
+
+        if (maxCardRows > 0) {
+            var homeLine = 0;
+            var awayLine = 0;
+            for (var i = 0; i < yellowHomeTimes.size(); i = i + 1) {
+                var y = yellowHomeTimes[i];
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(width / 4, cardStartY + homeLine * cardLineStep, cardFont, "Y" + (i + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                homeLine += 1;
+            }
+            for (var i = 0; i < yellowAwayTimes.size(); i = i + 1) {
+                var y = yellowAwayTimes[i];
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(3 * width / 4, cardStartY + awayLine * cardLineStep, cardFont, "Y" + (i + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                awayLine += 1;
+            }
+            if (redHome > 0 || redHomePermanent) {
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(width / 4, cardStartY + homeLine * cardLineStep, cardFont, redHomePermanent ? "R:PERM" : "R:" + formatShortTime(redHome), Graphics.TEXT_JUSTIFY_CENTER);
+                homeLine += 1;
+            }
+            if (redAway > 0 || redAwayPermanent) {
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(3 * width / 4, cardStartY + awayLine * cardLineStep, cardFont, redAwayPermanent ? "R:PERM" : "R:" + formatShortTime(redAway), Graphics.TEXT_JUSTIFY_CENTER);
+                awayLine += 1;
+            }
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        }
+
         var hint = "";
         if (gameState == STATE_IDLE) {
             hint = "SELECT: Start";
@@ -344,7 +383,6 @@ class RugbyTimerView extends WatchUi.View {
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
     }
-
     function updateGame() as Void {
         try {
             var now = System.getTimer();
