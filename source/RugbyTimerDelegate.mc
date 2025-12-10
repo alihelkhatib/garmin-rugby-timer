@@ -22,10 +22,10 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         // Start/pause/resume game with select button
         if (view.gameState == STATE_IDLE) {
             view.startGame();
-        } else if (view.gameState == STATE_PLAYING) {
-            view.pauseGame();
+        } else if (view.gameState == STATE_PLAYING || view.gameState == STATE_CONVERSION || view.gameState == STATE_PENALTY || view.gameState == STATE_KICKOFF) {
+            view.pauseClock();
         } else if (view.gameState == STATE_PAUSED) {
-            view.resumeGame();
+            view.resumeClock();
         } else if (view.gameState == STATE_HALFTIME) {
             view.startSecondHalf();
         }

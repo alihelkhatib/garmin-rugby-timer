@@ -1,12 +1,30 @@
 # Session Log
 
 
-## [2025-12-23] Card counter persistence
+## [2025-12-24] Pause countdown in set-piece states
 
 
-- Ensured yellow/red card counters persist via `cardId` metadata, tracked total tallies per team, and reset the timers plus totals when a match finishes so the Y# labels always reflect the total cards issued rather than whether an earlier timer is active.
+- Select toggles pause/resume even during conversions, penalties, and kickoff so the countdown timer can be frozen while those special windows run.
 
 
+# Session Log
+
+
+
+
+
+## [2025-12-23] Card counter persistence
+
+
+
+
+
+- Ensured yellow/red card counters persist via `cardId` metadata, tracked total tallies per team, and reset the timers plus totals when a match finishes so the Y# labels always reflect the total cards issued rather than whether an earlier timer is active.
+
+
+
+
+
 ## [2025-12-22] Event Log relocation
 
 
