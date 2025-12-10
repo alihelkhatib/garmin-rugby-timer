@@ -16,6 +16,10 @@
 ## [2025-12-15] Keep gameTimer running when countdown pauses
 - Adjusted `updateGame` so `gameTime` keeps counting even while countdown actions are suspended (e.g., paused), while `countdownRemaining` only ticks during active phases.
 
+## [2025-12-16] Cap card timers & yellow warning
+- Display-only the first two yellow timers per side so extras keep tracking silently until earlier timers finish, then reveal their remaining time once space frees up.
+- Added a one-time vibration whenever any yellow timer drops below 10 seconds so the referee hears the countdown even when watching another part of the screen.
+
 ## [2025-12-10] Layout Resilience
 - Reworked `RugbyTimerView` so the half text, tries, and timers position themselves without overlapping even when multiple card timers are active, and card timers now space dynamically below the main clocks.
 - Noted the adaptive layout strategy in `project_technical_document.md` so future contributors understand the spacing guarantees.
