@@ -10,6 +10,9 @@
 ## [2025-12-13] Revert card/main timer layout
 - Rolled the card timer / main timer layout back to the pre-layout-refactor implementation so the spacing resembles the earlier stable state, only keeping the centered `homeT / awayT` text beneath the half indicator.
 
+## [2025-12-14] Swap timer roles
+- Flipped the main/secondary timer text so the countdown timer now occupies the primary (white) position while the game clock moves to the lower slot with the dim/red accent color.
+
 ## [2025-12-10] Layout Resilience
 - Reworked `RugbyTimerView` so the half text, tries, and timers position themselves without overlapping even when multiple card timers are active, and card timers now space dynamically below the main clocks.
 - Noted the adaptive layout strategy in `project_technical_document.md` so future contributors understand the spacing guarantees.

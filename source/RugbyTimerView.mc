@@ -297,15 +297,15 @@ class RugbyTimerView extends WatchUi.View {
             countdownY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         }
         
-        // Game time
-        var timeStr = formatTime(gameTime);
-        dc.drawText(width / 2, timerY, timerFont, timeStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Countdown timer
+        // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);
-        var countdownColor = countdownRemaining <= 60 ? Graphics.COLOR_RED : (dimMode ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_LT_GRAY);
-        dc.setColor(countdownColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, timerY, timerFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
+        
+        // Game time (secondary)
+        var gameTimeStr = formatTime(gameTime);
+        var gameTimeColor = countdownRemaining <= 60 ? Graphics.COLOR_RED : (dimMode ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_LT_GRAY);
+        dc.setColor(gameTimeColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, countdownY, countdownFont, gameTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // State/status block
