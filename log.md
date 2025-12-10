@@ -19,6 +19,7 @@
 ## [2025-12-16] Cap card timers & yellow warning
 - Display-only the first two yellow timers per side so extras keep tracking silently until earlier timers finish, then reveal their remaining time once space frees up.
 - Added a one-time vibration whenever any yellow timer drops below 10 seconds so the referee hears the countdown even when watching another part of the screen.
+- Preserved each yellow entry’s `Y#` label so replacing a card that was hidden still shows the same identifier when it finally appears.
 
 ## [2025-12-10] Layout Resilience
 - Reworked `RugbyTimerView` so the half text, tries, and timers position themselves without overlapping even when multiple card timers are active, and card timers now space dynamically below the main clocks.

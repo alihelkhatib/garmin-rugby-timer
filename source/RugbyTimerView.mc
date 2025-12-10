@@ -56,6 +56,8 @@ class RugbyTimerView extends WatchUi.View {
     var pausedState;
     var yellowHomeTimes;
     var yellowAwayTimes;
+    var yellowHomeLabelCounter;
+    var yellowAwayLabelCounter;
     var redHome;
     var redAway;
     var redHomePermanent;
@@ -147,6 +149,8 @@ class RugbyTimerView extends WatchUi.View {
         pausedState = null;
         yellowHomeTimes = [];
         yellowAwayTimes = [];
+        yellowHomeLabelCounter = 0;
+        yellowAwayLabelCounter = 0;
         redHome = 0; redAway = 0;
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
@@ -211,7 +215,7 @@ class RugbyTimerView extends WatchUi.View {
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
             timerFont = Graphics.FONT_NUMBER_HOT;
-            countdownFont = Graphics.FONT_NUMBER_HOT;
+            countdownFont = Graphics.FONT_NUMBER_MILD;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         } else { // 6X
@@ -219,7 +223,7 @@ class RugbyTimerView extends WatchUi.View {
             triesFont = Graphics.FONT_SMALL;
             halfFont = Graphics.FONT_XTINY;
             timerFont = Graphics.FONT_NUMBER_HOT;
-            countdownFont = Graphics.FONT_NUMBER_HOT;
+            countdownFont = Graphics.FONT_NUMBER_MILD;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         }
@@ -229,7 +233,7 @@ class RugbyTimerView extends WatchUi.View {
         var halfY = height * 0.18;
         var triesY = halfY + height * 0.06;
         var cardsY = height * 0.37;
-        var baseTimerY = height * 0.48;
+        var baseTimerY = height * .09; //height * 0.48;
         var baseCountdownY = height * 0.66;
         var timerY = baseTimerY;
         var countdownY = baseCountdownY;
@@ -270,8 +274,12 @@ class RugbyTimerView extends WatchUi.View {
             for (var i = 0; i < yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
                 var entry = yellowHomeTimes[i];
                 var y = entry["remaining"];
+                var label = entry["label"];
+                if (label == null) {
+                    label = "Y" + (homeYellowDisplayed + 1).toString();
+                }
                 dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, "Y" + (homeYellowDisplayed + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
                 homeYellowDisplayed += 1;
             }
@@ -279,8 +287,12 @@ class RugbyTimerView extends WatchUi.View {
             for (var i = 0; i < yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
                 var entry = yellowAwayTimes[i];
                 var y = entry["remaining"];
+                var label = entry["label"];
+                if (label == null) {
+                    label = "Y" + (awayYellowDisplayed + 1).toString();
+                }
                 dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, "Y" + (awayYellowDisplayed + 1).toString() + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
                 awayYellowDisplayed += 1;
             }
@@ -471,6 +483,7 @@ class RugbyTimerView extends WatchUi.View {
             var entry = list[i];
             var remaining = entry["remaining"] - delta;
             var vibTriggered = entry["vibeTriggered"];
+            var label = entry["label"];
             if (remaining <= 0) {
                 continue;
             }
@@ -478,7 +491,7 @@ class RugbyTimerView extends WatchUi.View {
                 vibTriggered = true;
                 triggerYellowTimerVibe();
             }
-            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered });
+            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label });
         }
         return newList;
     }
@@ -492,18 +505,62 @@ class RugbyTimerView extends WatchUi.View {
             }
             var remaining = null;
             var vibTriggered = false;
+            var label = null;
             try {
                 remaining = entry["remaining"];
                 vibTriggered = entry["vibeTriggered"];
+                label = entry["label"];
             } catch (ex) {
                 remaining = entry;
             }
             if (remaining == null) {
                 continue;
             }
-            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered });
+            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label });
         }
         return normalized;
+    }
+
+    function computeYellowLabelCounter(list) {
+        var maxLabel = 0;
+        for (var i = 0; i < list.size(); i = i + 1) {
+            var entry = list[i];
+            if (entry == null) {
+                continue;
+            }
+            var label = null;
+            try {
+                label = entry["label"];
+            } catch (ex) {
+                label = null;
+            }
+            if (label == null) {
+                continue;
+            }
+            var labelNumber = parseLabelNumber(label);
+            if (labelNumber > maxLabel) {
+                maxLabel = labelNumber;
+            }
+        }
+        return maxLabel;
+    }
+
+    function parseLabelNumber(label) {
+        if (label == null) {
+            return 0;
+        }
+        var digits = label;
+        if (digits.length() > 0 && digits[0] == "Y") {
+            digits = digits.substr(1);
+        }
+        if (digits.length() == 0) {
+            return 0;
+        }
+        try {
+            return digits.toLong();
+        } catch (ex) {
+            return 0;
+        }
     }
 
     function resetGame() {
@@ -581,11 +638,21 @@ class RugbyTimerView extends WatchUi.View {
                   } else {
                       yellowHomeTimes = [];
                   }
+                  yellowHomeLabelCounter = computeYellowLabelCounter(yellowHomeTimes);
+                  var savedHomeLabelCounter = data["yellowHomeLabelCounter"];
+                  if (savedHomeLabelCounter != null && savedHomeLabelCounter > yellowHomeLabelCounter) {
+                      yellowHomeLabelCounter = savedHomeLabelCounter;
+                  }
                   var yAwayArr = data["yellowAwayTimes"];
                   if (yAwayArr != null) {
                       yellowAwayTimes = normalizeYellowTimers(yAwayArr);
                   } else {
                       yellowAwayTimes = [];
+                  }
+                  yellowAwayLabelCounter = computeYellowLabelCounter(yellowAwayTimes);
+                  var savedAwayLabelCounter = data["yellowAwayLabelCounter"];
+                  if (savedAwayLabelCounter != null && savedAwayLabelCounter > yellowAwayLabelCounter) {
+                      yellowAwayLabelCounter = savedAwayLabelCounter;
                   }
                 redHome = data["redHome"];
                 if (redHome == null) { redHome = 0; }
@@ -626,6 +693,8 @@ class RugbyTimerView extends WatchUi.View {
             "usePenaltyTimer" => usePenaltyTimer,
             "yellowHomeTimes" => yellowHomeTimes,
             "yellowAwayTimes" => yellowAwayTimes,
+            "yellowHomeLabelCounter" => yellowHomeLabelCounter,
+            "yellowAwayLabelCounter" => yellowAwayLabelCounter,
             "redHome" => redHome,
             "redAway" => redAway,
             "redHomePermanent" => redHomePermanent,
@@ -810,9 +879,13 @@ class RugbyTimerView extends WatchUi.View {
     function recordYellowCard(isHome) {
         var duration = is7s ? 120 : 600;
         if (isHome) {
-            yellowHomeTimes.add({ "remaining" => duration, "vibeTriggered" => false });
+            yellowHomeLabelCounter += 1;
+            var label = "Y" + yellowHomeLabelCounter.toString();
+            yellowHomeTimes.add({ "remaining" => duration, "vibeTriggered" => false, "label" => label });
         } else {
-            yellowAwayTimes.add({ "remaining" => duration, "vibeTriggered" => false });
+            yellowAwayLabelCounter += 1;
+            var label = "Y" + yellowAwayLabelCounter.toString();
+            yellowAwayTimes.add({ "remaining" => duration, "vibeTriggered" => false, "label" => label });
         }
         WatchUi.requestUpdate();
     }
