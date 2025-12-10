@@ -1058,6 +1058,13 @@ class RugbyTimerView extends WatchUi.View {
         WatchUi.requestUpdate();
     }
 
+    function cancelKickoff() {
+        if (gameState == STATE_KICKOFF) {
+            countdownSeconds = 0;
+            resumePlay();
+        }
+    }
+
     // Launches the penalty kick countdown display/clock.
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;

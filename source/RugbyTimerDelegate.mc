@@ -66,6 +66,8 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         }
         if (view.gameState == STATE_CONVERSION) {
             view.handleConversionSuccess();
+        } else if (view.gameState == STATE_KICKOFF) {
+            view.cancelKickoff();
         } else {
             view.showScoreDialog();
         }

@@ -16,7 +16,7 @@
 
 - Shifted the countdown timer above the card stack and capped its position to stay clear of the "PAUSED" prompt, ensuring the card and hint blocks never overlap the primary clock readout.
 
-
+- Added a kickoff shortcut so the scoreboard button clears the kickoff timer and immediately resumes normal play, keeping the UI responsive during restart sequences.
 
 
 
@@ -1298,5 +1298,11 @@
 
 
 
-
-- Ensured kickoff states keep updating countdownRemaining while their special countdown window runs so the main timer never freezes during conversions, penalties, or kickoff phases.
+
+
+- Ensured kickoff states keep updating countdownRemaining while their special countdown window runs so the main timer never freezes during conversions, penalties, or kickoff phases.
+
+
+
+- Added a kickoff shortcut so the scoreboard button clears the kickoff timer and immediately resumes normal play, keeping the UI responsive during restart sequences.
+
