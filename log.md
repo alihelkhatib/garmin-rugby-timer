@@ -10,7 +10,10 @@
 
 - Added the 40x40 launcher icon, refreshed `resources/drawables/drawables.xml`, and updated `AGENTS.md` and `project_technical_document.md` so contributors understand the layout and activity recording behavior.
 
-- Verified the build via `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
+- Verified the build via `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
+
+- Shifted the countdown timer above the card stack and capped its position to stay clear of the "PAUSED" prompt, ensuring the card and hint blocks never overlap the primary clock readout.
+
 
 
 
@@ -1259,6 +1262,8 @@
 
 
 - Documented project in `project_technical_document.md` for onboarding future LLM collaborators.
+
+
 
 
 

@@ -240,7 +240,7 @@ class RugbyTimerView extends WatchUi.View {
         var gameTimerY = halfY * 0.5; // running game clock stays centered above the “Half #”
         var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
         var cardsY = height * 0.37; // base offset for the stacked discipline timers
-        var countdownY = height * 0.66; // primary countdown/bonus timer slot near the bottom
+        var countdownY = height * 0.66; // fallback slot for countdown/bonus near the bottom
         var stateY = height * 0.82;
         var hintY = height * 0.92;
         
@@ -275,10 +275,10 @@ class RugbyTimerView extends WatchUi.View {
         var homeCardRows = visibleYellowHome + ((redHome > 0 || redHomePermanent) ? 1 : 0);
         var awayCardRows = visibleYellowAway + ((redAway > 0 || redAwayPermanent) ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
+        var lineStep = height * 0.1; // keeps each card timer row separated so the stack never intrudes on the central clocks
         if (maxCardRows > 0) {
             var homeLine = 0;
             var awayLine = 0;
-            var lineStep = height * 0.1; // keeps each card timer row separated so the stack never intrudes on the central clocks
             var cardFont = Graphics.FONT_MEDIUM;
             var homeYellowDisplayed = 0;
             for (var i = 0; i < yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
@@ -326,6 +326,13 @@ class RugbyTimerView extends WatchUi.View {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
+        // Keep the countdown above the cards but below the state section; `countdownCandidate` is the natural slot just under the stack while the limit keeps it clear of the status text.
+        var cardStackBottom = cardsY + (maxCardRows * lineStep);
+        var countdownCandidate = cardStackBottom + height * 0.04;
+        var countdownLimit = stateY - height * 0.12;
+        var countdownMin = triesY + height * 0.05;
+        var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
+        countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
         
         // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);
