@@ -18,7 +18,7 @@
 - Score dialog: team → score type, limited during conversion timer (made/miss).
 - Card tracking: multiple yellow timers per team, red timers (permanent for 7s). Display stacks with numbering.
 - Persistence: periodic state saves plus final summary stored at game end (`lastGameSummary`).
-- Card timers and main timers auto-adjust layout so numbers never overlap, even if many cards active.
+- Layout and rendering: positions for the scoreboard, main timers, and card timers adjust dynamically so the game/countdown clocks stay visible even when several card timers stack below, with the cards spaced and colored clearly.
 - Haptic alert at 30 seconds remaining when countdown active (if supported).
 - GPS/tracking hook collects position updates, trimmed to keep size bounded.
 
