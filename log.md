@@ -1304,5 +1304,3 @@
 
 
 
-- Added a kickoff shortcut so the scoreboard button clears the kickoff timer and immediately resumes normal play, keeping the UI responsive during restart sequences.
-
