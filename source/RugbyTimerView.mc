@@ -205,7 +205,7 @@ class RugbyTimerView extends WatchUi.View {
         var triesFont;
         var halfFont;
         var timerFont;
-        var countdownFont;
+        var gameTimerFont;
         var stateFont;
         var hintFont;
         if (width <= 240) { // 6S
@@ -237,10 +237,14 @@ class RugbyTimerView extends WatchUi.View {
         // Relative Y positions (fractions of screen height)
         var scoreY = height * 0.10;
         var halfY = height * 0.18;
+        var gameTimerY = halfY - height * 0.04; // place the ongoing game clock just above the “Half #” label
+        if (gameTimerY < scoreY + height * 0.02) {
+            gameTimerY = scoreY + height * 0.02;
+        }
         var triesY = halfY + height * 0.06;
         var cardsY = height * 0.37;
         var timerY = height * 0.48; // baseline position where the countdown timer starts before any cards shift it
-        var countdownY = height * 0.66; // default lower slot for the game timer display
+        var countdownY = height * 0.66; // default lower slot for the bonus timer display
         var stateY = height * 0.82;
         var hintY = height * 0.92;
         
@@ -249,11 +253,15 @@ class RugbyTimerView extends WatchUi.View {
         // Scores
         dc.drawText(width / 4, scoreY, scoreFont, homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        
+
+        // Game timer above the half indicator so referees see elapsed game minutes near the center top.
+        var gameStr = formatTime(gameTime);
+        dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
+
         // Half indicator
         var halfStr = "Half " + halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
+
         // Tries
         var triesText = homeTries.toString() + "T / " + awayTries.toString() + "T";
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
@@ -325,12 +333,6 @@ class RugbyTimerView extends WatchUi.View {
         // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
-        
-        // Game time (secondary)
-        var gameTimeStr = formatTime(gameTime);
-        var gameTimeColor = countdownRemaining <= 60 ? Graphics.COLOR_RED : (dimMode ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_LT_GRAY);
-        dc.setColor(gameTimeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, timerY, timerFont, gameTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // State/status block

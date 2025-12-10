@@ -14,7 +14,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-11] Score Spacing Fix
+
+
+
+
+
+
+
+
 
 
 
@@ -38,6 +62,22 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-12] Try Placement Refinement
 
 
@@ -46,7 +86,23 @@
 
 
 
+
+
+
+
+
+
+
+
 - Shifted `triesY` to `height * 0.36` in `source/RugbyTimerView.mc` to add more breathing room under the scores and keep the try text clear of the digits.
+
+
+
+
+
+
+
+
 
 
 
@@ -70,7 +126,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-13] Revert card/main timer layout
+
+
+
+
+
+
+
+
 
 
 
@@ -94,7 +174,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-14] Swap timer roles
+
+
+
+
+
+
+
+
 
 
 
@@ -118,7 +222,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-15] Keep gameTimer running when countdown pauses
+
+
+
+
+
+
+
+
 
 
 
@@ -142,7 +270,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-16] Cap card timers & yellow warning
+
+
+
+
+
+
+
+
 
 
 
@@ -158,7 +310,23 @@
 
 
 
+
+
+
+
+
+
+
+
 - Added a one-time vibration whenever any yellow timer drops below 10 seconds so the referee hears the countdown even when watching another part of the screen.
+
+
+
+
+
+
+
+
 
 
 
@@ -190,7 +358,39 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-17] Fix label parsing
+
+
+
+
+
+
+
+
 
 
 
@@ -218,7 +418,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-18] Clarify timing math
+
+
+
+
 
 
 
@@ -232,18 +456,51 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
 ## [2025-12-19] Expand inline documentation
+
+
 
 - Added concise comments before initialization, timer math, scoring/card helpers, persistence, and recording sections so the intent is clear for future maintainers.
 
 
 
 
+
+
+
+
+
 ## [2025-12-20] Conversion button shortcuts
+
 - Score/card hardware buttons now double as conversion decisions when the conversion timer is running, so the correct team records a made kick or the conversion timer is terminated on a miss.
+
 - Introduced `conversionTeam` state persistence to remember which side triggered the conversion, keeping the buttons deterministic through loads/resumes.
 
+
+
+
+## [2025-12-21] Decouple timers
+- Moved the running game timer above the “Half #” label and kept the countdown clock down below with its own position logic so the two clocks stay separate.
+
 ## [2025-12-10] Layout Resilience
+
+
+
+
+
+
+
+
 
 
 
@@ -259,7 +516,23 @@
 
 
 
+
+
+
+
+
+
+
+
 - Noted the adaptive layout strategy in `project_technical_document.md` so future contributors understand the spacing guarantees.
+
+
+
+
+
+
+
+
 
 
 
@@ -283,7 +556,31 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## [2025-10-31] Feature/Enhancement Summary
+
+
+
+
+
+
+
+
 
 
 
@@ -299,7 +596,23 @@
 
 
 
+
+
+
+
+
+
+
+
 - Reworked UI to display multiple yellow/red timers with numbering, auto shift main timers to avoid overlap, and maintain layout across device resolutions.
+
+
+
+
+
+
+
+
 
 
 
@@ -315,6 +628,14 @@
 
 
 
+
+
+
+
+
+
+
+
 - Added 30-second countdown alert via Attention vibrate profile and ensured timers keep running during conversion/penalty states.
 
 
@@ -323,7 +644,23 @@
 
 
 
+
+
+
+
+
+
+
+
 - Documented project in `project_technical_document.md` for onboarding future LLM collaborators.
+
+
+
+
+
+
+
+
 
 
 
