@@ -206,24 +206,24 @@ class RugbyTimerView extends WatchUi.View {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_NUMBER_MILD;
-            countdownFont = Graphics.FONT_NUMBER_MILD;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         } else if (width <= 260) { // 6 / 6 Pro
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_NUMBER_HOT;
-            countdownFont = Graphics.FONT_NUMBER_MILD;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         } else { // 6X
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_SMALL;
             halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_NUMBER_HOT;
-            countdownFont = Graphics.FONT_NUMBER_MILD;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         }
@@ -233,10 +233,8 @@ class RugbyTimerView extends WatchUi.View {
         var halfY = height * 0.18;
         var triesY = halfY + height * 0.06;
         var cardsY = height * 0.37;
-        var baseTimerY = height * .09; //height * 0.48;
-        var baseCountdownY = height * 0.66;
-        var timerY = baseTimerY;
-        var countdownY = baseCountdownY;
+        var timerY = height * 0.48; // baseline position where the countdown timer starts before any cards shift it
+        var countdownY = height * 0.66; // default lower slot for the game timer display
         var stateY = height * 0.82;
         var hintY = height * 0.92;
         
@@ -308,24 +306,25 @@ class RugbyTimerView extends WatchUi.View {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             var cardAreaBottom = cardsY + maxCardRows * lineStep;
+            // Raise the main timer just below the card stack if cards extend upward; candidateTimerY tracks that offset.
             var candidateTimerY = cardAreaBottom + height * 0.06;
             var timerLimit = (stateY - height * 0.3);
-            timerY = (baseTimerY > candidateTimerY) ? baseTimerY : candidateTimerY;
+            timerY = (height * 0.48 > candidateTimerY) ? height * 0.48 : candidateTimerY;
             timerY = (timerY < timerLimit) ? timerY : timerLimit;
-            var countdownCandidate = timerY + height * 0.2;
+            var countdownCandidate = timerY + height * 0.2; // keep the game timer below the primary countdown block
             var countdownLimit = stateY - height * 0.12;
             countdownY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         }
         
         // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);
-        dc.drawText(width / 2, timerY, timerFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         
         // Game time (secondary)
         var gameTimeStr = formatTime(gameTime);
         var gameTimeColor = countdownRemaining <= 60 ? Graphics.COLOR_RED : (dimMode ? Graphics.COLOR_DK_GRAY : Graphics.COLOR_LT_GRAY);
         dc.setColor(gameTimeColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, countdownY, countdownFont, gameTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, timerY, timerFont, gameTimeStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // State/status block
