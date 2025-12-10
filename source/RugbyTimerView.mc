@@ -355,66 +355,60 @@ class RugbyTimerView extends WatchUi.View {
         }
 
         // Update game time and countdown timer when playing or during set-piece timers
+        var delta = 0;
+        if (lastUpdate != null) {
+            delta = (now - lastUpdate) / 1000.0;
+            if (delta < 0) {
+                delta = 0;
+            }
+        }
+        if (delta > 0 && gameState != STATE_IDLE && gameState != STATE_ENDED) {
+            gameTime = gameTime + delta;
+        }
+
         if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
-            if (lastUpdate != null) {
-                var delta = (now - lastUpdate) / 1000.0;
-                if (delta < 0) {
-                    delta = 0;
-                }
-                gameTime = gameTime + delta;
-                    countdownRemaining = countdownRemaining - delta;
-                    if (countdownRemaining < 0) { countdownRemaining = 0; }
-                    if (countdownRemaining <= 30 && countdownRemaining > 0 && !thirtySecondAlerted) {
-                        thirtySecondAlerted = true;
-                        triggerThirtySecondVibe();
-                    }
-                
-                // Handle in-play special countdowns
-                if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
-                    countdownSeconds = countdownSeconds - delta;
-                    if (countdownSeconds <= 0) {
-                        countdownSeconds = 0;
-                        if (gameState == STATE_CONVERSION) {
-                            startKickoffCountdown();
-                        } else {
-                            resumePlay();
-                        }
-                    }
-                }
-                
-                // Card timers tick while play is active or during set-piece timers
-                yellowHomeTimes = updateTimers(yellowHomeTimes, delta);
-                yellowAwayTimes = updateTimers(yellowAwayTimes, delta);
-                if (!redHomePermanent && redHome > 0) { redHome = redHome - delta; if (redHome < 0) { redHome = 0; } }
-                if (!redAwayPermanent && redAway > 0) { redAway = redAway - delta; if (redAway < 0) { redAway = 0; } }
-                
-                // Check if countdown has reached zero
-                if (countdownRemaining <= 0) {
-                    countdownRemaining = 0;
-                    if (halfNumber == 1) {
-                            enterHalfTime();
-                        } else {
-                            endGame();
-                        }
-                    }
-                }
-                lastUpdate = now;
-            } else if (gameState == STATE_KICKOFF) {
-                if (lastUpdate != null) {
-                    var delta = (now - lastUpdate) / 1000.0;
-                    if (delta < 0) {
-                        delta = 0;
-                    }
-                    countdownSeconds = countdownSeconds - delta;
-                    if (countdownSeconds < 0) { countdownSeconds = 0; }
-                    
-                    if (countdownSeconds <= 0) {
-                        countdownSeconds = 0;
+            countdownRemaining = countdownRemaining - delta;
+            if (countdownRemaining < 0) { countdownRemaining = 0; }
+            if (countdownRemaining <= 30 && countdownRemaining > 0 && !thirtySecondAlerted) {
+                thirtySecondAlerted = true;
+                triggerThirtySecondVibe();
+            }
+
+            if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
+                countdownSeconds = countdownSeconds - delta;
+                if (countdownSeconds <= 0) {
+                    countdownSeconds = 0;
+                    if (gameState == STATE_CONVERSION) {
+                        startKickoffCountdown();
+                    } else {
                         resumePlay();
                     }
                 }
-                lastUpdate = now;
             }
+
+            yellowHomeTimes = updateTimers(yellowHomeTimes, delta);
+            yellowAwayTimes = updateTimers(yellowAwayTimes, delta);
+            if (!redHomePermanent && redHome > 0) { redHome = redHome - delta; if (redHome < 0) { redHome = 0; } }
+            if (!redAwayPermanent && redAway > 0) { redAway = redAway - delta; if (redAway < 0) { redAway = 0; } }
+
+            if (countdownRemaining <= 0) {
+                countdownRemaining = 0;
+                if (halfNumber == 1) {
+                    enterHalfTime();
+                } else {
+                    endGame();
+                }
+            }
+        } else if (gameState == STATE_KICKOFF) {
+            countdownSeconds = countdownSeconds - delta;
+            if (countdownSeconds < 0) { countdownSeconds = 0; }
+
+            if (countdownSeconds <= 0) {
+                countdownSeconds = 0;
+                resumePlay();
+            }
+        }
+        lastUpdate = now;
             
             if (lastPersistTime == 0 || now - lastPersistTime > STATE_SAVE_INTERVAL_MS) {
                 saveState();
