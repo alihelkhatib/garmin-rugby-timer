@@ -1,31 +1,27 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `source/` holds all Monkey C source files (`App`, `Delegate`, `View`, `Settings`); `resources/` stores Connect IQ assets (menus, strings, layouts).
-- `bin/` contains build outputs; `manifest.xml` configures the app metadata.
-- `log.md` and `project_technical_document.md` record session history and architecture notes. Keep `debug.png` and other art assets in repo root if used for references.
+- `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
+- `resources/` contains menus, strings, layouts, and drawables; keep the launcher bitmap in `resources/drawables/` and list it from `resources/drawables/drawables.xml`.
+- Build outputs land in `bin/`, while `monkey.jungle` is the project descriptor read by `monkeyc`. Manifest metadata and permissions live in `manifest.xml`.
+- Use `project_technical_document.md` for architecture notes and `log.md` to record the narrative of each session so future agents can resume work quickly.
 
 ## Build, Test, and Development Commands
-- `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`: compiles the project using the active SDK, producing the `.prg` binary and debug XML.
-- Open the generated `.prg` in the Fenix 6 simulator via Garmin Express or the SDK’s `monkeydo` for visual verification; there is no automated test suite yet.
-- Use the provided `monkeybrains.jar` path (see `developer_key` and SDK version) in all build commands to ensure proper signing.
+- Build with the Connect IQ compiler: `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`. Adjust the `-d` flag per target (fenix6pro, fenix6s, fenix6spro, fenix6xpro); the SDK lives under the provided `connectiq-sdk-win-8.3.0-...`.
+- After compilation, load the resulting `.prg` into the Fenix 6 simulator (via the SDK’s `monkeydo` or Garmin Express) to verify layout, conversion workflow, and card timers.
+- Document any manual validation steps in `log.md`, e.g., “Built with `monkeyc ...` and confirmed countdown timer spacing on the Fenix 6 simulator.”
 
 ## Coding Style & Naming Conventions
-- Stick to Monkey C idioms: 4-space indentation, PascalCase for classes, camelCase for functions/variables, and constants in ALL_CAPS_WITH_UNDERSCORES.
-- Favor descriptive variable names (e.g., `countdownRemaining`, `yellowHomeTimes`), keep inline comments short, and document non-obvious logic in `project_technical_document.md`.
-- Monkey C enforces ASCII for source files; avoid introducing Unicode unless the source already includes it.
+- Follow Monkey C idioms: 4-space indentation, PascalCase for classes/menus, camelCase for functions/fields, and ALL_CAPS constants. Prefer descriptive names (`countdownRemaining`, `yellowHomeTimes`, `triggerYellowTimerVibe`).
+- Keep inline comments tight and explain non-obvious math (layout offsets, timer stacking, and persistent keys). Add doc comments in `project_technical_document.md` when new flows appear.
+- Stick to ASCII characters unless existing assets already contain Unicode; file encodings should stay consistent with the SDK expectations.
 
 ## Testing Guidelines
-- No automated tests currently exist; rely on simulator/driven manual flows described in `project_technical_document.md`.
-- When adding tests later, place them under a dedicated `tests/` directory and run with `monkeyc` plus any simulation harness the SDK provides.
-- Document manual verification steps (e.g., verifying timers/card layout on Fenix 6) in `log.md`.
+- There are no automated tests yet. Use the simulator to confirm timer positions, countdown/clock separation, card and conversion handling, and the 30-second warning haptic.
+- Track manual regressions in `log.md` with the date, short summary, and steps taken (include the command used to build the project).
+- When introducing new logic (e.g., additional card timers, GPS recording), note the coverage expectations so future agents know what to verify.
 
 ## Commit & Pull Request Guidelines
-- Commit titles should describe the change concisely (e.g., “Refine timer layout spacing”, “Log layout session”). Avoid merging unrelated work in a single commit.
-- Each PR should include a summary of added features/bug fixes, mention impacted files, and note any manual verification performed (e.g., “Built with `monkeyc ...` and checked layout on Fenix 6 simulator”).
-- When touching user-visible behavior, link to any relevant issue/bug and include before/after screenshots if available.
-
-## Agent-specific Instructions
-- Update `log.md` at the end of every session with the date, concise summary, and notable decisions so future agents can resume quickly.
-- Keep `project_technical_document.md` synchronized with architectural decisions; add sections or update descriptions when introducing new flows or state storage keys.
-- If rebuilding after changes, capture the success/failure output to reference later and mention it in the session log.
+- Keep each commit focused and describe it in present tense (examples: “Clarify timer layout comments,” “Add 40×40 launcher icon,” “Update contributor docs”). Avoid bundling unrelated fixes.
+- A PR should include a short summary, the key files touched, and the manual tests executed (mention the `monkeyc` command used and any simulator checks). Add screenshots only if they illustrate a UI change.
+- Link to the relevant `log.md` entry if the change follows from a previous session, and mention any outstanding items for the next contributor at the end of the PR description.
