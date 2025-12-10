@@ -229,7 +229,7 @@ class RugbyTimerView extends WatchUi.View {
 
         var scoreY = height * 0.08;
         var halfY = height * 0.15;
-        var triesY = height * 0.24;
+        var triesY = height * 0.32;
         var baseTimerY = height * 0.54;
         var timerSpacing = height * 0.18;
         var minTimerY = triesY + height * 0.12;
