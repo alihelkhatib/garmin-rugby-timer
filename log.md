@@ -1,16 +1,24 @@
-# Session Log
+# Session Log
+
+
+## [2025-12-23] Card counter persistence
+
+
+- Ensured yellow/red card counters persist via `cardId` metadata, tracked total tallies per team, and reset the timers plus totals when a match finishes so the Y# labels always reflect the total cards issued rather than whether an earlier timer is active.
+
+
+## [2025-12-22] Event Log relocation
 
 
 
 
 
-
-## [2025-12-22] Event Log relocation
-
-
-- Moved the Event Log entry out of the main menu and into the Back/Exit menu so referees can access it via the BACK/LAP dialog while the game is running, and hooked the Exit menu item up to `view.showEventLog()`.
-
-
+- Moved the Event Log entry out of the main menu and into the Back/Exit menu so referees can access it via the BACK/LAP dialog while the game is running, and hooked the Exit menu item up to `view.showEventLog()`.
+
+
+
+
+
 ## [2025-12-10] Timer layout and docs
 
 
