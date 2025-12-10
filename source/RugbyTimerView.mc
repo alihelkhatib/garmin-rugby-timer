@@ -229,7 +229,7 @@ class RugbyTimerView extends WatchUi.View {
 
         var scoreY = height * 0.08;
         var halfY = height * 0.15;
-        var triesY = height * 0.36;
+        var triesY = halfY + height * 0.06;
         var baseTimerY = height * 0.54;
         var timerSpacing = height * 0.18;
         var minTimerY = triesY + height * 0.12;
@@ -270,8 +270,8 @@ class RugbyTimerView extends WatchUi.View {
         dc.drawText(3 * width / 4, scoreY, scoreFont, awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         var halfStr = "Half " + halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 4, triesY, triesFont, homeTries.toString() + "T", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(3 * width / 4, triesY, triesFont, awayTries.toString() + "T", Graphics.TEXT_JUSTIFY_CENTER);
+        var triesText = homeTries.toString() + "T / " + awayTries.toString() + "T";
+        dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
         if (isLocked) {
             dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
         }
