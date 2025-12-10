@@ -596,6 +596,18 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
+    // Helper to zero out all card/sanction timers so nothing lingers on screen.
+    function clearCardTimers() {
+        yellowHomeTimes = [];
+        yellowAwayTimes = [];
+        yellowHomeLabelCounter = 0;
+        yellowAwayLabelCounter = 0;
+        redHome = 0;
+        redAway = 0;
+        redHomePermanent = false;
+        redAwayPermanent = false;
+    }
+
     // Called when the match ends or is reset to start fresh state.
     function resetGame() {
         stopRecording();
@@ -613,6 +625,7 @@ class RugbyTimerView extends WatchUi.View {
         lastUpdate = null;
         lastEvents = [];
         eventLogEntries = [];
+        clearCardTimers();
         saveState();
         Storage.setValue("gameStateData", null);
         WatchUi.requestUpdate();
@@ -891,6 +904,7 @@ class RugbyTimerView extends WatchUi.View {
         saveState();
         finalizeGameData();
         Storage.setValue("gameStateData", null);
+        clearCardTimers();
         WatchUi.requestUpdate();
     }
 

@@ -4,7 +4,6 @@
     <menu-item id="pause_clock" label="Pause/Resume Clock" />
     <menu-item id="record_card" label="Record Card" />
     <menu-item id="start_half2" label="Start 2nd Half" />
-    <menu-item id="view_log" label="Event Log" />
     <menu-item id="end_game" label="End Game" />
     <menu-item id="undo_last" label="Undo Last Score" />
     <menu-item id="adjust_score" label="Adjust Score" />

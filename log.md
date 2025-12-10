@@ -1,23 +1,56 @@
-# Session Log
+# Session Log
+
+
+
+
+
+
+## [2025-12-22] Event Log relocation
 
 
-## [2025-12-10] Timer layout and docs
+- Moved the Event Log entry out of the main menu and into the Back/Exit menu so referees can access it via the BACK/LAP dialog while the game is running, and hooked the Exit menu item up to `view.showEventLog()`.
 
 
-- Documented the timer geometry (game clock vs countdown vs card stack) and ensured yellow timer dictionaries carry their `Y#` labels so card logic stays predictable while the running game timer keeps counting even when the countdown is paused.
-
-- Added the 40x40 launcher icon, refreshed `resources/drawables/drawables.xml`, and updated `AGENTS.md` and `project_technical_document.md` so contributors understand the layout and activity recording behavior.
-
-- Verified the build via `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
-
-
-- Shifted the countdown timer above the card stack and capped its position to stay clear of the "PAUSED" prompt, ensuring the card and hint blocks never overlap the primary clock readout.
-
-- Added a kickoff shortcut so the scoreboard button clears the kickoff timer and immediately resumes normal play, keeping the UI responsive during restart sequences.
-
-- Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
-
-
+## [2025-12-10] Timer layout and docs
+
+
+
+
+
+- Documented the timer geometry (game clock vs countdown vs card stack) and ensured yellow timer dictionaries carry their `Y#` labels so card logic stays predictable while the running game timer keeps counting even when the countdown is paused.
+
+
+
+- Added the 40x40 launcher icon, refreshed `resources/drawables/drawables.xml`, and updated `AGENTS.md` and `project_technical_document.md` so contributors understand the layout and activity recording behavior.
+
+
+
+- Verified the build via `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
+
+
+
+
+
+- Shifted the countdown timer above the card stack and capped its position to stay clear of the "PAUSED" prompt, ensuring the card and hint blocks never overlap the primary clock readout.
+
+
+
+- Added a kickoff shortcut so the scoreboard button clears the kickoff timer and immediately resumes normal play, keeping the UI responsive during restart sequences.
+
+
+
+- Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
+
+
+
+- Cleared card timers and red/yellow state whenever a game ends or is reset so stale discipline indicators cannot linger on subsequent matches.
+
+
+
+
+
+
+
 ## [2025-12-11] Score Spacing Fix
 
 

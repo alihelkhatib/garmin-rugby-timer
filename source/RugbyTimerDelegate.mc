@@ -42,6 +42,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
             menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
             menu.addItem(new WatchUi.MenuItem("Reset Game", null, :reset, null));
+            menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
             menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
             WatchUi.pushView(menu, new ExitMenuDelegate(view), WatchUi.SLIDE_UP);
             return true;
@@ -106,8 +107,6 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             return;
         } else if (item.getId() == :toggle_lock) {
             view.toggleLock();
-        } else if (item.getId() == :view_log) {
-            view.showEventLog();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
@@ -297,6 +296,9 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :reset) {
             view.resetGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :view_log) {
+            view.showEventLog();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :exit) {
             view.stopRecording();
