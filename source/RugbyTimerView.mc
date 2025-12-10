@@ -205,7 +205,7 @@ class RugbyTimerView extends WatchUi.View {
         var triesFont;
         var halfFont;
         var timerFont;
-        var gameTimerFont;
+        var countdownFont;
         var stateFont;
         var hintFont;
         if (width <= 240) { // 6S
@@ -234,17 +234,13 @@ class RugbyTimerView extends WatchUi.View {
             hintFont = Graphics.FONT_XTINY;
         }
         
-        // Relative Y positions (fractions of screen height)
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var gameTimerY = halfY - height * 0.04; // place the ongoing game clock just above the “Half #” label
-        if (gameTimerY < scoreY + height * 0.02) {
-            gameTimerY = scoreY + height * 0.02;
-        }
-        var triesY = halfY + height * 0.06;
-        var cardsY = height * 0.37;
-        var timerY = height * 0.48; // baseline position where the countdown timer starts before any cards shift it
-        var countdownY = height * 0.66; // default lower slot for the bonus timer display
+        // Relative Y positions (fractions of screen height) keep each layer separated vertically.
+        var scoreY = height * 0.10; // scoreboard sits near the top center
+        var halfY = height * 0.18; // half label floats just below the scores
+        var gameTimerY = halfY * 0.5; // running game clock stays centered above the “Half #”
+        var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
+        var cardsY = height * 0.37; // base offset for the stacked discipline timers
+        var countdownY = height * 0.66; // primary countdown/bonus timer slot near the bottom
         var stateY = height * 0.82;
         var hintY = height * 0.92;
         
@@ -256,7 +252,9 @@ class RugbyTimerView extends WatchUi.View {
 
         // Game timer above the half indicator so referees see elapsed game minutes near the center top.
         var gameStr = formatTime(gameTime);
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
 
         // Half indicator
         var halfStr = "Half " + halfNumber.toString();
@@ -280,11 +278,15 @@ class RugbyTimerView extends WatchUi.View {
         if (maxCardRows > 0) {
             var homeLine = 0;
             var awayLine = 0;
-            var lineStep = height * 0.1;
+            var lineStep = height * 0.1; // keeps each card timer row separated so the stack never intrudes on the central clocks
             var cardFont = Graphics.FONT_MEDIUM;
             var homeYellowDisplayed = 0;
             for (var i = 0; i < yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
-                var entry = yellowHomeTimes[i];
+                var entry = yellowHomeTimes[i] as Lang.Dictionary;
+                if (entry == null) {
+                    homeLine += 1;
+                    continue;
+                }
                 var y = entry["remaining"];
                 var label = entry["label"];
                 if (label == null) {
@@ -297,7 +299,11 @@ class RugbyTimerView extends WatchUi.View {
             }
             var awayYellowDisplayed = 0;
             for (var i = 0; i < yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
-                var entry = yellowAwayTimes[i];
+                var entry = yellowAwayTimes[i] as Lang.Dictionary;
+                if (entry == null) {
+                    awayLine += 1;
+                    continue;
+                }
                 var y = entry["remaining"];
                 var label = entry["label"];
                 if (label == null) {
@@ -319,15 +325,6 @@ class RugbyTimerView extends WatchUi.View {
                 awayLine += 1;
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            var cardAreaBottom = cardsY + maxCardRows * lineStep;
-            // Raise the main timer just below the card stack if cards extend upward; candidateTimerY tracks that offset.
-            var candidateTimerY = cardAreaBottom + height * 0.06;
-            var timerLimit = (stateY - height * 0.3);
-            timerY = (height * 0.48 > candidateTimerY) ? height * 0.48 : candidateTimerY;
-            timerY = (timerY < timerLimit) ? timerY : timerLimit;
-            var countdownCandidate = timerY + height * 0.2; // keep the game timer below the primary countdown block
-            var countdownLimit = stateY - height * 0.12;
-            countdownY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         }
         
         // Countdown timer (primary)
@@ -490,16 +487,30 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     // Tick and prune yellow timers; hidden entries still count down in the background.
+    // Each entry is expected to be a dictionary so we keep the label/vibe metadata while pruning zeros.
     function updateYellowTimers(list, delta) {
         var newList = [];
         for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i];
-            var remaining = entry["remaining"] - delta;
-            var vibTriggered = entry["vibeTriggered"];
-            var label = entry["label"];
+            var rawEntry = list[i];
+            var entry = rawEntry as Lang.Dictionary;
+            var remaining = null;
+            var vibTriggered = false;
+            var label = null;
+            if (entry != null) {
+                remaining = entry["remaining"];
+                vibTriggered = entry["vibeTriggered"];
+                label = entry["label"];
+            } else {
+                remaining = rawEntry;
+            }
+            if (remaining == null) {
+                continue;
+            }
+            remaining = remaining - delta;
             if (remaining <= 0) {
                 continue;
             }
+            vibTriggered = vibTriggered == true;
             if (!vibTriggered && remaining <= 10) {
                 vibTriggered = true;
                 triggerYellowTimerVibe();
@@ -509,7 +520,7 @@ class RugbyTimerView extends WatchUi.View {
         return newList;
     }
 
-    // Guard when reading saved state so each timer has both remaining time and label metadata.
+    // Guard when reading saved state so each timer has both remaining time and label metadata and we keep the Y# label even for older entries.
     function normalizeYellowTimers(list) {
         var normalized = [];
         for (var i = 0; i < list.size(); i = i + 1) {
@@ -517,38 +528,35 @@ class RugbyTimerView extends WatchUi.View {
             if (entry == null) {
                 continue;
             }
+            var dict = entry as Lang.Dictionary;
             var remaining = null;
             var vibTriggered = false;
             var label = null;
-            try {
-                remaining = entry["remaining"];
-                vibTriggered = entry["vibeTriggered"];
-                label = entry["label"];
-            } catch (ex) {
+            if (dict != null) {
+                remaining = dict["remaining"];
+                vibTriggered = dict["vibeTriggered"];
+                label = dict["label"];
+            } else {
                 remaining = entry;
             }
             if (remaining == null) {
                 continue;
             }
+            vibTriggered = vibTriggered == true;
             normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label });
         }
         return normalized;
     }
 
-    // Track the highest yellow label seen so new cards keep their sequential numbering.
+    // Track the highest yellow label seen so new cards keep their sequential numbering and labeled timers persist.
     function computeYellowLabelCounter(list) {
         var maxLabel = 0;
         for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i];
+            var entry = list[i] as Lang.Dictionary;
             if (entry == null) {
                 continue;
             }
-            var label = null;
-            try {
-                label = entry["label"];
-            } catch (ex) {
-                label = null;
-            }
+            var label = entry["label"];
             if (label == null) {
                 continue;
             }
@@ -793,7 +801,7 @@ class RugbyTimerView extends WatchUi.View {
     function pauseGame() {
         if (gameState == STATE_PLAYING) {
             gameState = STATE_PAUSED;
-            lastUpdate = null;
+            // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
             saveState();
         }
     }
