@@ -341,7 +341,7 @@ class RugbyTimerView extends WatchUi.View {
         // Keep the countdown above the cards but below the state section; `countdownCandidate` is the natural slot just under the stack while the limit keeps it clear of the status text.
         var cardStackBottom = cardsY + (maxCardRows * lineStep);
         var countdownCandidate = cardStackBottom + height * 0.04;
-        var countdownLimit = stateY - height * 0.12;
+        var countdownLimit = stateBaseY - height * 0.12;
         var countdownMin = triesY + height * 0.05;
         var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
