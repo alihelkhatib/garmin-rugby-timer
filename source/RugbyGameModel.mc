@@ -3,6 +3,7 @@ using Toybox.System;
 using Toybox.ActivityRecording;
 using Toybox.Activity;
 
+// Represents the game state
 enum {
     STATE_IDLE,
     STATE_PLAYING,
@@ -14,54 +15,105 @@ enum {
     STATE_ENDED
 }
 
+/**
+ * Represents the data model for the rugby timer application.
+ * This class holds the entire state of the game and provides methods to manipulate it.
+ * It is the single source of truth for the application's data.
+ */
 class RugbyGameModel {
+    // The current state of the game, one of the STATE_* enum values
     var gameState;
+    // The score of the home team
     var homeScore;
+    // The score of the away team
     var awayScore;
+    // The number of tries scored by the home team
     var homeTries;
+    // The number of tries scored by the away team
     var awayTries;
+    // The current half number (1 or 2)
     var halfNumber;
+    // The number of seconds for the current countdown (e.g., for conversion, penalty)
     var countdownSeconds;
-    var gameTime;  // Game time (can be paused)
-    var elapsedTime;  // Total elapsed time (always running)
+    // The main game time in seconds (can be paused)
+    var gameTime;
+    // The total elapsed time in seconds since the game started (always running)
+    var elapsedTime;
+    // The timestamp of the last update
     var lastUpdate;
-    var gameStartTime;  // When the game/session actually started
+    // The timestamp when the game started
+    var gameStartTime;
     
+    // The current activity recording session
     var session;
+    // A boolean indicating if the game is a 7s or 15s match
     var is7s;
+    // The duration of a half in seconds
     var halfDuration;
-    var countdownTimer;  // New: countdown timer
-    var countdownRemaining;  // New: remaining countdown time
+    // The configured duration for the main countdown timer
+    var countdownTimer;
+    // The remaining time for the main countdown timer
+    var countdownRemaining;
+    // An array of GPS track points
     var gpsTrack;
+    // An array of the last scoring events for the undo functionality
     var lastEvents;
+    // An array of all game events for the event log
     var eventLogEntries;
+    // The timestamp of the last time the state was persisted
     var lastPersistTime;
+    // The duration of the conversion timer for 7s matches
     var conversionTime7s;
+    // The duration of the conversion timer for 15s matches
     var conversionTime15s;
-    var conversionTeam; // Holds which team currently has the conversion attempt (true=home, false=away)
+    // The team that is currently attempting a conversion (true for home, false for away)
+    var conversionTeam;
+    // The duration of the penalty kick timer
     var penaltyKickTime;
+    // A boolean indicating if the conversion timer should be used
     var useConversionTimer;
+    // A boolean indicating if the penalty timer should be used
     var usePenaltyTimer;
+    // A boolean indicating if the screen should be locked on game start
     var lockOnStart;
+    // A flag to ensure the low time alert is triggered only once
     var lowAlertTriggered;
+    // A flag to ensure the 30-second alert is triggered only once
     var thirtySecondAlerted;
+    // The game state before it was paused
     var pausedState;
+    // An array of timers for yellow cards for the home team
     var yellowHomeTimes;
+    // An array of timers for yellow cards for the away team
     var yellowAwayTimes;
+    // A counter for the labels of yellow cards for the home team
     var yellowHomeLabelCounter;
+    // A counter for the labels of yellow cards for the away team
     var yellowAwayLabelCounter;
+    // The timer for a red card for the home team
     var redHome;
+    // The timer for a red card for the away team
     var redAway;
+    // A boolean indicating if the red card for the home team is permanent
     var redHomePermanent;
+    // A boolean indicating if the red card for the away team is permanent
     var redAwayPermanent;
+    // The total number of yellow cards for the home team
     var yellowHomeTotal;
+    // The total number of yellow cards for the away team
     var yellowAwayTotal;
+    // The total number of red cards for the home team
     var redHomeTotal;
+    // The total number of red cards for the away team
     var redAwayTotal;
+    // A flag to ensure the special timer alert is triggered only once
     var specialAlertTriggered;
     
+    // The current position information from the GPS
     var positionInfo;
+    // The total distance covered during the activity
     var distance;
+    // The current speed
     var speed;
     
     // Timers
@@ -72,6 +124,10 @@ class RugbyGameModel {
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
     
+    /**
+     * Initializes the game model.
+     * Loads settings from storage and initializes the game state.
+     */
     function initialize() {
         // Load settings
         var is7sValue = Storage.getValue("rugby7s");
@@ -156,11 +212,18 @@ class RugbyGameModel {
         RugbyTimerPersistence.loadSavedState(self);
     }
 
+    /**
+     * This method is called periodically to update the game state.
+     */
     function updateGame() as Void {
         RugbyTimerTiming.updateGame(self);
     }
 
-    // Helper that displays a short M:SS string for cards while hiding zeros.
+    /**
+     * Helper that displays a short M:SS string for cards while hiding zeros.
+     * @param seconds The number of seconds to format
+     * @return A formatted string in M:SS format
+     */
     function formatShortTime(seconds) {
         if (seconds <= 0) {
             return "--";
@@ -170,7 +233,9 @@ class RugbyGameModel {
         return mins.toString() + ":" + secs.format("%02d");
     }
 
-    // Called when the match ends or is reset to start fresh state.
+    /**
+     * Called when the match ends or is reset to start fresh state.
+     */
     function resetGame() {
         stopRecording();
         gameState = STATE_IDLE;
@@ -193,7 +258,10 @@ class RugbyGameModel {
         conversionTeam = null;
     }
 
-    // Updates timers/durations per rugby 7s vs 15s selection.
+    /**
+     * Updates timers/durations per rugby 7s vs 15s selection.
+     * @param is7sFlag A boolean indicating if the game is a 7s match
+     */
     function setGameType(is7sFlag) {
         is7s = is7sFlag;
         Storage.setValue("rugby7s", is7sFlag);
@@ -204,6 +272,9 @@ class RugbyGameModel {
         }
     }
 
+    /**
+     * Handles a successful conversion.
+     */
     function handleConversionSuccess() {
         if (gameState != STATE_CONVERSION || conversionTeam == null) {
             return;
@@ -211,6 +282,9 @@ class RugbyGameModel {
         recordConversion(conversionTeam);
     }
 
+    /**
+     * Handles a missed conversion.
+     */
     function handleConversionMiss() {
         if (gameState != STATE_CONVERSION) {
             return;
@@ -221,13 +295,17 @@ class RugbyGameModel {
         endConversionWithoutScore();
     }
 
-    // Attempt to resume a persisted match session.
+    /**
+     * Attempt to resume a persisted match session.
+     */
     function saveGame() {
         RugbyTimerPersistence.finalizeGameData(self);
         RugbyTimerPersistence.saveState(self);
     }
 
-    // Kick off the match clock and transition into STATE_PLAYING.
+    /**
+     * Kick off the match clock and transition into STATE_PLAYING.
+     */
     function startGame() {
         if (gameState == STATE_IDLE) {
             var now = System.getTimer();
@@ -244,7 +322,9 @@ class RugbyGameModel {
         }
     }
 
-    // Freeze the countdown timer while leaving gameTime intact.
+    /**
+     * Freeze the countdown timer while leaving gameTime intact.
+     */
     function pauseGame() {
         if (gameState == STATE_PLAYING) {
             gameState = STATE_PAUSED;
@@ -253,7 +333,9 @@ class RugbyGameModel {
         }
     }
 
-    // Resume play from a paused state.
+    /**
+     * Resume play from a paused state.
+     */
     function resumeGame() {
         if (gameState == STATE_PAUSED) {
             gameState = STATE_PLAYING;
@@ -262,7 +344,9 @@ class RugbyGameModel {
         }
     }
 
-    // Convenience to stop both countdown and special timers for interruptions.
+    /**
+     * Convenience to stop both countdown and special timers for interruptions.
+     */
     function pauseClock() {
         if (gameState != STATE_PAUSED) {
             pausedState = gameState;
@@ -272,7 +356,9 @@ class RugbyGameModel {
         }
     }
 
-    // Resume the countdown and special timers after a pause.
+    /**
+     * Resume the countdown and special timers after a pause.
+     */
     function resumeClock() {
         if (gameState == STATE_PAUSED) {
             if (pausedState != null) {
@@ -286,21 +372,27 @@ class RugbyGameModel {
         }
     }
 
-    // Continue live play after a conversion/penalty timer finishes.
+    /**
+     * Continue live play after a conversion/penalty timer finishes.
+     */
     function resumePlay() {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
         RugbyTimerPersistence.saveState(self);
     }
 
-    // Switch state to halftime once first 40 minutes finish.
+    /**
+     * Switch state to halftime once first 40 minutes finish.
+     */
     function enterHalfTime() {
         gameState = STATE_HALFTIME;
         lastUpdate = null;
         RugbyTimerPersistence.saveState(self);
     }
 
-    // Reset clocks/flags when beginning the second half.
+    /**
+     * Reset clocks/flags when beginning the second half.
+     */
     function startSecondHalf() {
         if (gameState == STATE_HALFTIME) {
             halfNumber = 2;
@@ -314,7 +406,9 @@ class RugbyGameModel {
         }
     }
 
-    // Wrap up the match, finalize data, and stop GPS recording.
+    /**
+     * Wrap up the match, finalize data, and stop GPS recording.
+     */
     function endGame() {
         gameState = STATE_ENDED;
         lastUpdate = null;
@@ -325,7 +419,10 @@ class RugbyGameModel {
         RugbyTimerCards.clearCardTimers(self);
     }
 
-    // Score helpers: tries add five points plus conversion clock.
+    /**
+     * Score helpers: tries add five points plus conversion clock.
+     * @param isHome A boolean indicating if the home team scored
+     */
     function recordTry(isHome) {
         if (isHome) {
             homeScore += 5;
@@ -345,7 +442,10 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Try");
     }
 
-    // Conversion attempt scoring (2 points) triggered by the conversion state.
+    /**
+     * Conversion attempt scoring (2 points) triggered by the conversion state.
+     * @param isHome A boolean indicating if the home team scored
+     */
     function recordConversion(isHome) {
         if (isHome) {
             homeScore += 2;
@@ -361,7 +461,10 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Conversion (made)");
     }
 
-    // Track penalty goals/drops and optionally start a penalty timer.
+    /**
+     * Track penalty goals/drops and optionally start a penalty timer.
+     * @param isHome A boolean indicating if the home team scored
+     */
     function recordPenalty(isHome) {
         if (isHome) {
             homeScore += 3;
@@ -378,7 +481,10 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Penalty Goal");
     }
 
-    // Drop goal scoring is 3 points without extra timers.
+    /**
+     * Drop goal scoring is 3 points without extra timers.
+     * @param isHome A boolean indicating if the home team scored
+     */
     function recordDropGoal(isHome) {
         if (isHome) {
             homeScore += 3;
@@ -390,7 +496,10 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Drop Goal");
     }
     
-    // Add a yellow-card timer entry, tracking its label and vibration state.
+    /**
+     * Add a yellow-card timer entry, tracking its label and vibration state.
+     * @param isHome A boolean indicating if the home team received the card
+     */
     function recordYellowCard(isHome) {
         var duration = is7s ? 120 : 600;
         var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
@@ -406,7 +515,10 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
     }
 
-    // Handle red cards (permanent for 7s, timed for 15s).
+    /**
+     * Handle red cards (permanent for 7s, timed for 15s).
+     * @param isHome A boolean indicating if the home team received the card
+     */
     function recordRedCard(isHome) {
         if (is7s) {
             if (isHome) {
@@ -434,7 +546,11 @@ class RugbyGameModel {
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
     }
     
-    // Adjust either team’s score with bounds to avoid negative values.
+    /**
+     * Adjust either team’s score with bounds to avoid negative values.
+     * @param isHome A boolean indicating if the home team's score should be adjusted
+     * @param delta The amount to adjust the score by
+     */
     function adjustScore(isHome, delta) {
         if (isHome) {
             homeScore = (homeScore + delta < 0) ? 0 : homeScore + delta;
@@ -444,7 +560,10 @@ class RugbyGameModel {
         RugbyTimerPersistence.saveState(self);
     }
     
-    // Undo mechanism for the last scoring event to support simple corrections.
+    /**
+     * Undo mechanism for the last scoring event to support simple corrections.
+     * @return true if an event was undone, false otherwise
+     */
     function undoLastEvent() {
         if (lastEvents.size() == 0) {
             return false;
@@ -482,22 +601,32 @@ class RugbyGameModel {
         return true;
     }
     
-    // Keep the event history capped so persistence/storage stays light.
+    /**
+     * Keep the event history capped so persistence/storage stays light.
+     */
     function trimEvents() {
         if (lastEvents.size() > 20) {
             lastEvents.remove(0);
         }
     }
 
+    /**
+     * Exports the event log to storage.
+     */
     function exportEventLog() {
         RugbyTimerEventLog.exportEventLog(self);
     }
 
+    /**
+     * Shows the event log screen.
+     */
     function showEventLog() {
         RugbyTimerEventLog.showEventLog(self);
     }
 
-    // Begin the conversion timer window when a try is scored.
+    /**
+     * Begin the conversion timer window when a try is scored.
+     */
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
@@ -505,7 +634,9 @@ class RugbyGameModel {
         lastUpdate = System.getTimer();
     }
 
-    // After a conversion attempt ends, prepare the kickoff countdown.
+    /**
+     * After a conversion attempt ends, prepare the kickoff countdown.
+     */
     function startKickoffCountdown() {
         conversionTeam = null;
         gameState = STATE_KICKOFF;
@@ -514,6 +645,9 @@ class RugbyGameModel {
         lastUpdate = System.getTimer();
     }
 
+    /**
+     * Cancels the kickoff countdown.
+     */
     function cancelKickoff() {
         if (gameState == STATE_KICKOFF) {
             countdownSeconds = 0;
@@ -521,7 +655,9 @@ class RugbyGameModel {
         }
     }
 
-    // Launches the penalty kick countdown display/clock.
+    /**
+     * Launches the penalty kick countdown display/clock.
+     */
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;
         countdownSeconds = penaltyKickTime;
@@ -529,14 +665,18 @@ class RugbyGameModel {
         lastUpdate = System.getTimer();
     }
 
-    // Cleanly exit a conversion phase when no score is recorded.
+    /**
+     * Cleanly exit a conversion phase when no score is recorded.
+     */
     function endConversionWithoutScore() {
         if (gameState == STATE_CONVERSION) {
             startKickoffCountdown();
         }
     }
 
-    // Begin GPS/activity recording tied to the `SPORT_RUGBY` session.
+    /**
+     * Begin GPS/activity recording tied to the `SPORT_RUGBY` session.
+     */
     function startRecording() {
         if (session == null) {
             session = ActivityRecording.createSession({
@@ -547,7 +687,9 @@ class RugbyGameModel {
         }
     }
 
-    // Stop the GPS/activity recording safely.
+    /**
+     * Stop the GPS/activity recording safely.
+     */
     function stopRecording() {
         if (session != null && session.isRecording()) {
             session.stop();
@@ -556,7 +698,10 @@ class RugbyGameModel {
         }
     }
 
-    // GPS position callback that feeds the activity recording and tracking storyline.
+    /**
+     * GPS position callback that feeds the activity recording and tracking storyline.
+     * @param info The position information
+     */
     function updatePosition(info) {
         positionInfo = info;
         if (info has :speed && info.speed != null) {
