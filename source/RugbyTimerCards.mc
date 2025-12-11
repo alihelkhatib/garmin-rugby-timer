@@ -28,7 +28,7 @@ class RugbyTimerCards {
             vibTriggered = vibTriggered == true;
             if (!vibTriggered && remaining <= 10) {
                 vibTriggered = true;
-                view.triggerYellowTimerVibe();
+                RugbyTimerTiming.triggerYellowTimerVibe();
             }
             newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
         }

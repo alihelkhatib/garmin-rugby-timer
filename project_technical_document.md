@@ -9,7 +9,7 @@
 ## Architecture
 - Entry point: `source/RugbyTimerApp.mc` registers viewer/delegate.
 - View: `source/RugbyTimerView.mc` orchestrates gameplay state, overlays, persistence, and button interactions while delegating drawing to the renderer and helpers in other files.
-- Helpers: `source/RugbyTimerRenderer.mc` handles font/layout math, `source/RugbyTimerCards.mc` keeps yellow/red card numbering and countdown maintenance centralized, and `source/RugbyTimerEventLog.mc` owns the event log/export formatting.
+- Helpers: `source/RugbyTimerRenderer.mc` handles font/layout math, `source/RugbyTimerCards.mc` keeps yellow/red card numbering and countdown maintenance centralized, `source/RugbyTimerEventLog.mc` owns the event log/export formatting, `source/RugbyTimerTiming.mc` runs the shared update loop and haptics, `source/RugbyTimerPersistence.mc` manages snapshot/load plus summaries, and `source/RugbyTimerOverlay.mc` renders the inline special timer screen.
 - Delegate/menus: `RugbyTimerDelegate.mc` routes hardware actions and menu interactions.
 - Renderer helper: `RugbyTimerRenderer.mc` centralizes font selection, scoreboard rendering, card timer drawing, and the countdown/state layout math so the view layer can stay lean.
 - Settings/UI resources under `resources/menus`, `resources/strings`, `resources/layouts`.

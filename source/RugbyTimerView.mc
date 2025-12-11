@@ -7,7 +7,6 @@ using Toybox.Position;
 using Toybox.Application.Storage;
 using Toybox.System;
 using Toybox.Lang;
-using Toybox.Attention;
 
 enum {
     STATE_IDLE,
@@ -179,7 +178,7 @@ class RugbyTimerView extends WatchUi.View {
         distance = 0.0;
         speed = 0.0;
         
-        loadSavedState();
+        RugbyTimerPersistence.loadSavedState(self);
     }
 
     // Layout callback needed by WatchUi; just delegates to the main layout definition.
@@ -236,7 +235,7 @@ class RugbyTimerView extends WatchUi.View {
         var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
         renderHint(dc, width, fonts[:hintFont], hintY);
 
-        renderSpecialOverlay(dc, width, height);
+        RugbyTimerOverlay.renderSpecialOverlay(self, dc, width, height);
     }
 
     function renderHint(dc, width, hintFont, hintY) {
@@ -256,143 +255,10 @@ class RugbyTimerView extends WatchUi.View {
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    function renderSpecialOverlay(dc, width, height) {
-        if (!specialTimerOverlayVisible || !isSpecialState()) {
-            return;
-        }
-        var label = getSpecialStateLabel();
-        var countdown = formatTime(countdownSeconds);
-        var countdownMain = formatTime(countdownRemaining);
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
-        if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
-        }
-    }
-
-    // Periodic tick that keeps the clocks, card timers, and persistence in sync.
     function updateGame() as Void {
-        try {
-            var now = System.getTimer();
-            
-            // Always update elapsed time if game has started
-        if (gameStartTime != null) {
-            elapsedTime = (now - gameStartTime) / 1000;
-        }
-
-        // Update game time and countdown timer when playing or during set-piece timers
-        var delta = 0;
-        if (lastUpdate != null) {
-            delta = (now - lastUpdate) / 1000.0;
-            if (delta < 0) {
-                delta = 0;
-            }
-        }
-        if (delta > 0 && gameState != STATE_IDLE && gameState != STATE_ENDED) {
-            gameTime = gameTime + delta;
-        }
-
-        if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
-            countdownRemaining = countdownRemaining - delta;
-            if (countdownRemaining < 0) { countdownRemaining = 0; }
-            if (countdownRemaining <= 30 && countdownRemaining > 0 && !thirtySecondAlerted) {
-                thirtySecondAlerted = true;
-                triggerThirtySecondVibe();
-            }
-
-            if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
-                countdownSeconds = countdownSeconds - delta;
-                if (countdownSeconds <= 0) {
-                    countdownSeconds = 0;
-                    if (gameState == STATE_CONVERSION) {
-                        startKickoffCountdown();
-                    } else if (gameState == STATE_PENALTY) {
-                        resumePlay();
-                    } else { // kickoff
-                        resumePlay();
-                    }
-                }
-                if (countdownSeconds <= 15 && countdownSeconds > 0 && !specialAlertTriggered) {
-                    specialAlertTriggered = true;
-                    triggerSpecialTimerVibe();
-                }
-            }
-
-            yellowHomeTimes = RugbyTimerCards.updateYellowTimers(self, yellowHomeTimes, delta);
-            yellowAwayTimes = RugbyTimerCards.updateYellowTimers(self, yellowAwayTimes, delta);
-            if (!redHomePermanent && redHome > 0) { redHome = redHome - delta; if (redHome < 0) { redHome = 0; } }
-            if (!redAwayPermanent && redAway > 0) { redAway = redAway - delta; if (redAway < 0) { redAway = 0; } }
-
-            if (countdownRemaining <= 0) {
-                countdownRemaining = 0;
-                if (halfNumber == 1) {
-                    enterHalfTime();
-                } else {
-                    endGame();
-                }
-            }
-        }
-        lastUpdate = now;
-            
-            if (lastPersistTime == 0 || now - lastPersistTime > STATE_SAVE_INTERVAL_MS) {
-                saveState();
-                lastPersistTime = now;
-            }
-            
-            WatchUi.requestUpdate();
-        } catch (ex) {
-            // Silently handle errors to prevent crash
-        }
+        RugbyTimerTiming.updateGame(self);
     }
 
-    // Convert raw seconds into a zero-padded MM:SS string for display.
-    function formatTime(seconds) {
-        if (seconds < 0) {
-            seconds = 0;
-        }
-        var mins = (seconds.toLong() / 60);
-        var secs = (seconds.toLong() % 60);
-        return mins.format("%02d") + ":" + secs.format("%02d");
-    }
-
-    // Plays the thirty-second warning haptic when the countdown drops below 30s.
-    function triggerThirtySecondVibe() {
-        if (Attention has :vibrate) {
-            var vibeProfiles = [
-                new Attention.VibeProfile(50, 500)
-            ];
-            Attention.vibrate(vibeProfiles);
-        }
-    }
-    
-    function triggerSpecialTimerVibe() {
-        if (Attention has :vibrate) {
-            var vibeProfiles = [
-                new Attention.VibeProfile(40, 400)
-            ];
-            Attention.vibrate(vibeProfiles);
-        }
-    }
-
-    // Alerts the referee when a yellow timer is about to expire (below 10s).
-    function triggerYellowTimerVibe() {
-        if (Attention has :vibrate) {
-            var vibeProfiles = [
-                new Attention.VibeProfile(40, 300)
-            ];
-            Attention.vibrate(vibeProfiles);
-        }
-    }
-    
     // Helper that displays a short M:SS string for cards while hiding zeros.
     function formatShortTime(seconds) {
         if (seconds <= 0) {
@@ -421,7 +287,7 @@ class RugbyTimerView extends WatchUi.View {
         lastEvents = [];
         eventLogEntries = [];
         RugbyTimerCards.clearCardTimers(self);
-        saveState();
+        RugbyTimerPersistence.saveState(self);
         Storage.setValue("gameStateData", null);
         WatchUi.requestUpdate();
         conversionTeam = null;
@@ -464,7 +330,7 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         recordConversion(conversionTeam);
-        displaySpecialOverlayMessage("Conversion recorded");
+        RugbyTimerOverlay.displaySpecialOverlayMessage(self, "Conversion recorded");
     }
 
     function handleConversionMiss() {
@@ -479,198 +345,9 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     // Attempt to resume a persisted match session.
-    function loadSavedState() {
-        var data = Storage.getValue("gameStateData") as Lang.Dictionary;
-        if (data != null) {
-            try {
-                homeScore = data["homeScore"];
-                awayScore = data["awayScore"];
-                homeTries = data["homeTries"];
-                awayTries = data["awayTries"];
-                halfNumber = data["halfNumber"];
-                gameTime = data["gameTime"];
-                elapsedTime = data["elapsedTime"];
-                countdownRemaining = data["countdownRemaining"];
-                countdownSeconds = data["countdownSeconds"];
-                gameState = data["gameState"];
-                is7s = data["is7s"];
-                countdownTimer = data["countdownTimer"];
-                conversionTime7s = data["conversionTime7s"];
-                conversionTime15s = data["conversionTime15s"];
-                penaltyKickTime = data["penaltyKickTime"];
-                useConversionTimer = data["useConversionTimer"];
-                usePenaltyTimer = data["usePenaltyTimer"];
-                var savedConversion = data["conversionTeam"];
-                conversionTeam = savedConversion;
-                var yHomeArr = data["yellowHomeTimes"];
-                  if (yHomeArr != null) {
-                      yellowHomeTimes = RugbyTimerCards.normalizeYellowTimers(self, yHomeArr, true);
-                  } else {
-                      yellowHomeTimes = [];
-                  }
-                  yellowHomeLabelCounter = RugbyTimerCards.computeYellowLabelCounter(yellowHomeTimes);
-                  var savedHomeLabelCounter = data["yellowHomeLabelCounter"];
-                  if (savedHomeLabelCounter != null && savedHomeLabelCounter > yellowHomeLabelCounter) {
-                      yellowHomeLabelCounter = savedHomeLabelCounter;
-                  }
-                  var yAwayArr = data["yellowAwayTimes"];
-                  if (yAwayArr != null) {
-                      yellowAwayTimes = RugbyTimerCards.normalizeYellowTimers(self, yAwayArr, false);
-                  } else {
-                      yellowAwayTimes = [];
-                  }
-                  yellowAwayLabelCounter = RugbyTimerCards.computeYellowLabelCounter(yellowAwayTimes);
-                  var savedAwayLabelCounter = data["yellowAwayLabelCounter"];
-                  if (savedAwayLabelCounter != null && savedAwayLabelCounter > yellowAwayLabelCounter) {
-                      yellowAwayLabelCounter = savedAwayLabelCounter;
-                  }
-                redHome = data["redHome"];
-                if (redHome == null) { redHome = 0; }
-                redAway = data["redAway"];
-                if (redAway == null) { redAway = 0; }
-                redHomePermanent = data["redHomePermanent"];
-                if (redHomePermanent == null) { redHomePermanent = false; }
-                redAwayPermanent = data["redAwayPermanent"];
-                if (redAwayPermanent == null) { redAwayPermanent = false; }
-                yellowHomeTotal = data["yellowHomeTotal"];
-                if (yellowHomeTotal == null) { yellowHomeTotal = 0; }
-                yellowAwayTotal = data["yellowAwayTotal"];
-                if (yellowAwayTotal == null) { yellowAwayTotal = 0; }
-                redHomeTotal = data["redHomeTotal"];
-                if (redHomeTotal == null) { redHomeTotal = 0; }
-                redAwayTotal = data["redAwayTotal"];
-                if (redAwayTotal == null) { redAwayTotal = 0; }
-                // Resume safely: if it was playing, return paused
-                if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
-                    gameState = STATE_PAUSED;
-                }
-            } catch (ex) {
-                // ignore corrupted state
-            }
-        }
-    }
-
-    // Persist all derived game/session values so restart can pick them up.
-    function saveState() {
-        var snapshot = {
-            "homeScore" => homeScore,
-            "awayScore" => awayScore,
-            "homeTries" => homeTries,
-            "awayTries" => awayTries,
-            "halfNumber" => halfNumber,
-            "gameTime" => gameTime,
-            "elapsedTime" => elapsedTime,
-            "countdownRemaining" => countdownRemaining,
-            "countdownSeconds" => countdownSeconds,
-            "gameState" => gameState,
-            "is7s" => is7s,
-            "countdownTimer" => countdownTimer,
-            "conversionTime7s" => conversionTime7s,
-            "conversionTime15s" => conversionTime15s,
-            "penaltyKickTime" => penaltyKickTime,
-            "useConversionTimer" => useConversionTimer,
-            "usePenaltyTimer" => usePenaltyTimer,
-            "conversionTeam" => conversionTeam,
-            "yellowHomeTimes" => yellowHomeTimes,
-            "yellowAwayTimes" => yellowAwayTimes,
-            "yellowHomeLabelCounter" => yellowHomeLabelCounter,
-            "yellowAwayLabelCounter" => yellowAwayLabelCounter,
-            "yellowHomeTotal" => yellowHomeTotal,
-            "yellowAwayTotal" => yellowAwayTotal,
-            "redHome" => redHome,
-            "redAway" => redAway,
-            "redHomePermanent" => redHomePermanent,
-            "redAwayPermanent" => redAwayPermanent
-        };
-        Storage.setValue("gameStateData", snapshot);
-    }
-
-    // Capture the final match summary before exiting the session.
-    function finalizeGameData() {
-        var summary = {
-            "homeScore" => homeScore,
-            "awayScore" => awayScore,
-            "homeTries" => homeTries,
-            "awayTries" => awayTries,
-            "halfNumber" => halfNumber,
-            "elapsedTime" => elapsedTime,
-            "countdownRemaining" => countdownRemaining,
-            "yellowHomeTimes" => yellowHomeTimes,
-            "yellowAwayTimes" => yellowAwayTimes,
-            "redHome" => redHome,
-            "redAway" => redAway,
-            "redHomePermanent" => redHomePermanent,
-            "redAwayPermanent" => redAwayPermanent
-        };
-        summary["yellowHomeTotal"] = yellowHomeTotal;
-        summary["yellowAwayTotal"] = yellowAwayTotal;
-        summary["redHomeTotal"] = redHomeTotal;
-        summary["redAwayTotal"] = redAwayTotal;
-        var eventLogText = RugbyTimerEventLog.buildEventLogText(self);
-        if (eventLogText.length() > 0) {
-            summary["eventLog"] = eventLogText;
-        }
-        Storage.setValue("lastGameSummary", summary);
-    }
-
-    function isSpecialState() {
-        return gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF;
-    }
-
-    function showSpecialTimerScreen() {
-        if (isSpecialState()) {
-            specialTimerOverlayVisible = true;
-            WatchUi.requestUpdate();
-        }
-    }
-
-    function closeSpecialTimerScreen() {
-        if (specialTimerOverlayVisible) {
-            specialTimerOverlayVisible = false;
-            WatchUi.requestUpdate();
-        }
-    }
-
-    function isSpecialOverlayActive() {
-        return specialTimerOverlayVisible && isSpecialState();
-    }
-
-    function getSpecialOverlayHint() {
-        if (gameState == STATE_CONVERSION) {
-            return "DOWN: Conversion ×   UP: Conversion ✓";
-        }
-        return "UP: Cards   DOWN: Score";
-    }
-
     function saveGame() {
-        finalizeGameData();
-        saveState();
-        WatchUi.requestUpdate();
-    }
-
-    function getSpecialStateLabel() {
-        if (gameState == STATE_CONVERSION) {
-            return "CONVERSION";
-        } else if (gameState == STATE_PENALTY) {
-            return "PENALTY KICK";
-        } else if (gameState == STATE_KICKOFF) {
-            return "KICKOFF";
-        }
-        return "";
-    }
-
-    function getSpecialStateColor() {
-        return Graphics.COLOR_RED;
-    }
-
-    function displaySpecialOverlayMessage(text) {
-        if (text == null) {
-            specialOverlayMessage = null;
-            specialOverlayMessageExpiry = 0;
-            return;
-        }
-        specialOverlayMessage = text;
-        specialOverlayMessageExpiry = System.getTimer() + 2000;
+        RugbyTimerPersistence.finalizeGameData(self);
+        RugbyTimerPersistence.saveState(self);
         WatchUi.requestUpdate();
     }
 
@@ -687,7 +364,7 @@ class RugbyTimerView extends WatchUi.View {
             countdownSeconds = 0;
             thirtySecondAlerted = false;
             startRecording();
-            saveState();
+            RugbyTimerPersistence.saveState(self);
             if (lockOnStart) {
                 isLocked = true;
             }
@@ -700,7 +377,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_PLAYING) {
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
-            saveState();
+            RugbyTimerPersistence.saveState(self);
         }
     }
 
@@ -709,7 +386,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_PAUSED) {
             gameState = STATE_PLAYING;
             lastUpdate = System.getTimer();
-            saveState();
+            RugbyTimerPersistence.saveState(self);
         }
     }
 
@@ -719,8 +396,8 @@ class RugbyTimerView extends WatchUi.View {
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
-            saveState();
-            closeSpecialTimerScreen();
+            RugbyTimerPersistence.saveState(self);
+            RugbyTimerOverlay.closeSpecialTimerScreen(self);
         }
     }
 
@@ -734,11 +411,11 @@ class RugbyTimerView extends WatchUi.View {
             }
             pausedState = null;
             lastUpdate = System.getTimer();
-            saveState();
-            if (isSpecialState()) {
-                showSpecialTimerScreen();
+            RugbyTimerPersistence.saveState(self);
+            if (RugbyTimerOverlay.isSpecialState(self)) {
+                RugbyTimerOverlay.showSpecialTimerScreen(self);
             } else {
-                closeSpecialTimerScreen();
+                RugbyTimerOverlay.closeSpecialTimerScreen(self);
             }
         }
     }
@@ -747,17 +424,17 @@ class RugbyTimerView extends WatchUi.View {
     function resumePlay() {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
-        closeSpecialTimerScreen();
-        saveState();
+        RugbyTimerOverlay.closeSpecialTimerScreen(self);
+        RugbyTimerPersistence.saveState(self);
         WatchUi.requestUpdate();
     }
 
     // Switch state to halftime once first 40 minutes finish.
     function enterHalfTime() {
         gameState = STATE_HALFTIME;
-        closeSpecialTimerScreen();
+        RugbyTimerOverlay.closeSpecialTimerScreen(self);
         lastUpdate = null;
-        saveState();
+        RugbyTimerPersistence.saveState(self);
         WatchUi.requestUpdate();
     }
 
@@ -768,10 +445,10 @@ class RugbyTimerView extends WatchUi.View {
             gameTime = 0;
             countdownRemaining = countdownTimer;  // Reset countdown for second half
             gameState = STATE_PLAYING;
-            closeSpecialTimerScreen();
+            RugbyTimerOverlay.closeSpecialTimerScreen(self);
             countdownSeconds = 0;
             lastUpdate = System.getTimer();
-            saveState();
+            RugbyTimerPersistence.saveState(self);
             thirtySecondAlerted = false;
         }
     }
@@ -779,11 +456,11 @@ class RugbyTimerView extends WatchUi.View {
     // Wrap up the match, finalize data, and stop GPS recording.
     function endGame() {
         gameState = STATE_ENDED;
-        closeSpecialTimerScreen();
+        RugbyTimerOverlay.closeSpecialTimerScreen(self);
         lastUpdate = null;
         stopRecording();
-        saveState();
-        finalizeGameData();
+        RugbyTimerPersistence.saveState(self);
+        RugbyTimerPersistence.finalizeGameData(self);
         Storage.setValue("gameStateData", null);
         RugbyTimerCards.clearCardTimers(self);
         WatchUi.requestUpdate();
@@ -911,7 +588,7 @@ class RugbyTimerView extends WatchUi.View {
         } else {
             awayScore = (awayScore + delta < 0) ? 0 : awayScore + delta;
         }
-        saveState();
+        RugbyTimerPersistence.saveState(self);
         WatchUi.requestUpdate();
     }
     
@@ -949,7 +626,7 @@ class RugbyTimerView extends WatchUi.View {
                 if (awayScore < 0) { awayScore = 0; }
             }
         }
-        saveState();
+        RugbyTimerPersistence.saveState(self);
         WatchUi.requestUpdate();
         return true;
     }
@@ -976,7 +653,7 @@ class RugbyTimerView extends WatchUi.View {
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
-        showSpecialTimerScreen();
+        RugbyTimerOverlay.showSpecialTimerScreen(self);
     }
 
     // After a conversion attempt ends, prepare the kickoff countdown.
@@ -987,13 +664,13 @@ class RugbyTimerView extends WatchUi.View {
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
-        showSpecialTimerScreen();
+        RugbyTimerOverlay.showSpecialTimerScreen(self);
     }
 
     function cancelKickoff() {
         if (gameState == STATE_KICKOFF) {
             countdownSeconds = 0;
-            closeSpecialTimerScreen();
+            RugbyTimerOverlay.closeSpecialTimerScreen(self);
             resumePlay();
         }
     }
@@ -1005,7 +682,7 @@ class RugbyTimerView extends WatchUi.View {
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
-        showSpecialTimerScreen();
+        RugbyTimerOverlay.showSpecialTimerScreen(self);
     }
 
     // Cleanly exit a conversion phase when no score is recorded.

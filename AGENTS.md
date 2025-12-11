@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 - `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerRenderer.mc` centralizes the font/layout math and card rendering so the view can focus on timers and overlays, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
-- `source/RugbyTimerCards.mc` keeps the yellow/red card helpers, numbering, and countdown updates separate, while `source/RugbyTimerEventLog.mc` owns the event-log formatting/export helpers so the view stays lean.
+- `source/RugbyTimerCards.mc` keeps the yellow/red card helpers, numbering, and countdown updates separate, `source/RugbyTimerEventLog.mc` owns the event-log formatting/export helpers, `source/RugbyTimerTiming.mc` runs the shared update loop and haptics, `source/RugbyTimerPersistence.mc` owns the state snapshot/summary plumbing, and `source/RugbyTimerOverlay.mc` draws the special timer overlay so the view just wires the flow.
 - `resources/` contains menus, strings, layouts, and drawables; keep the launcher bitmap in `resources/drawables/` and list it from `resources/drawables/drawables.xml`.
 - `resources/menus/menu.xml` defines the main menu stack; the Exit / Back menu also exposes the Event Log entry now so referees can open the log via that dialog while in-play.
 - Build outputs land in `bin/`, while `monkey.jungle` is the project descriptor read by `monkeyc`. Manifest metadata and permissions live in `manifest.xml`.

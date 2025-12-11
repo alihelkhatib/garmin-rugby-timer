@@ -1,6 +1,5 @@
 using Toybox.Graphics;
 using Toybox.Lang;
-using Toybox.System;
 
 class RugbyTimerRenderer {
     // Central rendering helper that keeps layout math and font selection in one place so
@@ -78,7 +77,7 @@ class RugbyTimerRenderer {
     }
 
     static function renderGameTimer(dc, view, width, timerFont, gameTimerY) {
-        var gameStr = view.formatTime(view.gameTime);
+        var gameStr = RugbyTimerTiming.formatTime(view.gameTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -184,7 +183,7 @@ class RugbyTimerRenderer {
     static function renderCountdown(dc, view, width, countdownFont, countdownY) {
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var countdownStr = view.formatTime(view.countdownRemaining);
+        var countdownStr = RugbyTimerTiming.formatTime(view.countdownRemaining);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
@@ -234,26 +233,4 @@ class RugbyTimerRenderer {
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    static function renderSpecialOverlay(dc, view, width, height) {
-        if (!view.specialTimerOverlayVisible || !view.isSpecialState()) {
-            return;
-        }
-        var label = view.getSpecialStateLabel();
-        var countdown = view.formatTime(view.countdownSeconds);
-        var countdownMain = view.formatTime(view.countdownRemaining);
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(view.getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, view.getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
-        if (view.specialOverlayMessage != null && System.getTimer() < view.specialOverlayMessageExpiry) {
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, view.specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
-        }
-    }
 }

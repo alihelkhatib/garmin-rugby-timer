@@ -40,7 +40,7 @@ class RugbyTimerEventLog {
         if (view.eventLogEntries == null) {
             view.eventLogEntries = [];
         }
-        var timestamp = view.formatTime(view.gameTime);
+        var timestamp = RugbyTimerTiming.formatTime(view.gameTime);
         view.eventLogEntries.add({:time => timestamp, :desc => description});
         if (view.eventLogEntries.size() > EVENT_LOG_LIMIT) {
             view.eventLogEntries.remove(0);
