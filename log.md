@@ -1,3 +1,8 @@
+## [2025-12-28] Special timer screen and save option
+
+- Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
+- Conversion/Kickoff/Penalty states push a dedicated view that highlights the state label, synced countdown, and the same UP/DOWN shortcuts used on the main screen while still closing the overlay when those buttons fire.
+
 ## [2025-12-28] Protect countdown layout
 
 - Added inline documentation for the timer stack math in `source/RugbyTimerView.mc` and clamped `countdownY` to keep the big clock away from the state/hint block while still staying above the card timers.
