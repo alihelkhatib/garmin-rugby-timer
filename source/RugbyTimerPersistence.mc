@@ -1,7 +1,14 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
 
+/**
+ * A helper class for saving and loading the game state.
+ */
 class RugbyTimerPersistence {
+    /**
+     * Saves the current game state to storage.
+     * @param model The game model
+     */
     static function saveState(model) {
         var snapshot = {
             "homeScore" => model.homeScore,
@@ -36,6 +43,10 @@ class RugbyTimerPersistence {
         Storage.setValue("gameStateData", snapshot);
     }
 
+    /**
+     * Finalizes the game data and saves a summary to storage.
+     * @param model The game model
+     */
     static function finalizeGameData(model) {
         var summary = {
             "homeScore" => model.homeScore,
@@ -63,6 +74,10 @@ class RugbyTimerPersistence {
         Storage.setValue("lastGameSummary", summary);
     }
 
+    /**
+     * Loads the saved game state from storage.
+     * @param model The game model
+     */
     static function loadSavedState(model) {
         var data = Storage.getValue("gameStateData") as Lang.Dictionary;
         if (data != null) {
