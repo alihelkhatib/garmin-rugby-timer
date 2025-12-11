@@ -3,6 +3,7 @@ using Toybox.Graphics;
 using Toybox.Timer;
 using Toybox.System;
 using Toybox.Lang;
+using Toybox.Application.Storage;
 
 /**
  * Represents the main view of the rugby timer application.
