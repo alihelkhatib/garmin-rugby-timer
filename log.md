@@ -1,9 +1,57 @@
-## [2025-12-26] Launcher icon swap
+## [2025-12-27] Highlight conversion text
 
 
-- Replaced the 40?40 PNG launcher icon with `icon.jpg` and pointed `resources/drawables/drawables.xml` at it so the watch delivers the requested asset.
+- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
 
 
+## [2025-12-27] Avoid timer overlap
+
+
+
+
+
+- Raised the state text when the countdown timer is high so the conversion/penalty/KICKOFF captions never intersect the white countdown digits; the computed `stateY` and `hintY` now depend on the adjustable `countdownY`.
+
+
+
+
+
+## [2025-12-27] Trim manifest targets
+
+
+
+
+
+- Removed the unsupported Forerunner/Venu/Instinct product IDs because the SDK rejected them and documented that the app currently targets Fenix 6/7 plus Epix/Venu in the README.
+
+
+
+
+
+## [2025-12-26] Expanded product list
+
+
+
+
+
+- Added the Fenix 7/7S families plus Epix, Forerunner 745/945/255/955, Venu 2/3, and Instinct 2 identifiers to `manifest.xml` and noted the expanded coverage in `README.md` so the app can build for more Garmin watches.
+
+
+
+
+
+## [2025-12-26] Launcher icon swap
+
+
+
+
+
+- Replaced the 40?40 PNG launcher icon with `icon.jpg` and pointed `resources/drawables/drawables.xml` at it so the watch delivers the requested asset.
+
+
+
+
+
 # Session Log
 
 

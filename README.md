@@ -1,6 +1,6 @@
 # Rugby Timer for Garmin Fenix 6
 
-This Connect IQ watch app turns the Fenix 6 suite (and other recent Garmin sports watches) into a rugby referee console: it tracks scores, halves, countdowns, yellow/red cards, conversions/penalties, and a GPS `SPORT_RUGBY` recording while keeping the main timers visible even when card timers stack.
+This Connect IQ watch app covers the Fenix 6/7 series plus Epix and Venu devices: it tracks scores, halves, countdowns, yellow/red cards, conversions/penalties, and a GPS `SPORT_RUGBY` recording while keeping the main timers visible even when card timers stack.
 
 ## Highlights
 - Game clock and countdown split so referees see both the live game time and the active countdown/bonus window.
@@ -11,7 +11,7 @@ This Connect IQ watch app turns the Fenix 6 suite (and other recent Garmin sport
 
 ## Requirements
 - [Garmin Connect IQ SDK 8.3.x](https://developer.garmin.com/connect-iq/) (already referenced via `monkeybrains.jar` in the project).
-- This project targets the full Fenix 6 lineup plus newer devices such as Fenix 7-series, Epix, Forerunner 745/945, and Venu 2; add/remove device IDs in `manifest.xml` before building if you need a different subset.
+- This project targets the Fenix 6/7 families plus Epix and Venu watch lines; adjust the `<iq:product>` entries in `manifest.xml` if you need to ship to a narrower set of devices.
 - `monkeyc`, `monkeydo`, and the device simulators installed.
 - Windows/macOS terminal with access to the `monkeyc` toolchain. The repo currently targets fenix6/fenix6pro/fenix6s/fenix6spro/fenix6xpro.
 

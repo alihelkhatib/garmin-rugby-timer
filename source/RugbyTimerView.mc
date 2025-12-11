@@ -253,8 +253,8 @@ class RugbyTimerView extends WatchUi.View {
         var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
         var cardsY = height * 0.37; // base offset for the stacked discipline timers
         var countdownY = height * 0.66; // fallback slot for countdown/bonus near the bottom
-        var stateY = height * 0.82;
-        var hintY = height * 0.92;
+        var stateBaseY = height * 0.82;
+        var hintBaseY = height * 0.92;
         
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
@@ -341,10 +341,13 @@ class RugbyTimerView extends WatchUi.View {
         // Keep the countdown above the cards but below the state section; `countdownCandidate` is the natural slot just under the stack while the limit keeps it clear of the status text.
         var cardStackBottom = cardsY + (maxCardRows * lineStep);
         var countdownCandidate = cardStackBottom + height * 0.04;
-        var countdownLimit = stateY - height * 0.12;
+        var countdownLimit = stateBaseY - height * 0.12;
         var countdownMin = triesY + height * 0.05;
         var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
+
+        var stateY = (countdownY + height * 0.09 > stateBaseY) ? countdownY + height * 0.09 : stateBaseY;
+        var hintY = (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
         
         // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);
@@ -352,6 +355,11 @@ class RugbyTimerView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // State/status block
+        var stateColor = Graphics.COLOR_WHITE;
+        if (gameState == STATE_CONVERSION || gameState == STATE_KICKOFF || gameState == STATE_PENALTY) {
+            stateColor = Graphics.COLOR_RED;
+        }
+        dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
         if (gameState == STATE_PAUSED) {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (gameState == STATE_CONVERSION) {
@@ -370,6 +378,7 @@ class RugbyTimerView extends WatchUi.View {
         } else if (gameState == STATE_IDLE) {
             dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
         }
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // Hint
         var hint = "";
