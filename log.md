@@ -1,6 +1,14 @@
-## [2025-12-27] Highlight conversion text
-
-- Added cover.jpg (512x512, <300 KB) for the Connect IQ Store listing so the app has a compliant cover image alongside the launcher icon.
+## [2025-12-28] Protect countdown layout
+
+- Added inline documentation for the timer stack math in `source/RugbyTimerView.mc` and clamped `countdownY` to keep the big clock away from the state/hint block while still staying above the card timers.
+- Noted the adaptive timer geometry and multi-platform coverage in `project_technical_document.md` and `README.md` so future agents understand the device scope and spacing guarantees.
+
+## [2025-12-27] Highlight conversion text
+
+
+
+- Added cover.jpg (512x512, <300 KB) for the Connect IQ Store listing so the app has a compliant cover image alongside the launcher icon.
+
 
 
 
@@ -769,7 +777,7 @@
 
 
 
-- Preserved each yellow entry’s `Y#` label so replacing a card that was hidden still shows the same identifier when it finally appears.
+- Preserved each yellow entryâ€™s `Y#` label so replacing a card that was hidden still shows the same identifier when it finally appears.
 
 
 
@@ -897,7 +905,7 @@
 
 
 
-- Replaced the unsupported `substr` call in `parseLabelNumber` with a manual loop that drops the leading �Y�, preventing the undefined symbol build error on Fenix 6.
+- Replaced the unsupported `substr` call in `parseLabelNumber` with a manual loop that drops the leading “Y”, preventing the undefined symbol build error on Fenix 6.
 
 
 
@@ -1081,7 +1089,7 @@
 
 ## [2025-12-21] Decouple timers
 
-- Moved the running game timer above the �Half #� label and kept the countdown clock down below with its own position logic so the two clocks stay separate.
+- Moved the running game timer above the “Half #” label and kept the countdown clock down below with its own position logic so the two clocks stay separate.
 
 
 

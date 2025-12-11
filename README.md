@@ -1,9 +1,10 @@
-# Rugby Timer for Garmin Fenix 6
+# Rugby Timer for Garmin Watches
 
-This Connect IQ watch app covers the Fenix 6/7 series plus Epix and Venu devices: it tracks scores, halves, countdowns, yellow/red cards, conversions/penalties, and a GPS `SPORT_RUGBY` recording while keeping the main timers visible even when card timers stack.
+This Connect IQ watch app supports the modern Fenix 6/7/8, Epix, Forerunner (255/265/945/955/965), Venu, and Instinct families: it tracks scores, halves, countdowns, yellow/red cards, conversions/penalties, and a GPS `SPORT_RUGBY` recording while adapting the layout so the core timers stay visible even when multiple card timers stack below.
 
 ## Highlights
 - Game clock and countdown split so referees see both the live game time and the active countdown/bonus window.
+- Layout math keeps the countdown, state text, and card stacks from stepping on each other no matter how many timers are visible, letting the main clocks stay readable on every supported screen size.
 - Dialog-driven scoring/card capture with conversion/penalty shortcuts, event log export, GPS activity recording, and auto-cleared timers on reset/end.
 - Event Log accessible from the BACK/LAP (Exit) dialog so referees can save a time-stamped list of every try, conversion, penalty, drop goal, and card.
 - Yellow cards store their `Y#` labels and persist even when additional cards are added; totals per team are kept for final summaries.
@@ -11,7 +12,7 @@ This Connect IQ watch app covers the Fenix 6/7 series plus Epix and Venu devices
 
 ## Requirements
 - [Garmin Connect IQ SDK 8.3.x](https://developer.garmin.com/connect-iq/) (already referenced via `monkeybrains.jar` in the project).
-- This project targets the Fenix 6/7 families plus Epix and Venu watch lines; adjust the `<iq:product>` entries in `manifest.xml` if you need to ship to a narrower set of devices.
+- This project targets the Fenix 6/7/8, Epix, Forerunner (255/265/945/955/965), Venu, and Instinct watch lines; adjust the `<iq:product>` entries in `manifest.xml` if you need to ship to a narrower set of devices.
 - `monkeyc`, `monkeydo`, and the device simulators installed.
 - Windows/macOS terminal with access to the `monkeyc` toolchain. The repo currently targets fenix6/fenix6pro/fenix6s/fenix6spro/fenix6xpro.
 
