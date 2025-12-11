@@ -1,9 +1,21 @@
-## [2025-12-26] Expanded product list
+## [2025-12-27] Trim manifest targets
 
 
-- Added the Fenix 7/7S families plus Epix, Forerunner 745/945/255/955, Venu 2/3, and Instinct 2 identifiers to `manifest.xml` and noted the expanded coverage in `README.md` so the app can build for more Garmin watches.
+- Removed the unsupported Forerunner/Venu/Instinct product IDs because the SDK rejected them and documented that the app currently targets Fenix 6/7 plus Epix/Venu in the README.
 
 
+## [2025-12-26] Expanded product list
+
+
+
+
+
+- Added the Fenix 7/7S families plus Epix, Forerunner 745/945/255/955, Venu 2/3, and Instinct 2 identifiers to `manifest.xml` and noted the expanded coverage in `README.md` so the app can build for more Garmin watches.
+
+
+
+
+
 ## [2025-12-26] Launcher icon swap
 
 
