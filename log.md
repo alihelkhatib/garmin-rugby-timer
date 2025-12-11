@@ -9,6 +9,12 @@
 - The inline overlay now labels the primary countdown timer, keeps it white, and places the conversion/kickoff/penalty timer squarely in the middle so the referee sees both clocks.
 - The special timer confirmation text is larger and still appears briefly when the referee confirms a conversion.
 
+## [2025-12-12] Modular cards and event log helpers
+
+- Created `RugbyTimerCards.mc` to house the yellow/red timer math, numbering helpers, and card-stack resets so the view no longer kept that entire block of logic.
+- Added `RugbyTimerEventLog.mc` to format/export the event log text and keep the `EVENT_LOG` wiring out of the main view; the view now just orchestrates the helper and a few thin wrappers.
+- Updated the documentation to call out the new helper modules so future contributors know where the card and log behaviors live.
+
 ## [2025-12-28] Special timer alert
 
 - Added a 15-second vibration for conversion/penalty/kickoff countdowns so referees are alerted ahead of the kick window.

@@ -86,8 +86,6 @@ class RugbyTimerView extends WatchUi.View {
     const PENALTY_KICK_TIME = 60; // 60 seconds for penalty kicks
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
-    const EVENT_LOG_LIMIT = 64;
-    const EVENT_LOG_STORAGE_KEY = "eventLogExport";
     
     // Primary initialization: load persisted settings, zero all counters, and prepare timers.
     function initialize() {
@@ -329,8 +327,8 @@ class RugbyTimerView extends WatchUi.View {
                 }
             }
 
-            yellowHomeTimes = updateYellowTimers(yellowHomeTimes, delta);
-            yellowAwayTimes = updateYellowTimers(yellowAwayTimes, delta);
+            yellowHomeTimes = RugbyTimerCards.updateYellowTimers(self, yellowHomeTimes, delta);
+            yellowAwayTimes = RugbyTimerCards.updateYellowTimers(self, yellowAwayTimes, delta);
             if (!redHomePermanent && redHome > 0) { redHome = redHome - delta; if (redHome < 0) { redHome = 0; } }
             if (!redAwayPermanent && redAway > 0) { redAway = redAway - delta; if (redAway < 0) { redAway = 0; } }
 
@@ -405,166 +403,6 @@ class RugbyTimerView extends WatchUi.View {
         return mins.toString() + ":" + secs.format("%02d");
     }
 
-    // Tick and prune yellow timers; hidden entries still count down in the background.
-    // Each entry is expected to be a dictionary so we keep the label/vibe metadata while pruning zeros.
-    function updateYellowTimers(list, delta) {
-        var newList = [];
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var rawEntry = list[i];
-            var entry = rawEntry as Lang.Dictionary;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
-            if (entry != null) {
-                remaining = entry["remaining"];
-                vibTriggered = entry["vibeTriggered"];
-                label = entry["label"];
-                cardId = entry["cardId"];
-            } else {
-                remaining = rawEntry;
-            }
-            if (remaining == null) {
-                continue;
-            }
-            remaining = remaining - delta;
-            if (remaining <= 0) {
-                continue;
-            }
-            vibTriggered = vibTriggered == true;
-            if (!vibTriggered && remaining <= 10) {
-                vibTriggered = true;
-                triggerYellowTimerVibe();
-            }
-            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
-        }
-        return newList;
-    }
-
-    // Guard when reading saved state so each timer has both remaining time and label metadata and we keep the Y# label even for older entries.
-    function normalizeYellowTimers(list, isHome) {
-        var normalized = [];
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i];
-            if (entry == null) {
-                continue;
-            }
-            var dict = entry as Lang.Dictionary;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
-            if (dict != null) {
-                remaining = dict["remaining"];
-                vibTriggered = dict["vibeTriggered"];
-                label = dict["label"];
-                cardId = dict["cardId"];
-            } else {
-                remaining = entry;
-            }
-            if (remaining == null) {
-                continue;
-            }
-            vibTriggered = vibTriggered == true;
-            if (cardId == null && label != null) {
-                cardId = parseLabelNumber(label);
-            }
-            if (label == null && cardId != null) {
-                label = "Y" + cardId.toString();
-            }
-            if ((label == null || cardId == null)) {
-                cardId = allocateYellowCardId(isHome);
-                label = "Y" + cardId.toString();
-            }
-            ensureYellowLabelCounter(isHome, cardId);
-            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
-        }
-        return normalized;
-    }
-
-    // Track the highest yellow label seen so new cards keep their sequential numbering and labeled timers persist.
-    function computeYellowLabelCounter(list) {
-        var maxLabel = 0;
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i] as Lang.Dictionary;
-            if (entry == null) {
-                continue;
-            }
-            var label = entry["label"];
-            if (label == null) {
-                continue;
-            }
-            var labelNumber = parseLabelNumber(label);
-            if (labelNumber > maxLabel) {
-                maxLabel = labelNumber;
-            }
-        }
-        return maxLabel;
-    }
-
-    // Parse the numeric portion of a label like “Y3” so counters increment safely.
-    function parseLabelNumber(label) {
-        if (label == null) {
-            return 0;
-        }
-        var digits = label;
-        if (digits.length() > 0 && digits[0] == "Y") {
-            var trimmed = "";
-            for (var idx = 1; idx < digits.length(); idx = idx + 1) {
-                trimmed = trimmed + digits[idx];
-            }
-            digits = trimmed;
-        }
-        if (digits.length() == 0) {
-            return 0;
-        }
-        try {
-            return digits.toLong();
-        } catch (ex) {
-            return 0;
-        }
-    }
-
-    function allocateYellowCardId(isHome) {
-        if (isHome) {
-            yellowHomeLabelCounter = yellowHomeLabelCounter + 1;
-            return yellowHomeLabelCounter;
-        }
-        yellowAwayLabelCounter = yellowAwayLabelCounter + 1;
-        return yellowAwayLabelCounter;
-    }
-
-    function ensureYellowLabelCounter(isHome, cardId) {
-        if (cardId == null) {
-            return;
-        }
-        if (isHome) {
-            if (cardId > yellowHomeLabelCounter) {
-                yellowHomeLabelCounter = cardId;
-            }
-        } else {
-            if (cardId > yellowAwayLabelCounter) {
-                yellowAwayLabelCounter = cardId;
-            }
-        }
-    }
-
-    // Helper to zero out all card/sanction timers so nothing lingers on screen.
-    function clearCardTimers() {
-        yellowHomeTimes = [];
-        yellowAwayTimes = [];
-        yellowHomeLabelCounter = 0;
-        yellowAwayLabelCounter = 0;
-        redHome = 0;
-        redAway = 0;
-        redHomePermanent = false;
-        redAwayPermanent = false;
-        yellowHomeTotal = 0;
-        yellowAwayTotal = 0;
-        redHomeTotal = 0;
-        redAwayTotal = 0;
-    }
-
     // Called when the match ends or is reset to start fresh state.
     function resetGame() {
         stopRecording();
@@ -582,7 +420,7 @@ class RugbyTimerView extends WatchUi.View {
         lastUpdate = null;
         lastEvents = [];
         eventLogEntries = [];
-        clearCardTimers();
+        RugbyTimerCards.clearCardTimers(self);
         saveState();
         Storage.setValue("gameStateData", null);
         WatchUi.requestUpdate();
@@ -634,7 +472,7 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         if (conversionTeam != null) {
-            appendEventLogEntry((conversionTeam ? "Home" : "Away") + " Conversion Miss");
+            RugbyTimerEventLog.appendEntry(self, (conversionTeam ? "Home" : "Away") + " Conversion Miss");
         }
         endConversionWithoutScore();
         WatchUi.requestUpdate();
@@ -666,22 +504,22 @@ class RugbyTimerView extends WatchUi.View {
                 conversionTeam = savedConversion;
                 var yHomeArr = data["yellowHomeTimes"];
                   if (yHomeArr != null) {
-                      yellowHomeTimes = normalizeYellowTimers(yHomeArr, true);
+                      yellowHomeTimes = RugbyTimerCards.normalizeYellowTimers(self, yHomeArr, true);
                   } else {
                       yellowHomeTimes = [];
                   }
-                  yellowHomeLabelCounter = computeYellowLabelCounter(yellowHomeTimes);
+                  yellowHomeLabelCounter = RugbyTimerCards.computeYellowLabelCounter(yellowHomeTimes);
                   var savedHomeLabelCounter = data["yellowHomeLabelCounter"];
                   if (savedHomeLabelCounter != null && savedHomeLabelCounter > yellowHomeLabelCounter) {
                       yellowHomeLabelCounter = savedHomeLabelCounter;
                   }
                   var yAwayArr = data["yellowAwayTimes"];
                   if (yAwayArr != null) {
-                      yellowAwayTimes = normalizeYellowTimers(yAwayArr, false);
+                      yellowAwayTimes = RugbyTimerCards.normalizeYellowTimers(self, yAwayArr, false);
                   } else {
                       yellowAwayTimes = [];
                   }
-                  yellowAwayLabelCounter = computeYellowLabelCounter(yellowAwayTimes);
+                  yellowAwayLabelCounter = RugbyTimerCards.computeYellowLabelCounter(yellowAwayTimes);
                   var savedAwayLabelCounter = data["yellowAwayLabelCounter"];
                   if (savedAwayLabelCounter != null && savedAwayLabelCounter > yellowAwayLabelCounter) {
                       yellowAwayLabelCounter = savedAwayLabelCounter;
@@ -768,7 +606,7 @@ class RugbyTimerView extends WatchUi.View {
         summary["yellowAwayTotal"] = yellowAwayTotal;
         summary["redHomeTotal"] = redHomeTotal;
         summary["redAwayTotal"] = redAwayTotal;
-        var eventLogText = buildEventLogText();
+        var eventLogText = RugbyTimerEventLog.buildEventLogText(self);
         if (eventLogText.length() > 0) {
             summary["eventLog"] = eventLogText;
         }
@@ -947,7 +785,7 @@ class RugbyTimerView extends WatchUi.View {
         saveState();
         finalizeGameData();
         Storage.setValue("gameStateData", null);
-        clearCardTimers();
+        RugbyTimerCards.clearCardTimers(self);
         WatchUi.requestUpdate();
     }
 
@@ -968,7 +806,7 @@ class RugbyTimerView extends WatchUi.View {
             conversionTeam = isHome;
             startConversionCountdown();
         }
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Try");
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Try");
         WatchUi.requestUpdate();
     }
 
@@ -985,7 +823,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_CONVERSION) {
             startKickoffCountdown();
         }
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Conversion (made)");
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Conversion (made)");
         WatchUi.requestUpdate();
     }
 
@@ -1003,7 +841,7 @@ class RugbyTimerView extends WatchUi.View {
         if (gameState == STATE_PLAYING && usePenaltyTimer) {
             startPenaltyCountdown();
         }
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Penalty Goal");
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Penalty Goal");
         WatchUi.requestUpdate();
     }
 
@@ -1016,14 +854,14 @@ class RugbyTimerView extends WatchUi.View {
         }
         lastEvents.add({:type => :drop, :home => isHome});
         trimEvents();
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Drop Goal");
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Drop Goal");
         WatchUi.requestUpdate();
     }
     
     // Add a yellow-card timer entry, tracking its label and vibration state.
     function recordYellowCard(isHome) {
         var duration = is7s ? 120 : 600;
-        var cardId = allocateYellowCardId(isHome);
+        var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
         var label = "Y" + cardId.toString();
         var entry = { "remaining" => duration, "vibeTriggered" => false, "label" => label, "cardId" => cardId };
         if (isHome) {
@@ -1033,7 +871,7 @@ class RugbyTimerView extends WatchUi.View {
             yellowAwayTimes.add(entry);
             yellowAwayTotal = yellowAwayTotal + 1;
         }
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
         WatchUi.requestUpdate();
     }
 
@@ -1062,7 +900,7 @@ class RugbyTimerView extends WatchUi.View {
         } else {
             redAwayTotal = redAwayTotal + 1;
         }
-        appendEventLogEntry((isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
         WatchUi.requestUpdate();
     }
     
@@ -1123,55 +961,12 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
 
-    // Event log helpers store human-readable lines with timestamps for export/review.
-    function buildEventLogLines() {
-        var lines = [];
-        if (eventLogEntries == null) {
-            return lines;
-        }
-        for (var i = 0; i < eventLogEntries.size(); i = i + 1) {
-            var entry = eventLogEntries[i] as Lang.Dictionary;
-            if (entry == null) {
-                continue;
-            }
-            var time = entry[:time];
-            var desc = entry[:desc];
-            lines.add((time != null ? time : "--:--") + " – " + (desc != null ? desc : ""));
-        }
-        return lines;
-    }
-
-    function buildEventLogText() {
-        var lines = buildEventLogLines();
-        var text = "";
-        for (var i = 0; i < lines.size(); i = i + 1) {
-            if (i > 0) { text = text + "\n"; }
-            text = text + lines[i];
-        }
-        return text;
-    }
-
-    function appendEventLogEntry(description) {
-        if (description == null) {
-            return;
-        }
-        if (eventLogEntries == null) {
-            eventLogEntries = [];
-        }
-        var timestamp = formatTime(gameTime);
-        eventLogEntries.add({:time => timestamp, :desc => description});
-        if (eventLogEntries.size() > EVENT_LOG_LIMIT) {
-            eventLogEntries.remove(0);
-        }
-    }
-
     function exportEventLog() {
-        var text = buildEventLogText();
-        Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
+        RugbyTimerEventLog.exportEventLog(self);
     }
 
     function showEventLog() {
-        WatchUi.pushView(new EventLogMenu(eventLogEntries), new EventLogDelegate(self), WatchUi.SLIDE_UP);
+        RugbyTimerEventLog.showEventLog(self);
     }
 
     // Begin the conversion timer window when a try is scored.
