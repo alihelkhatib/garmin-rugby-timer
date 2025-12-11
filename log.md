@@ -1,3 +1,8 @@
+## [2025-12-28] Special timer alert
+
+- Added a 15-second vibration for conversion/penalty/kickoff countdowns so referees are alerted ahead of the kick window.
+- Reset the alert flag whenever those timers start so the notification only fires once per phase.
+
 ## [2025-12-28] Special timer screen and save option
 
 - Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
