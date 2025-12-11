@@ -42,6 +42,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
             menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
             menu.addItem(new WatchUi.MenuItem("Reset Game", null, :reset, null));
+            menu.addItem(new WatchUi.MenuItem("Save Game", null, :save_game, null));
             menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
             menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
             WatchUi.pushView(menu, new ExitMenuDelegate(view), WatchUi.SLIDE_UP);
@@ -297,6 +298,9 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (item.getId() == :reset) {
             view.resetGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :save_game) {
+            view.saveGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :view_log) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             view.showEventLog();
@@ -381,5 +385,68 @@ class EventLogDelegate extends WatchUi.Menu2InputDelegate {
 
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+class SpecialStateDelegate extends WatchUi.BehaviorDelegate {
+    var view;
+
+    function initialize(v) {
+        BehaviorDelegate.initialize();
+        view = v;
+    }
+
+    function onMenu() {
+        WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(view), WatchUi.SLIDE_UP);
+        return true;
+    }
+
+    function onSelect() {
+        if (view.isLocked) {
+            return true;
+        }
+        if (view.gameState == STATE_IDLE) {
+            view.startGame();
+        } else if (view.gameState == STATE_PLAYING || view.gameState == STATE_CONVERSION || view.gameState == STATE_PENALTY || view.gameState == STATE_KICKOFF) {
+            view.pauseClock();
+        } else if (view.gameState == STATE_PAUSED) {
+            view.resumeClock();
+        } else if (view.gameState == STATE_HALFTIME) {
+            view.startSecondHalf();
+        }
+        return true;
+    }
+
+    function onBack() {
+        view.closeSpecialTimerScreen();
+        return true;
+    }
+
+    function onNextPage() {
+        if (view.isLocked || !view.isActionAllowed()) {
+            return true;
+        }
+        view.closeSpecialTimerScreen();
+        if (view.gameState == STATE_CONVERSION) {
+            view.handleConversionMiss();
+        } else {
+            view.showCardDialog();
+        }
+        return true;
+    }
+
+    function onPreviousPage() {
+        if (view.isLocked || !view.isActionAllowed()) {
+            return true;
+        }
+        view.closeSpecialTimerScreen();
+        if (view.gameState == STATE_CONVERSION) {
+            view.handleConversionSuccess();
+        } else if (view.gameState == STATE_KICKOFF) {
+            view.cancelKickoff();
+        } else {
+            view.showScoreDialog();
+        }
+        return true;
     }
 }

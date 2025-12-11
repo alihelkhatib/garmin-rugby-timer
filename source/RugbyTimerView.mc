@@ -68,6 +68,7 @@ class RugbyTimerView extends WatchUi.View {
     var yellowAwayTotal;
     var redHomeTotal;
     var redAwayTotal;
+    var specialTimerScreenOpen;
     
     var positionInfo;
     var distance;
@@ -169,6 +170,7 @@ class RugbyTimerView extends WatchUi.View {
         redHome = 0; redAway = 0;
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
+        specialTimerScreenOpen = false;
         
         distance = 0.0;
         speed = 0.0;
@@ -878,6 +880,45 @@ class RugbyTimerView extends WatchUi.View {
         Storage.setValue("lastGameSummary", summary);
     }
 
+    function isSpecialState() {
+        return gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF;
+    }
+
+    function showSpecialTimerScreen() {
+        if (isSpecialState() && !specialTimerScreenOpen) {
+            specialTimerScreenOpen = true;
+            WatchUi.pushView(new SpecialStateView(self), new SpecialStateDelegate(self), WatchUi.SLIDE_UP);
+        }
+    }
+
+    function closeSpecialTimerScreen() {
+        if (specialTimerScreenOpen) {
+            specialTimerScreenOpen = false;
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        }
+    }
+
+    function saveGame() {
+        finalizeGameData();
+        saveState();
+        WatchUi.requestUpdate();
+    }
+
+    function getSpecialStateLabel() {
+        if (gameState == STATE_CONVERSION) {
+            return "CONVERSION";
+        } else if (gameState == STATE_PENALTY) {
+            return "PENALTY KICK";
+        } else if (gameState == STATE_KICKOFF) {
+            return "KICKOFF";
+        }
+        return "";
+    }
+
+    function getSpecialStateColor() {
+        return Graphics.COLOR_RED;
+    }
+
     // Kick off the match clock and transition into STATE_PLAYING.
     function startGame() {
         if (gameState == STATE_IDLE) {
@@ -924,6 +965,7 @@ class RugbyTimerView extends WatchUi.View {
             gameState = STATE_PAUSED;
             lastUpdate = null;
             saveState();
+            closeSpecialTimerScreen();
         }
     }
 
@@ -938,6 +980,11 @@ class RugbyTimerView extends WatchUi.View {
             pausedState = null;
             lastUpdate = System.getTimer();
             saveState();
+            if (isSpecialState()) {
+                showSpecialTimerScreen();
+            } else {
+                closeSpecialTimerScreen();
+            }
         }
     }
 
@@ -945,6 +992,7 @@ class RugbyTimerView extends WatchUi.View {
     function resumePlay() {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
+        closeSpecialTimerScreen();
         saveState();
         WatchUi.requestUpdate();
     }
@@ -952,6 +1000,7 @@ class RugbyTimerView extends WatchUi.View {
     // Switch state to halftime once first 40 minutes finish.
     function enterHalfTime() {
         gameState = STATE_HALFTIME;
+        closeSpecialTimerScreen();
         lastUpdate = null;
         saveState();
         WatchUi.requestUpdate();
@@ -964,6 +1013,7 @@ class RugbyTimerView extends WatchUi.View {
             gameTime = 0;
             countdownRemaining = countdownTimer;  // Reset countdown for second half
             gameState = STATE_PLAYING;
+            closeSpecialTimerScreen();
             countdownSeconds = 0;
             lastUpdate = System.getTimer();
             saveState();
@@ -974,6 +1024,7 @@ class RugbyTimerView extends WatchUi.View {
     // Wrap up the match, finalize data, and stop GPS recording.
     function endGame() {
         gameState = STATE_ENDED;
+        closeSpecialTimerScreen();
         lastUpdate = null;
         stopRecording();
         saveState();
@@ -1212,6 +1263,7 @@ class RugbyTimerView extends WatchUi.View {
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
+        showSpecialTimerScreen();
     }
 
     // After a conversion attempt ends, prepare the kickoff countdown.
@@ -1221,11 +1273,13 @@ class RugbyTimerView extends WatchUi.View {
         countdownSeconds = KICKOFF_TIME;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
+        showSpecialTimerScreen();
     }
 
     function cancelKickoff() {
         if (gameState == STATE_KICKOFF) {
             countdownSeconds = 0;
+            closeSpecialTimerScreen();
             resumePlay();
         }
     }
@@ -1236,6 +1290,7 @@ class RugbyTimerView extends WatchUi.View {
         countdownSeconds = penaltyKickTime;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
+        showSpecialTimerScreen();
     }
 
     // Cleanly exit a conversion phase when no score is recorded.
@@ -1300,5 +1355,44 @@ class RugbyTimerView extends WatchUi.View {
             updateTimer.stop();
             updateTimer = null;
         }
+    }
+}
+
+class SpecialStateView extends WatchUi.View {
+    var parentView;
+
+    function initialize(p) {
+        View.initialize();
+        parentView = p;
+    }
+
+    function onLayout(dc) {
+        setLayout(Rez.Layouts.MainLayout(dc));
+    }
+
+    function onUpdate(dc) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+
+        var label = parentView.getSpecialStateLabel();
+        var countdown = parentView.formatTime(parentView.countdownSeconds);
+
+        dc.setColor(parentView.getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, height * 0.35, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, "UP: Cards  DOWN: Score", Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function onShow() {
+        WatchUi.requestUpdate();
+    }
+
+    function onHide() {
+        parentView.specialTimerScreenOpen = false;
     }
 }
