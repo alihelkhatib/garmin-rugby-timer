@@ -3,6 +3,10 @@
 - Added a 15-second vibration for conversion/penalty/kickoff countdowns so referees are alerted ahead of the kick window.
 - Reset the alert flag whenever those timers start so the notification only fires once per phase.
 
+## [2025-12-29] Conversion overlay shortcuts
+
+- When the conversion overlay is visible, the UP button logs a successful kick and adds two points while the DOWN button records a miss, and the onscreen hint updates to remind the referee which buttons perform which action.
+
 ## [2025-12-28] Special timer screen and save option
 
 - Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
@@ -1468,5 +1472,3 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
-
-

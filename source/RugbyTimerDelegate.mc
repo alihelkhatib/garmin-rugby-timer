@@ -55,6 +55,14 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
+        if (view.isSpecialOverlayActive() && view.gameState == STATE_CONVERSION) {
+            view.closeSpecialTimerScreen();
+            view.handleConversionMiss();
+            return true;
+        }
+        if (view.isSpecialOverlayActive()) {
+            view.closeSpecialTimerScreen();
+        }
         if (view.gameState == STATE_CONVERSION) {
             view.handleConversionMiss();
         } else {
@@ -66,6 +74,14 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onPreviousPage() {
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
+        }
+        if (view.isSpecialOverlayActive() && view.gameState == STATE_CONVERSION) {
+            view.closeSpecialTimerScreen();
+            view.handleConversionSuccess();
+            return true;
+        }
+        if (view.isSpecialOverlayActive()) {
+            view.closeSpecialTimerScreen();
         }
         if (view.gameState == STATE_CONVERSION) {
             view.handleConversionSuccess();
