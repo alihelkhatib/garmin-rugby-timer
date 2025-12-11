@@ -1,5 +1,6 @@
 using Toybox.Graphics;
 using Toybox.Lang;
+using Toybox.System;
 
 class RugbyTimerRenderer {
     // Central rendering helper that keeps layout math and font selection in one place so
