@@ -298,8 +298,8 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
             view.resetGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :view_log) {
-            view.showEventLog();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
+            view.showEventLog();
         } else if (item.getId() == :exit) {
             view.stopRecording();
             System.exit();

@@ -1,12 +1,21 @@
-# Session Log
-
-
-## [2025-12-24] Pause countdown in set-piece states
-
-
-- Select toggles pause/resume even during conversions, penalties, and kickoff so the countdown timer can be frozen while those special windows run.
-
-
+# Session Log
+
+
+
+
+
+## [2025-12-24] Pause countdown in set-piece states
+
+
+
+
+
+- Select toggles pause/resume even during conversions, penalties, and kickoff so the countdown timer can be frozen while those special windows run.
+
+
+
+
+
 # Session Log
 
 
@@ -1365,3 +1374,5 @@
 
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
+- Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
+
