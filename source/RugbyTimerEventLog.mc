@@ -42,14 +42,14 @@ class RugbyTimerEventLog {
         }
         var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
         model.eventLogEntries.add({:time => timestamp, :desc => description});
-        if (model.eventLogEntries.size() > RugbyTimerEventLog.EVENT_LOG_LIMIT) {
+        if (model.eventLogEntries.size() > self.EVENT_LOG_LIMIT) {
             model.eventLogEntries.remove(0);
         }
     }
 
     static function exportEventLog(model) {
         var text = RugbyTimerEventLog.buildEventLogText(model);
-        Storage.setValue(RugbyTimerEventLog.EVENT_LOG_STORAGE_KEY, text);
+        Storage.setValue(self.EVENT_LOG_STORAGE_KEY, text);
     }
 
     static function showEventLog(model) {
