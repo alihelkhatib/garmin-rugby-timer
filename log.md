@@ -1,9 +1,18 @@
 ## [2025-12-27] Highlight conversion text
 
-
-- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
-
-
+- Added cover.jpg (512x512, <300 KB) for the Connect IQ Store listing so the app has a compliant cover image alongside the launcher icon.
+
+
+
+
+
+
+- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
+
+
+
+
+
 ## [2025-12-27] Avoid timer overlap
 
 
