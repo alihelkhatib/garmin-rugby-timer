@@ -249,12 +249,12 @@ class RugbyTimerView extends WatchUi.View {
         // Relative Y positions (fractions of screen height) keep each layer separated vertically.
         var scoreY = height * 0.10; // scoreboard sits near the top center
         var halfY = height * 0.18; // half label floats just below the scores
-        var gameTimerY = halfY * 0.5; // running game clock stays centered above the “Half #”
+        var gameTimerY = halfY * 0.5; // running game clock stays centered above the "Half" label
         var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
         var cardsY = height * 0.37; // base offset for the stacked discipline timers
-        var countdownY = height * 0.66; // fallback slot for countdown/bonus near the bottom
-        var stateBaseY = height * 0.82;
-        var hintBaseY = height * 0.92;
+        var countdownY = height * 0.66; // fallback slot for the countdown/bonus window (adjusted below)
+        var stateBaseY = height * 0.82; // state text block anchors near the lower third
+        var hintBaseY = height * 0.92; // hints float near the hardware button etchings
         
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
@@ -338,14 +338,15 @@ class RugbyTimerView extends WatchUi.View {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
-        // Keep the countdown above the cards but below the state section; `countdownCandidate` is the natural slot just under the stack while the limit keeps it clear of the status text.
+        // Keep the countdown above the cards yet comfortably below the status block; `countdownCandidate` hugs the card stack while the limit reserves a buffer for the state text.
         var cardStackBottom = cardsY + (maxCardRows * lineStep);
         var countdownCandidate = cardStackBottom + height * 0.04;
-        var countdownLimit = stateBaseY - height * 0.12;
+        var countdownLimit = stateBaseY - height * 0.18;
         var countdownMin = triesY + height * 0.05;
         var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
 
+        // State and hint positions stay below the countdown but above the bezel text, growing downward if the clock chunk pushes them.
         var stateY = (countdownY + height * 0.09 > stateBaseY) ? countdownY + height * 0.09 : stateBaseY;
         var hintY = (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
         
