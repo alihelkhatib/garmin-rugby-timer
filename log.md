@@ -1,12 +1,27 @@
-# Session Log
+## [2025-12-26] Launcher icon swap
 
 
-## [2025-12-24] Multi-platform readiness
+- Replaced the 40?40 PNG launcher icon with `icon.jpg` and pointed `resources/drawables/drawables.xml` at it so the watch delivers the requested asset.
 
 
-- Added Fenix 7, Epix, Forerunner 745/945, and Venu 2 to `manifest.xml`, refreshed `README.md`, and noted the wider device coverage so branches can target additional watch families beyond the Fenix 6 lineup.
-
-
+# Session Log
+
+
+
+
+
+## [2025-12-24] Multi-platform readiness
+
+
+
+
+
+- Added Fenix 7, Epix, Forerunner 745/945, and Venu 2 to `manifest.xml`, refreshed `README.md`, and noted the wider device coverage so branches can target additional watch families beyond the Fenix 6 lineup.
+
+
+
+
+
 ## [2025-12-24] Pause countdown in set-piece states
 
 
