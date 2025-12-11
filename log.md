@@ -1,9 +1,12 @@
-# Session Log
-
-
-
-
-
+# Session Log
+
+
+## [2025-12-24] Multi-platform readiness
+
+
+- Added Fenix 7, Epix, Forerunner 745/945, and Venu 2 to `manifest.xml`, refreshed `README.md`, and noted the wider device coverage so branches can target additional watch families beyond the Fenix 6 lineup.
+
+
 ## [2025-12-24] Pause countdown in set-piece states
 
 
@@ -1374,5 +1377,7 @@
 
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
-- Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
-
+- Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
+
+
+
