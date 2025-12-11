@@ -70,23 +70,23 @@ class RugbyTimerRenderer {
         };
     }
 
-    static function renderScores(dc, view, width, scoreFont, scoreY) {
+    static function renderScores(dc, model, width, scoreFont, scoreY) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 4, scoreY, scoreFont, view.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(3 * width / 4, scoreY, scoreFont, view.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    static function renderGameTimer(dc, view, width, timerFont, gameTimerY) {
-        var gameStr = RugbyTimerTiming.formatTime(view.gameTime);
+    static function renderGameTimer(dc, model, width, timerFont, gameTimerY) {
+        var gameStr = RugbyTimerTiming.formatTime(model.gameTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
-    static function renderHalfAndTries(dc, view, width, halfFont, triesFont, halfY, triesY) {
-        var halfStr = "Half " + view.halfNumber.toString();
+    static function renderHalfAndTries(dc, model, width, halfFont, triesFont, halfY, triesY) {
+        var halfStr = "Half " + model.halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        var triesText = view.homeTries.toString() + "T / " + view.awayTries.toString() + "T";
+        var triesText = model.homeTries.toString() + "T / " + model.awayTries.toString() + "T";
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -94,13 +94,13 @@ class RugbyTimerRenderer {
         dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
-    static function renderCardTimers(dc, view, width, cardsY, height) {
+    static function renderCardTimers(dc, model, width, cardsY, height) {
         // Only render the first two yellows per team plus any active red timers so the primary layout
         // stays tidy while extra timers still count in the background.
-        var visibleYellowHome = view.yellowHomeTimes.size() > 2 ? 2 : view.yellowHomeTimes.size();
-        var visibleYellowAway = view.yellowAwayTimes.size() > 2 ? 2 : view.yellowAwayTimes.size();
-        var homeCardRows = visibleYellowHome + ((view.redHome > 0 || view.redHomePermanent) ? 1 : 0);
-        var awayCardRows = visibleYellowAway + ((view.redAway > 0 || view.redAwayPermanent) ? 1 : 0);
+        var visibleYellowHome = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
+        var visibleYellowAway = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
+        var homeCardRows = visibleYellowHome + ((model.redHome > 0 || model.redHomePermanent) ? 1 : 0);
+        var awayCardRows = visibleYellowAway + ((model.redAway > 0 || model.redAwayPermanent) ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
         var lineStep = height * 0.1;
         if (maxCardRows > 0) {
@@ -108,8 +108,8 @@ class RugbyTimerRenderer {
             var awayLine = 0;
             var cardFont = Graphics.FONT_MEDIUM;
             var homeYellowDisplayed = 0;
-            for (var i = 0; i < view.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
-                var entry = view.yellowHomeTimes[i] as Lang.Dictionary;
+            for (var i = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
+                var entry = model.yellowHomeTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     homeLine += 1;
                 } else {
@@ -119,14 +119,14 @@ class RugbyTimerRenderer {
                         label = "Y" + (homeYellowDisplayed + 1).toString();
                     }
                     dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + view.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + model.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                     homeYellowDisplayed += 1;
                 }
                 homeLine += 1;
             }
             var awayYellowDisplayed = 0;
-            for (var i = 0; i < view.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
-                var entry = view.yellowAwayTimes[i] as Lang.Dictionary;
+            for (var i = 0; i < model.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
+                var entry = model.yellowAwayTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     awayLine += 1;
                 } else {
@@ -136,19 +136,19 @@ class RugbyTimerRenderer {
                         label = "Y" + (awayYellowDisplayed + 1).toString();
                     }
                     dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + view.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + model.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                     awayYellowDisplayed += 1;
                 }
                 awayLine += 1;
             }
-            if (view.redHome > 0 || view.redHomePermanent) {
+            if (model.redHome > 0 || model.redHomePermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, view.redHomePermanent ? "R:PERM" : "R:" + view.formatShortTime(view.redHome), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, model.redHomePermanent ? "R:PERM" : "R:" + model.formatShortTime(model.redHome), Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
             }
-            if (view.redAway > 0 || view.redAwayPermanent) {
+            if (model.redAway > 0 || model.redAwayPermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, view.redAwayPermanent ? "R:PERM" : "R:" + view.formatShortTime(view.redAway), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, model.redAwayPermanent ? "R:PERM" : "R:" + model.formatShortTime(model.redAway), Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -180,57 +180,40 @@ class RugbyTimerRenderer {
         return (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
     }
 
-    static function renderCountdown(dc, view, width, countdownFont, countdownY) {
+    static function renderCountdown(dc, model, width, countdownFont, countdownY) {
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var countdownStr = RugbyTimerTiming.formatTime(view.countdownRemaining);
+        var countdownStr = RugbyTimerTiming.formatTime(model.countdownRemaining);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
-    static function renderStateText(dc, view, width, stateFont, stateY, height) {
+    static function renderStateText(dc, model, width, stateFont, stateY, height) {
         // Each special state adopts a red accent, while the idle/paused text stays white for clarity.
         var stateColor = Graphics.COLOR_WHITE;
-        if (view.gameState == STATE_CONVERSION || view.gameState == STATE_KICKOFF || view.gameState == STATE_PENALTY) {
+        if (model.gameState == STATE_CONVERSION || model.gameState == STATE_KICKOFF || model.gameState == STATE_PENALTY) {
             stateColor = Graphics.COLOR_RED;
         }
         dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
-        if (view.gameState == STATE_PAUSED) {
+        if (model.gameState == STATE_PAUSED) {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_CONVERSION) {
+        } else if (model.gameState == STATE_CONVERSION) {
             dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, view.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_PENALTY) {
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (model.gameState == STATE_PENALTY) {
             dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, view.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_KICKOFF) {
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (model.gameState == STATE_KICKOFF) {
             dc.drawText(width / 2, stateY, stateFont, "KICKOFF", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, view.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_HALFTIME) {
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (model.gameState == STATE_HALFTIME) {
             dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_ENDED) {
+        } else if (model.gameState == STATE_ENDED) {
             dc.drawText(width / 2, stateY, stateFont, "GAME ENDED", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (view.gameState == STATE_IDLE) {
+        } else if (model.gameState == STATE_IDLE) {
             dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
         }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-    }
-
-    static function renderHint(dc, view, width, hintFont, hintY) {
-        var hint = "";
-        if (view.gameState == STATE_IDLE) {
-            hint = "SELECT: Start";
-        } else if (view.gameState == STATE_PLAYING) {
-            hint = "SELECT: Pause";
-        } else if (view.gameState == STATE_PAUSED) {
-            hint = "SELECT: Resume";
-        }
-        if (view.isLocked) {
-            hint = "LOCKED";
-        }
-        var hintColor = view.dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
-        dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
 }

@@ -485,7 +485,7 @@ class RugbyTimerView extends WatchUi.View {
     // Simple debounce for adjustments/quick actions
     // Simple debounce gate to prevent rapid repeated actions from hardware buttons.
     function isActionAllowed() {
-        var now = System.getTimer();
+        var now = System.getimer();
         if (lastActionTs == null || now - lastActionTs > 300) {
             lastActionTs = now;
             return true;
@@ -518,7 +518,7 @@ class RugbyTimerView extends WatchUi.View {
         var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
         renderHint(dc, width, fonts[:hintFont], hintY);
 
-        RugbyTimerOverlay.renderSpecialOverlay(self, dc, width, height);
+        RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
     }
 
     function renderHint(dc, width, hintFont, hintY) {
@@ -555,7 +555,7 @@ class RugbyTimerView extends WatchUi.View {
 
     // Presents the menu asking whether the match is 7s or 15s.
     function showGameTypePrompt() {
-        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(self), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(model), WatchUi.SLIDE_UP);
     }
 
     // Launches the score dialog stack; respects the locked state.
@@ -563,7 +563,7 @@ class RugbyTimerView extends WatchUi.View {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(self), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(model), WatchUi.SLIDE_UP);
     }
 
     // Launches the card/discipline dialog (swap button assigned externally).
@@ -571,23 +571,7 @@ class RugbyTimerView extends WatchUi.View {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(self), WatchUi.SLIDE_UP);
-    }
-
-    function handleConversionSuccess() {
-        if (model.gameState != STATE_CONVERSION || model.conversionTeam == null) {
-            return;
-        }
-        model.recordConversion(model.conversionTeam);
-        RugbyTimerOverlay.displaySpecialOverlayMessage(self, "Conversion recorded");
-    }
-
-    function handleConversionMiss() {
-        if (model.gameState != STATE_CONVERSION) {
-            return;
-        }
-        model.handleConversionMiss();
-        WatchUi.requestUpdate();
+        WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(model), WatchUi.SLIDE_UP);
     }
 
     // Lock/unlock the UI so accidental button presses can't change state.
@@ -602,6 +586,22 @@ class RugbyTimerView extends WatchUi.View {
             updateTimer.stop();
             updateTimer = null;
         }
+    }
+
+    function isSpecialOverlayActive() {
+        return RugbyTimerOverlay.isSpecialOverlayActive(self, model);
+    }
+
+    function closeSpecialTimerScreen() {
+        RugbyTimerOverlay.closeSpecialTimerScreen(self);
+    }
+
+    function showSpecialTimerScreen() {
+        RugbyTimerOverlay.showSpecialTimerScreen(self, model);
+    }
+
+    function displaySpecialOverlayMessage(text) {
+        RugbyTimerOverlay.displaySpecialOverlayMessage(self, text);
     }
 }
         RugbyTimerOverlay.closeSpecialTimerScreen(self);
