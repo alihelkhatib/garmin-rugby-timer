@@ -220,223 +220,25 @@ class RugbyTimerView extends WatchUi.View {
         var width = dc.getWidth();
         var height = dc.getHeight();
 
-        var fonts = chooseFonts(width);
-        var layout = calculateLayout(height);
+        var fonts = RugbyTimerRenderer.chooseFonts(width);
+        var layout = RugbyTimerRenderer.calculateLayout(height);
 
-        renderScores(dc, width, fonts[:scoreFont], layout[:scoreY]);
-        renderGameTimer(dc, width, fonts[:timerFont], layout[:gameTimerY]);
-        renderHalfAndTries(dc, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        RugbyTimerRenderer.renderScores(dc, this, width, fonts[:scoreFont], layout[:scoreY]);
+        RugbyTimerRenderer.renderGameTimer(dc, this, width, fonts[:timerFont], layout[:gameTimerY]);
+        RugbyTimerRenderer.renderHalfAndTries(dc, this, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
         if (isLocked) {
-            renderLockIndicator(dc, width, fonts[:halfFont], layout[:scoreY]);
+            RugbyTimerRenderer.renderLockIndicator(dc, this, width, fonts[:halfFont], layout[:scoreY]);
         }
 
-        var cardInfo = renderCardTimers(dc, width, layout[:cardsY], height);
-        var countdownY = calculateCountdownPosition(layout, cardInfo, height);
-        renderCountdown(dc, width, fonts[:countdownFont], countdownY);
-        var stateY = calculateStateY(countdownY, layout, height);
-        renderStateText(dc, width, fonts[:stateFont], stateY, height);
-        var hintY = calculateHintY(stateY, layout[:hintBaseY], height);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, this, width, layout[:cardsY], height);
+        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
+        RugbyTimerRenderer.renderCountdown(dc, this, width, fonts[:countdownFont], countdownY);
+        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
+        RugbyTimerRenderer.renderStateText(dc, this, width, fonts[:stateFont], stateY, height);
+        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
         renderHint(dc, width, fonts[:hintFont], hintY);
 
         renderSpecialOverlay(dc, width, height);
-    }
-
-    function chooseFonts(width) {
-        var scoreFont;
-        var triesFont;
-        var halfFont;
-        var timerFont;
-        var countdownFont;
-        var stateFont;
-        var hintFont;
-        if (width <= 240) {
-            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
-            triesFont = Graphics.FONT_XTINY;
-            halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_SYSTEM_TINY;
-            countdownFont = Graphics.FONT_NUMBER_HOT;
-            stateFont = Graphics.FONT_SMALL;
-            hintFont = Graphics.FONT_XTINY;
-        } else if (width <= 260) {
-            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
-            triesFont = Graphics.FONT_XTINY;
-            halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_SYSTEM_TINY;
-            countdownFont = Graphics.FONT_NUMBER_HOT;
-            stateFont = Graphics.FONT_SMALL;
-            hintFont = Graphics.FONT_XTINY;
-        } else {
-            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
-            triesFont = Graphics.FONT_SMALL;
-            halfFont = Graphics.FONT_XTINY;
-            timerFont = Graphics.FONT_SYSTEM_TINY;
-            countdownFont = Graphics.FONT_NUMBER_HOT;
-            stateFont = Graphics.FONT_SMALL;
-            hintFont = Graphics.FONT_XTINY;
-        }
-        return {
-            :scoreFont => scoreFont,
-            :triesFont => triesFont,
-            :halfFont => halfFont,
-            :timerFont => timerFont,
-            :countdownFont => countdownFont,
-            :stateFont => stateFont,
-            :hintFont => hintFont
-        };
-    }
-
-    function calculateLayout(height) {
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var gameTimerY = halfY * 0.5;
-        var triesY = halfY + height * 0.06;
-        var cardsY = height * 0.37;
-        var stateBaseY = height * 0.82;
-        var hintBaseY = height * 0.92;
-        return {
-            :scoreY => scoreY,
-            :halfY => halfY,
-            :gameTimerY => gameTimerY,
-            :triesY => triesY,
-            :cardsY => cardsY,
-            :stateBaseY => stateBaseY,
-            :hintBaseY => hintBaseY
-        };
-    }
-
-    function renderScores(dc, width, scoreFont, scoreY) {
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 4, scoreY, scoreFont, homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(3 * width / 4, scoreY, scoreFont, awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function renderGameTimer(dc, width, timerFont, gameTimerY) {
-        var gameStr = formatTime(gameTime);
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-    }
-
-    function renderHalfAndTries(dc, width, halfFont, triesFont, halfY, triesY) {
-        var halfStr = "Half " + halfNumber.toString();
-        dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        var triesText = homeTries.toString() + "T / " + awayTries.toString() + "T";
-        dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function renderLockIndicator(dc, width, halfFont, scoreY) {
-        dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function renderCardTimers(dc, width, cardsY, height) {
-        var visibleYellowHome = yellowHomeTimes.size() > 2 ? 2 : yellowHomeTimes.size();
-        var visibleYellowAway = yellowAwayTimes.size() > 2 ? 2 : yellowAwayTimes.size();
-        var homeCardRows = visibleYellowHome + ((redHome > 0 || redHomePermanent) ? 1 : 0);
-        var awayCardRows = visibleYellowAway + ((redAway > 0 || redAwayPermanent) ? 1 : 0);
-        var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
-        var lineStep = height * 0.1;
-        if (maxCardRows > 0) {
-            var homeLine = 0;
-            var awayLine = 0;
-            var cardFont = Graphics.FONT_MEDIUM;
-            var homeYellowDisplayed = 0;
-            for (var i = 0; i < yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
-                var entry = yellowHomeTimes[i] as Lang.Dictionary;
-                if (entry == null) {
-                    homeLine += 1;
-                } else {
-                    var y = entry["remaining"];
-                    var label = entry["label"];
-                    if (label == null) {
-                        label = "Y" + (homeYellowDisplayed + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
-                    homeYellowDisplayed += 1;
-                }
-                homeLine += 1;
-            }
-            var awayYellowDisplayed = 0;
-            for (var i = 0; i < yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
-                var entry = yellowAwayTimes[i] as Lang.Dictionary;
-                if (entry == null) {
-                    awayLine += 1;
-                } else {
-                    var y = entry["remaining"];
-                    var label = entry["label"];
-                    if (label == null) {
-                        label = "Y" + (awayYellowDisplayed + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
-                    awayYellowDisplayed += 1;
-                }
-                awayLine += 1;
-            }
-            if (redHome > 0 || redHomePermanent) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, redHomePermanent ? "R:PERM" : "R:" + formatShortTime(redHome), Graphics.TEXT_JUSTIFY_CENTER);
-                homeLine += 1;
-            }
-            if (redAway > 0 || redAwayPermanent) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, redAwayPermanent ? "R:PERM" : "R:" + formatShortTime(redAway), Graphics.TEXT_JUSTIFY_CENTER);
-                awayLine += 1;
-            }
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        }
-        return { :rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY };
-    }
-
-    function calculateCountdownPosition(layout, cardInfo, height) {
-        var cardStackBottom = cardInfo[:cardsY] + (cardInfo[:rows] * cardInfo[:lineStep]);
-        var countdownCandidate = cardStackBottom + height * 0.04;
-        var countdownLimit = layout[:stateBaseY] - height * 0.18;
-        var countdownMin = layout[:triesY] + height * 0.05;
-        var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
-        var countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
-        return countdownY;
-    }
-
-    function calculateStateY(countdownY, layout, height) {
-        return (countdownY + height * 0.09 > layout[:stateBaseY]) ? countdownY + height * 0.09 : layout[:stateBaseY];
-    }
-
-    function calculateHintY(stateY, hintBaseY, height) {
-        return (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
-    }
-
-    function renderCountdown(dc, width, countdownFont, countdownY) {
-        var countdownStr = formatTime(countdownRemaining);
-        dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-    }
-
-    function renderStateText(dc, width, stateFont, stateY, height) {
-        var stateColor = Graphics.COLOR_WHITE;
-        if (gameState == STATE_CONVERSION || gameState == STATE_KICKOFF || gameState == STATE_PENALTY) {
-            stateColor = Graphics.COLOR_RED;
-        }
-        dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
-        if (gameState == STATE_PAUSED) {
-            dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_CONVERSION) {
-            dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_PENALTY) {
-            dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_KICKOFF) {
-            dc.drawText(width / 2, stateY, stateFont, "KICKOFF", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_HALFTIME) {
-            dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_ENDED) {
-            dc.drawText(width / 2, stateY, stateFont, "GAME ENDED", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (gameState == STATE_IDLE) {
-            dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
-        }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
     function renderHint(dc, width, hintFont, hintY) {
