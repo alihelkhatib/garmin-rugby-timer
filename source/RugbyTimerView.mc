@@ -69,6 +69,7 @@ class RugbyTimerView extends WatchUi.View {
     var redHomeTotal;
     var redAwayTotal;
     var specialTimerScreenOpen;
+    var specialAlertTriggered;
     
     var positionInfo;
     var distance;
@@ -171,6 +172,7 @@ class RugbyTimerView extends WatchUi.View {
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
         specialTimerScreenOpen = false;
+        specialAlertTriggered = false;
         
         distance = 0.0;
         speed = 0.0;
@@ -442,6 +444,10 @@ class RugbyTimerView extends WatchUi.View {
                         resumePlay();
                     }
                 }
+                if (countdownSeconds <= 15 && countdownSeconds > 0 && !specialAlertTriggered) {
+                    specialAlertTriggered = true;
+                    triggerSpecialTimerVibe();
+                }
             }
 
             yellowHomeTimes = updateYellowTimers(yellowHomeTimes, delta);
@@ -491,6 +497,15 @@ class RugbyTimerView extends WatchUi.View {
         }
     }
     
+    function triggerSpecialTimerVibe() {
+        if (Attention has :vibrate) {
+            var vibeProfiles = [
+                new Attention.VibeProfile(40, 400)
+            ];
+            Attention.vibrate(vibeProfiles);
+        }
+    }
+
     // Alerts the referee when a yellow timer is about to expire (below 10s).
     function triggerYellowTimerVibe() {
         if (Attention has :vibrate) {
@@ -1261,6 +1276,7 @@ class RugbyTimerView extends WatchUi.View {
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
+        specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
         showSpecialTimerScreen();
@@ -1271,6 +1287,7 @@ class RugbyTimerView extends WatchUi.View {
         conversionTeam = null;
         gameState = STATE_KICKOFF;
         countdownSeconds = KICKOFF_TIME;
+        specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
         showSpecialTimerScreen();
@@ -1288,6 +1305,7 @@ class RugbyTimerView extends WatchUi.View {
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;
         countdownSeconds = penaltyKickTime;
+        specialAlertTriggered = false;
         lastUpdate = System.getTimer();
         WatchUi.requestUpdate();
         showSpecialTimerScreen();
