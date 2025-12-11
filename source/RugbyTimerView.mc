@@ -223,18 +223,18 @@ class RugbyTimerView extends WatchUi.View {
         var fonts = RugbyTimerRenderer.chooseFonts(width);
         var layout = RugbyTimerRenderer.calculateLayout(height);
 
-        RugbyTimerRenderer.renderScores(dc, this, width, fonts[:scoreFont], layout[:scoreY]);
-        RugbyTimerRenderer.renderGameTimer(dc, this, width, fonts[:timerFont], layout[:gameTimerY]);
-        RugbyTimerRenderer.renderHalfAndTries(dc, this, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        RugbyTimerRenderer.renderScores(dc, self, width, fonts[:scoreFont], layout[:scoreY]);
+        RugbyTimerRenderer.renderGameTimer(dc, self, width, fonts[:timerFont], layout[:gameTimerY]);
+        RugbyTimerRenderer.renderHalfAndTries(dc, self, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
         if (isLocked) {
-            RugbyTimerRenderer.renderLockIndicator(dc, this, width, fonts[:halfFont], layout[:scoreY]);
+            RugbyTimerRenderer.renderLockIndicator(dc, self, width, fonts[:halfFont], layout[:scoreY]);
         }
 
-        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, this, width, layout[:cardsY], height);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, self, width, layout[:cardsY], height);
         var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
-        RugbyTimerRenderer.renderCountdown(dc, this, width, fonts[:countdownFont], countdownY);
+        RugbyTimerRenderer.renderCountdown(dc, self, width, fonts[:countdownFont], countdownY);
         var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
-        RugbyTimerRenderer.renderStateText(dc, this, width, fonts[:stateFont], stateY, height);
+        RugbyTimerRenderer.renderStateText(dc, self, width, fonts[:stateFont], stateY, height);
         var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
         renderHint(dc, width, fonts[:hintFont], hintY);
 
