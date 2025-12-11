@@ -2,7 +2,14 @@ using Toybox.Attention;
 using Toybox.System;
 using Toybox.WatchUi;
 
+/**
+ * A helper class for handling game timing.
+ */
 class RugbyTimerTiming {
+    /**
+     * This method is called periodically to update the game state.
+     * @param model The game model
+     */
     static function updateGame(model) as Void {
         try {
             var now = System.getTimer();
@@ -56,7 +63,7 @@ class RugbyTimerTiming {
                     model.countdownRemaining = 0;
                     if (model.halfNumber == 1) {
                         model.enterHalfTime();
-                    } else {.
+                    } else {
                         model.endGame();
                     }
                 }
@@ -73,6 +80,11 @@ class RugbyTimerTiming {
         }
     }
 
+    /**
+     * Formats a time in seconds into a MM:SS string.
+     * @param seconds The time in seconds
+     * @return The formatted time string
+     */
     static function formatTime(seconds) {
         if (seconds < 0) {
             seconds = 0;
@@ -82,6 +94,9 @@ class RugbyTimerTiming {
         return mins.format("%02d") + ":" + secs.format("%02d");
     }
 
+    /**
+     * Triggers a vibration for the 30-second warning.
+     */
     static function triggerThirtySecondVibe() {
         if (Attention has :vibrate) {
             var vibeProfiles = [
@@ -91,6 +106,9 @@ class RugbyTimerTiming {
         }
     }
 
+    /**
+     * Triggers a vibration for the special timer warning.
+     */
     static function triggerSpecialTimerVibe() {
         if (Attention has :vibrate) {
             var vibeProfiles = [
@@ -100,6 +118,9 @@ class RugbyTimerTiming {
         }
     }
 
+    /**
+     * Triggers a vibration for the yellow card timer warning.
+     */
     static function triggerYellowTimerVibe() {
         if (Attention has :vibrate) {
             var vibeProfiles = [
