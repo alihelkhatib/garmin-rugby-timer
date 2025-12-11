@@ -1,9 +1,21 @@
-## [2025-12-26] Launcher icon swap
+## [2025-12-26] Expanded product list
 
 
-- Replaced the 40?40 PNG launcher icon with `icon.jpg` and pointed `resources/drawables/drawables.xml` at it so the watch delivers the requested asset.
+- Added the Fenix 7/7S families plus Epix, Forerunner 745/945/255/955, Venu 2/3, and Instinct 2 identifiers to `manifest.xml` and noted the expanded coverage in `README.md` so the app can build for more Garmin watches.
 
 
+## [2025-12-26] Launcher icon swap
+
+
+
+
+
+- Replaced the 40?40 PNG launcher icon with `icon.jpg` and pointed `resources/drawables/drawables.xml` at it so the watch delivers the requested asset.
+
+
+
+
+
 # Session Log
 
 

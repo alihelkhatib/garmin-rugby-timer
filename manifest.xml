@@ -14,6 +14,8 @@
             "Monkey C: Edit Products" - Lets you add or remove any product
         -->
         <iq:products>
+            <iq:product id="epixpro"/>
+            <iq:product id="epixpro-sapphire"/>
             <iq:product id="fenix6"/>
             <iq:product id="fenix6pro"/>
             <iq:product id="fenix6s"/>
@@ -21,11 +23,19 @@
             <iq:product id="fenix6xpro"/>
             <iq:product id="fenix7"/>
             <iq:product id="fenix7pro"/>
-            <iq:product id="epix"/>
-            <iq:product id="epixpro"/>
+            <iq:product id="fenix7s"/>
+            <iq:product id="fenix7spro"/>
+            <iq:product id="forerunner255"/>
+            <iq:product id="forerunner255s"/>
             <iq:product id="forerunner745"/>
             <iq:product id="forerunner945"/>
+            <iq:product id="forerunner955"/>
+            <iq:product id="instinct2"/>
+            <iq:product id="instinct2s"/>
+            <iq:product id="instinct2s-solar"/>
             <iq:product id="venu2"/>
+            <iq:product id="venu3"/>
+            <iq:product id="venu3s"/>
         </iq:products>
         <!--
             Use "Monkey C: Edit Permissions" from the Visual Studio Code command
