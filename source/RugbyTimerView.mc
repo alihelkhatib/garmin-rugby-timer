@@ -68,7 +68,7 @@ class RugbyTimerView extends WatchUi.View {
     var yellowAwayTotal;
     var redHomeTotal;
     var redAwayTotal;
-    var specialTimerScreenOpen;
+    var specialTimerOverlayVisible;
     var specialAlertTriggered;
     
     var positionInfo;
@@ -171,7 +171,7 @@ class RugbyTimerView extends WatchUi.View {
         redHome = 0; redAway = 0;
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
-        specialTimerScreenOpen = false;
+        specialTimerOverlayVisible = false;
         specialAlertTriggered = false;
         
         distance = 0.0;
@@ -215,6 +215,19 @@ class RugbyTimerView extends WatchUi.View {
         
         var width = dc.getWidth();
         var height = dc.getHeight();
+
+        if (specialTimerOverlayVisible && isSpecialState()) {
+            var label = getSpecialStateLabel();
+            var countdown = formatTime(countdownSeconds);
+            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+            dc.clear();
+            dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.35, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, "UP: Cards   DOWN: Score", Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
         
         // Choose fonts based on resolution so things stay readable without overlap
         var scoreFont;
@@ -400,6 +413,7 @@ class RugbyTimerView extends WatchUi.View {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+
     }
 
     // Periodic tick that keeps the clocks, card timers, and persistence in sync.
@@ -900,16 +914,16 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     function showSpecialTimerScreen() {
-        if (isSpecialState() && !specialTimerScreenOpen) {
-            specialTimerScreenOpen = true;
-            WatchUi.pushView(new SpecialStateView(self), new SpecialStateDelegate(self), WatchUi.SLIDE_UP);
+        if (isSpecialState()) {
+            specialTimerOverlayVisible = true;
+            WatchUi.requestUpdate();
         }
     }
 
     function closeSpecialTimerScreen() {
-        if (specialTimerScreenOpen) {
-            specialTimerScreenOpen = false;
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (specialTimerOverlayVisible) {
+            specialTimerOverlayVisible = false;
+            WatchUi.requestUpdate();
         }
     }
 
@@ -1373,44 +1387,5 @@ class RugbyTimerView extends WatchUi.View {
             updateTimer.stop();
             updateTimer = null;
         }
-    }
-}
-
-class SpecialStateView extends WatchUi.View {
-    var parentView;
-
-    function initialize(p) {
-        View.initialize();
-        parentView = p;
-    }
-
-    function onLayout(dc) {
-        setLayout(Rez.Layouts.MainLayout(dc));
-    }
-
-    function onUpdate(dc) {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
-
-        var width = dc.getWidth();
-        var height = dc.getHeight();
-
-        var label = parentView.getSpecialStateLabel();
-        var countdown = parentView.formatTime(parentView.countdownSeconds);
-
-        dc.setColor(parentView.getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.35, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, "UP: Cards  DOWN: Score", Graphics.TEXT_JUSTIFY_CENTER);
-    }
-
-    function onShow() {
-        WatchUi.requestUpdate();
-    }
-
-    function onHide() {
-        parentView.specialTimerScreenOpen = false;
     }
 }

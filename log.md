@@ -6,7 +6,7 @@
 ## [2025-12-28] Special timer screen and save option
 
 - Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
-- Conversion/Kickoff/Penalty states push a dedicated view that highlights the state label, synced countdown, and the same UP/DOWN shortcuts used on the main screen while still closing the overlay when those buttons fire.
+- Conversion/Kickoff/Penalty states now display the label and countdown as an inline overlay drawn over the scoreboard; the overlay closes automatically before each scoreboard interaction while maintaining the existing UP/DOWN shortcuts.
 
 ## [2025-12-28] Protect countdown layout
 
@@ -1468,6 +1468,5 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
-
 
 
