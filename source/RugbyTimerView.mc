@@ -253,8 +253,8 @@ class RugbyTimerView extends WatchUi.View {
         var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
         var cardsY = height * 0.37; // base offset for the stacked discipline timers
         var countdownY = height * 0.66; // fallback slot for countdown/bonus near the bottom
-        var stateY = height * 0.82;
-        var hintY = height * 0.92;
+        var stateBaseY = height * 0.82;
+        var hintBaseY = height * 0.92;
         
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
@@ -345,6 +345,9 @@ class RugbyTimerView extends WatchUi.View {
         var countdownMin = triesY + height * 0.05;
         var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
         countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
+
+        var stateY = (countdownY + height * 0.09 > stateBaseY) ? countdownY + height * 0.09 : stateBaseY;
+        var hintY = (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
         
         // Countdown timer (primary)
         var countdownStr = formatTime(countdownRemaining);

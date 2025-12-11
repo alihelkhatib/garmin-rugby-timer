@@ -1,9 +1,21 @@
-## [2025-12-27] Trim manifest targets
+## [2025-12-27] Avoid timer overlap
 
 
-- Removed the unsupported Forerunner/Venu/Instinct product IDs because the SDK rejected them and documented that the app currently targets Fenix 6/7 plus Epix/Venu in the README.
+- Raised the state text when the countdown timer is high so the conversion/penalty/KICKOFF captions never intersect the white countdown digits; the computed `stateY` and `hintY` now depend on the adjustable `countdownY`.
 
 
+## [2025-12-27] Trim manifest targets
+
+
+
+
+
+- Removed the unsupported Forerunner/Venu/Instinct product IDs because the SDK rejected them and documented that the app currently targets Fenix 6/7 plus Epix/Venu in the README.
+
+
+
+
+
 ## [2025-12-26] Expanded product list
 
 
