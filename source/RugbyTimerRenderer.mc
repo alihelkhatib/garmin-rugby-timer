@@ -1,9 +1,17 @@
 using Toybox.Graphics;
 using Toybox.Lang;
 
+/**
+ * A helper class for rendering the UI elements.
+ * This class contains static methods for drawing the various components of the UI.
+ */
 class RugbyTimerRenderer {
-    // Central rendering helper that keeps layout math and font selection in one place so
-    // the view can focus on state updates and overlays.
+    /**
+     * Central rendering helper that keeps layout math and font selection in one place so
+     * the view can focus on state updates and overlays.
+     * @param width The width of the screen
+     * @return A dictionary of fonts
+     */
     static function chooseFonts(width) {
         // Use compact fonts for smaller screens and a slightly larger tries font on wide displays.
         var scoreFont;
@@ -49,6 +57,12 @@ class RugbyTimerRenderer {
         };
     }
 
+    /**
+     * Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
+     * and the state/hint section so each renders consistently across devices.
+     * @param height The height of the screen
+     * @return A dictionary of layout values
+     */
     static function calculateLayout(height) {
         // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
         // and the state/hint section so each renders consistently across devices.
@@ -70,12 +84,28 @@ class RugbyTimerRenderer {
         };
     }
 
+    /**
+     * Renders the scores of both teams.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param scoreFont The font to use for the scores
+     * @param scoreY The Y position of the scores
+     */
     static function renderScores(dc, model, width, scoreFont, scoreY) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
+    /**
+     * Renders the main game timer.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param timerFont The font to use for the timer
+     * @param gameTimerY The Y position of the timer
+     */
     static function renderGameTimer(dc, model, width, timerFont, gameTimerY) {
         var gameStr = RugbyTimerTiming.formatTime(model.gameTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
@@ -83,6 +113,16 @@ class RugbyTimerRenderer {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
+    /**
+     * Renders the half number and the number of tries for each team.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param halfFont The font to use for the half number
+     * @param triesFont The font to use for the tries
+     * @param halfY The Y position of the half number
+     * @param triesY The Y position of the tries
+     */
     static function renderHalfAndTries(dc, model, width, halfFont, triesFont, halfY, triesY) {
         var halfStr = "Half " + model.halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
@@ -90,10 +130,27 @@ class RugbyTimerRenderer {
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
+    /**
+     * Renders the lock indicator.
+     * @param dc The device context
+     * @param view The view
+     * @param width The width of the screen
+     * @param halfFont The font to use for the lock indicator
+     * @param scoreY The Y position of the lock indicator
+     */
     static function renderLockIndicator(dc, view, width, halfFont, scoreY) {
         dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
     }
 
+    /**
+     * Renders the card timers.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param cardsY The Y position of the card timers
+     * @param height The height of the screen
+     * @return A dictionary containing information about the rendered cards
+     */
     static function renderCardTimers(dc, model, width, cardsY, height) {
         // Only render the first two yellows per team plus any active red timers so the primary layout
         // stays tidy while extra timers still count in the background.
@@ -156,6 +213,13 @@ class RugbyTimerRenderer {
         return {:rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY};
     }
 
+    /**
+     * Calculates the position of the countdown timer.
+     * @param layout The layout dictionary
+     * @param cardInfo The card information dictionary
+     * @param height The height of the screen
+     * @return The Y position of the countdown timer
+     */
     static function calculateCountdownPosition(layout, cardInfo, height) {
         // Place the countdown timer below the card stack while enforcing a ceiling for the state block.
         // countdownCandidate is the naive position just below the cards, and countdownLimit ensures the
@@ -170,16 +234,38 @@ class RugbyTimerRenderer {
         return countdownY;
     }
 
+    /**
+     * Calculates the position of the state text.
+     * @param countdownY The Y position of the countdown timer
+     * @param layout The layout dictionary
+     * @param height The height of the screen
+     * @return The Y position of the state text
+     */
     static function calculateStateY(countdownY, layout, height) {
         // Anchor the state text slightly below the countdown timer, unless the reserved base position is lower.
         return (countdownY + height * 0.09 > layout[:stateBaseY]) ? countdownY + height * 0.09 : layout[:stateBaseY];
     }
 
+    /**
+     * Calculates the position of the hint text.
+     * @param stateY The Y position of the state text
+     * @param hintBaseY The base Y position of the hint text
+     * @param height The height of the screen
+     * @return The Y position of the hint text
+     */
     static function calculateHintY(stateY, hintBaseY, height) {
         // Keep the hint block beneath the state text or at the bottom hint base, whichever sits lower.
         return (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
     }
 
+    /**
+     * Renders the countdown timer.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param countdownFont The font to use for the countdown timer
+     * @param countdownY The Y position of the countdown timer
+     */
     static function renderCountdown(dc, model, width, countdownFont, countdownY) {
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
@@ -188,6 +274,15 @@ class RugbyTimerRenderer {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
+    /**
+     * Renders the state text.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param stateFont The font to use for the state text
+     * @param stateY The Y position of the state text
+     * @param height The height of the screen
+     */
     static function renderStateText(dc, model, width, stateFont, stateY, height) {
         // Each special state adopts a red accent, while the idle/paused text stays white for clarity.
         var stateColor = Graphics.COLOR_WHITE;
