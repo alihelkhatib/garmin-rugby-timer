@@ -1,9 +1,21 @@
-## [2025-12-27] Avoid timer overlap
+## [2025-12-27] Highlight conversion text
 
 
-- Raised the state text when the countdown timer is high so the conversion/penalty/KICKOFF captions never intersect the white countdown digits; the computed `stateY` and `hintY` now depend on the adjustable `countdownY`.
+- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
 
 
+## [2025-12-27] Avoid timer overlap
+
+
+
+
+
+- Raised the state text when the countdown timer is high so the conversion/penalty/KICKOFF captions never intersect the white countdown digits; the computed `stateY` and `hintY` now depend on the adjustable `countdownY`.
+
+
+
+
+
 ## [2025-12-27] Trim manifest targets
 
 

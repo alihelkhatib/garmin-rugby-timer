@@ -355,6 +355,11 @@ class RugbyTimerView extends WatchUi.View {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // State/status block
+        var stateColor = Graphics.COLOR_WHITE;
+        if (gameState == STATE_CONVERSION || gameState == STATE_KICKOFF || gameState == STATE_PENALTY) {
+            stateColor = Graphics.COLOR_RED;
+        }
+        dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
         if (gameState == STATE_PAUSED) {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (gameState == STATE_CONVERSION) {
@@ -373,6 +378,7 @@ class RugbyTimerView extends WatchUi.View {
         } else if (gameState == STATE_IDLE) {
             dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
         }
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         
         // Hint
         var hint = "";
