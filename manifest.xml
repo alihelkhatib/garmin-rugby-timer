@@ -19,6 +19,13 @@
             <iq:product id="fenix6s"/>
             <iq:product id="fenix6spro"/>
             <iq:product id="fenix6xpro"/>
+            <iq:product id="fenix7"/>
+            <iq:product id="fenix7pro"/>
+            <iq:product id="epix"/>
+            <iq:product id="epixpro"/>
+            <iq:product id="forerunner745"/>
+            <iq:product id="forerunner945"/>
+            <iq:product id="venu2"/>
         </iq:products>
         <!--
             Use "Monkey C: Edit Permissions" from the Visual Studio Code command

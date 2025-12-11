@@ -297,34 +297,34 @@ class RugbyTimerView extends WatchUi.View {
                 var entry = yellowHomeTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     homeLine += 1;
-                    continue;
+                } else {
+                    var y = entry["remaining"];
+                    var label = entry["label"];
+                    if (label == null) {
+                        label = "Y" + (homeYellowDisplayed + 1).toString();
+                    }
+                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    homeYellowDisplayed += 1;
                 }
-                var y = entry["remaining"];
-                var label = entry["label"];
-                if (label == null) {
-                    label = "Y" + (homeYellowDisplayed + 1).toString();
-                }
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
-                homeYellowDisplayed += 1;
             }
             var awayYellowDisplayed = 0;
             for (var i = 0; i < yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
                 var entry = yellowAwayTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     awayLine += 1;
-                    continue;
+                } else {
+                    var y = entry["remaining"];
+                    var label = entry["label"];
+                    if (label == null) {
+                        label = "Y" + (awayYellowDisplayed + 1).toString();
+                    }
+                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    awayYellowDisplayed += 1;
                 }
-                var y = entry["remaining"];
-                var label = entry["label"];
-                if (label == null) {
-                    label = "Y" + (awayYellowDisplayed + 1).toString();
-                }
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
-                awayYellowDisplayed += 1;
             }
             if (redHome > 0 || redHomePermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
