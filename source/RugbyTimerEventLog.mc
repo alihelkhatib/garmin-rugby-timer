@@ -2,9 +2,10 @@ using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.WatchUi;
 
+const EVENT_LOG_LIMIT = 64;
+const EVENT_LOG_STORAGE_KEY = "eventLogExport";
+
 class RugbyTimerEventLog {
-    const EVENT_LOG_LIMIT = 64;
-    const EVENT_LOG_STORAGE_KEY = "eventLogExport";
 
     static function buildEventLogLines(model) {
         var lines = [];
@@ -42,14 +43,14 @@ class RugbyTimerEventLog {
         }
         var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
         model.eventLogEntries.add({:time => timestamp, :desc => description});
-        if (model.eventLogEntries.size() > self.EVENT_LOG_LIMIT) {
+        if (model.eventLogEntries.size() > EVENT_LOG_LIMIT) {
             model.eventLogEntries.remove(0);
         }
     }
 
     static function exportEventLog(model) {
         var text = RugbyTimerEventLog.buildEventLogText(model);
-        Storage.setValue(self.EVENT_LOG_STORAGE_KEY, text);
+        Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
     }
 
     static function showEventLog(model) {
