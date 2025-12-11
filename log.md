@@ -6,6 +6,7 @@
 ## [2025-12-29] Conversion overlay shortcuts
 
 - When the conversion overlay is visible, the UP button logs a successful kick and adds two points while the DOWN button records a miss, and the onscreen hint updates to remind the referee which buttons perform which action.
+- The overlay now renders the conversion countdown in the center (with the main countdown above it, both using the same high-contrast color) and flips the hint text order so the DOWN prompt appears before UP, matching the new layout focus.
 
 ## [2025-12-28] Special timer screen and save option
 

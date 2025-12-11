@@ -223,19 +223,19 @@ class RugbyTimerView extends WatchUi.View {
         if (specialTimerOverlayVisible && isSpecialState()) {
             var label = getSpecialStateLabel();
             var countdown = formatTime(countdownSeconds);
+            var countdownMain = formatTime(countdownRemaining);
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
             dc.clear();
             dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.35, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-            var countdownMain = formatTime(countdownRemaining);
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.22, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.5, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.1, Graphics.FONT_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
             if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
                 dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 2, height * 0.65, Graphics.FONT_XTINY, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(width / 2, height * 0.65, Graphics.FONT_SMALL, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
             }
             return;
         }
@@ -945,7 +945,7 @@ class RugbyTimerView extends WatchUi.View {
 
     function getSpecialOverlayHint() {
         if (gameState == STATE_CONVERSION) {
-            return "UP: Conversion ✓   DOWN: Conversion ×";
+            return "DOWN: Conversion ×   UP: Conversion ✓";
         }
         return "UP: Cards   DOWN: Score";
     }
