@@ -226,16 +226,17 @@ class RugbyTimerView extends WatchUi.View {
             var countdownMain = formatTime(countdownRemaining);
             dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
             dc.clear();
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.22, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, height * 0.5, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.1, Graphics.FONT_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
             if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
                 dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 2, height * 0.65, Graphics.FONT_SMALL, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
             }
             return;
         }
