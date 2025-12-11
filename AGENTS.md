@@ -27,3 +27,8 @@
 - Every substantive code or resource change must be followed by its own git commit so the history remains easy to trace.
 - A PR should include a short summary, the key files touched, and the manual tests executed (mention the `monkeyc` command used and any simulator checks). Add screenshots only if they illustrate a UI change.
 - Link to the relevant `log.md` entry if the change follows from a previous session, and mention any outstanding items for the next contributor at the end of the PR description.
+
+## Documentation & Collaboration Expectations
+- Every code change must include inline context comments or reference documentation (`project_technical_document.md`, `log.md`) so any future agent can trace why logic evolved, especially for the special timer overlay and conversion/penalty handling.
+- Log each session's work in `log.md`, describing the change, why it was made, and how it was validated (mention the `monkeyc` command). Update the log whenever overlay behavior, save-game flow, or button mappings change.
+- Keep `AGENTS.md` current when you add new UX rules (e.g., countdown label color, hint swaps, conversion confirmation) so every contributor reads the rules before touching the code.
