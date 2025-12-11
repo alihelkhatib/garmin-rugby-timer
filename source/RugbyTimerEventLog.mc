@@ -6,13 +6,13 @@ class RugbyTimerEventLog {
     const EVENT_LOG_LIMIT = 64;
     const EVENT_LOG_STORAGE_KEY = "eventLogExport";
 
-    static function buildEventLogLines(view) {
+    static function buildEventLogLines(model) {
         var lines = [];
-        if (view.eventLogEntries == null) {
+        if (model.eventLogEntries == null) {
             return lines;
         }
-        for (var i = 0; i < view.eventLogEntries.size(); i = i + 1) {
-            var entry = view.eventLogEntries[i] as Lang.Dictionary;
+        for (var i = 0; i < model.eventLogEntries.size(); i = i + 1) {
+            var entry = model.eventLogEntries[i] as Lang.Dictionary;
             if (entry == null) {
                 continue;
             }
@@ -23,8 +23,8 @@ class RugbyTimerEventLog {
         return lines;
     }
 
-    static function buildEventLogText(view) {
-        var lines = RugbyTimerEventLog.buildEventLogLines(view);
+    static function buildEventLogText(model) {
+        var lines = RugbyTimerEventLog.buildEventLogLines(model);
         var text = "";
         for (var i = 0; i < lines.size(); i = i + 1) {
             if (i > 0) { text = text + "\n"; }
@@ -33,26 +33,26 @@ class RugbyTimerEventLog {
         return text;
     }
 
-    static function appendEntry(view, description) {
+    static function appendEntry(model, description) {
         if (description == null) {
             return;
         }
-        if (view.eventLogEntries == null) {
-            view.eventLogEntries = [];
+        if (model.eventLogEntries == null) {
+            model.eventLogEntries = [];
         }
-        var timestamp = RugbyTimerTiming.formatTime(view.gameTime);
-        view.eventLogEntries.add({:time => timestamp, :desc => description});
-        if (view.eventLogEntries.size() > EVENT_LOG_LIMIT) {
-            view.eventLogEntries.remove(0);
+        var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
+        model.eventLogEntries.add({:time => timestamp, :desc => description});
+        if (model.eventLogEntries.size() > EVENT_LOG_LIMIT) {
+            model.eventLogEntries.remove(0);
         }
     }
 
-    static function exportEventLog(view) {
-        var text = RugbyTimerEventLog.buildEventLogText(view);
+    static function exportEventLog(model) {
+        var text = RugbyTimerEventLog.buildEventLogText(model);
         Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
     }
 
-    static function showEventLog(view) {
-        WatchUi.pushView(new EventLogMenu(view.eventLogEntries), new EventLogDelegate(view), WatchUi.SLIDE_UP);
+    static function showEventLog(model) {
+        WatchUi.pushView(new EventLogMenu(model.eventLogEntries), new EventLogDelegate(model), WatchUi.SLIDE_UP);
     }
 }

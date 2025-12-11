@@ -3,72 +3,71 @@ using Toybox.System;
 using Toybox.WatchUi;
 
 class RugbyTimerTiming {
-    static function updateGame(view) as Void {
+    static function updateGame(model) as Void {
         try {
             var now = System.getTimer();
-            if (view.gameStartTime != null) {
-                view.elapsedTime = (now - view.gameStartTime) / 1000;
+            if (model.gameStartTime != null) {
+                model.elapsedTime = (now - model.gameStartTime) / 1000;
             }
 
             var delta = 0;
-            if (view.lastUpdate != null) {
-                delta = (now - view.lastUpdate) / 1000.0;
+            if (model.lastUpdate != null) {
+                delta = (now - model.lastUpdate) / 1000.0;
                 if (delta < 0) {
                     delta = 0;
                 }
             }
-            if (delta > 0 && view.gameState != STATE_IDLE && view.gameState != STATE_ENDED) {
-                view.gameTime = view.gameTime + delta;
+            if (delta > 0 && model.gameState != STATE_IDLE && model.gameState != STATE_ENDED) {
+                model.gameTime = model.gameTime + delta;
             }
 
-            if (view.gameState == STATE_PLAYING || view.gameState == STATE_CONVERSION || view.gameState == STATE_PENALTY || view.gameState == STATE_KICKOFF) {
-                view.countdownRemaining = view.countdownRemaining - delta;
-                if (view.countdownRemaining < 0) { view.countdownRemaining = 0; }
-                if (view.countdownRemaining <= 30 && view.countdownRemaining > 0 && !view.thirtySecondAlerted) {
-                    view.thirtySecondAlerted = true;
+            if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+                model.countdownRemaining = model.countdownRemaining - delta;
+                if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
+                if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
+                    model.thirtySecondAlerted = true;
                     RugbyTimerTiming.triggerThirtySecondVibe();
                 }
 
-                if (view.gameState == STATE_CONVERSION || view.gameState == STATE_PENALTY || view.gameState == STATE_KICKOFF) {
-                    view.countdownSeconds = view.countdownSeconds - delta;
-                    if (view.countdownSeconds <= 0) {
-                        view.countdownSeconds = 0;
-                        if (view.gameState == STATE_CONVERSION) {
-                            view.startKickoffCountdown();
-                        } else if (view.gameState == STATE_PENALTY) {
-                            view.resumePlay();
+                if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+                    model.countdownSeconds = model.countdownSeconds - delta;
+                    if (model.countdownSeconds <= 0) {
+                        model.countdownSeconds = 0;
+                        if (model.gameState == STATE_CONVERSION) {
+                            model.startKickoffCountdown();
+                        } else if (model.gameState == STATE_PENALTY) {
+                            model.resumePlay();
                         } else {
-                            view.resumePlay();
+                            model.resumePlay();
                         }
                     }
-                    if (view.countdownSeconds <= 15 && view.countdownSeconds > 0 && !view.specialAlertTriggered) {
-                        view.specialAlertTriggered = true;
+                    if (model.countdownSeconds <= 15 && model.countdownSeconds > 0 && !model.specialAlertTriggered) {
+                        model.specialAlertTriggered = true;
                         RugbyTimerTiming.triggerSpecialTimerVibe();
                     }
                 }
 
-                view.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(view, view.yellowHomeTimes, delta);
-                view.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(view, view.yellowAwayTimes, delta);
-                if (!view.redHomePermanent && view.redHome > 0) { view.redHome = view.redHome - delta; if (view.redHome < 0) { view.redHome = 0; } }
-                if (!view.redAwayPermanent && view.redAway > 0) { view.redAway = view.redAway - delta; if (view.redAway < 0) { view.redAway = 0; } }
+                model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta);
+                model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta);
+                if (!model.redHomePermanent && model.redHome > 0) { model.redHome = model.redHome - delta; if (model.redHome < 0) { model.redHome = 0; } }
+                if (!model.redAwayPermanent && model.redAway > 0) { model.redAway = model.redAway - delta; if (model.redAway < 0) { model.redAway = 0; } }
 
-                if (view.countdownRemaining <= 0) {
-                    view.countdownRemaining = 0;
-                    if (view.halfNumber == 1) {
-                        view.enterHalfTime();
-                    } else {
-                        view.endGame();
+                if (model.countdownRemaining <= 0) {
+                    model.countdownRemaining = 0;
+                    if (model.halfNumber == 1) {
+                        model.enterHalfTime();
+                    } else {.
+                        model.endGame();
                     }
                 }
             }
 
-            view.lastUpdate = now;
-            if (view.lastPersistTime == 0 || now - view.lastPersistTime > view.STATE_SAVE_INTERVAL_MS) {
-                RugbyTimerPersistence.saveState(view);
-                view.lastPersistTime = now;
+            model.lastUpdate = now;
+            if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
+                RugbyTimerPersistence.saveState(model);
+                model.lastPersistTime = now;
             }
 
-            WatchUi.requestUpdate();
         } catch (ex) {
             // Silently handle errors to prevent crash
         }
@@ -96,6 +95,15 @@ class RugbyTimerTiming {
         if (Attention has :vibrate) {
             var vibeProfiles = [
                 new Attention.VibeProfile(40, 400)
+            ];
+            Attention.vibrate(vibeProfiles);
+        }
+    }
+
+    static function triggerYellowTimerVibe() {
+        if (Attention has :vibrate) {
+            var vibeProfiles = [
+                new Attention.VibeProfile(60, 300)
             ];
             Attention.vibrate(vibeProfiles);
         }

@@ -1,7 +1,7 @@
 using Toybox.Lang;
 
 class RugbyTimerCards {
-    static function updateYellowTimers(view, list, delta) {
+    static function updateYellowTimers(model, list, delta) {
         var newList = [];
         for (var i = 0; i < list.size(); i = i + 1) {
             var rawEntry = list[i];
@@ -35,7 +35,7 @@ class RugbyTimerCards {
         return newList;
     }
 
-    static function normalizeYellowTimers(view, list, isHome) {
+    static function normalizeYellowTimers(model, list, isHome) {
         var normalized = [];
         for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i];
@@ -66,10 +66,10 @@ class RugbyTimerCards {
                 label = "Y" + cardId.toString();
             }
             if ((label == null || cardId == null)) {
-                cardId = RugbyTimerCards.allocateYellowCardId(view, isHome);
+                cardId = RugbyTimerCards.allocateYellowCardId(model, isHome);
                 label = "Y" + cardId.toString();
             }
-            RugbyTimerCards.ensureYellowLabelCounter(view, isHome, cardId);
+            RugbyTimerCards.ensureYellowLabelCounter(model, isHome, cardId);
             normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
         }
         return normalized;
@@ -116,42 +116,43 @@ class RugbyTimerCards {
         }
     }
 
-    static function allocateYellowCardId(view, isHome) {
+    static function allocateYellowCardId(model, isHome) {
         if (isHome) {
-            view.yellowHomeLabelCounter = view.yellowHomeLabelCounter + 1;
-            return view.yellowHomeLabelCounter;
+            model.yellowHomeLabelCounter = model.yellowHomeLabelCounter + 1;
+            return model.yellowHomeLabelCounter;
         }
-        view.yellowAwayLabelCounter = view.yellowAwayLabelCounter + 1;
-        return view.yellowAwayLabelCounter;
+        model.yellowAwayLabelCounter = model.yellowAwayLabelCounter + 1;
+        return model.yellowAwayLabelCounter;
     }
 
-    static function ensureYellowLabelCounter(view, isHome, cardId) {
+    static function ensureYellowLabelCounter(model, isHome, cardId) {
         if (cardId == null) {
             return;
         }
         if (isHome) {
-            if (cardId > view.yellowHomeLabelCounter) {
-                view.yellowHomeLabelCounter = cardId;
+            if (cardId > model.yellowHomeLabelCounter) {
+                model.yellowHomeLabelCounter = cardId;
             }
-        } else {
-            if (cardId > view.yellowAwayLabelCounter) {
-                view.yellowAwayLabelCounter = cardId;
+        }
+        else {
+            if (cardId > model.yellowAwayLabelCounter) {
+                model.yellowAwayLabelCounter = cardId;
             }
         }
     }
 
-    static function clearCardTimers(view) {
-        view.yellowHomeTimes = [];
-        view.yellowAwayTimes = [];
-        view.yellowHomeLabelCounter = 0;
-        view.yellowAwayLabelCounter = 0;
-        view.redHome = 0;
-        view.redAway = 0;
-        view.redHomePermanent = false;
-        view.redAwayPermanent = false;
-        view.yellowHomeTotal = 0;
-        view.yellowAwayTotal = 0;
-        view.redHomeTotal = 0;
-        view.redAwayTotal = 0;
+    static function clearCardTimers(model) {
+        model.yellowHomeTimes = [];
+        model.yellowAwayTimes = [];
+        model.yellowHomeLabelCounter = 0;
+        model.yellowAwayLabelCounter = 0;
+        model.redHome = 0;
+        model.redAway = 0;
+        model.redHomePermanent = false;
+        model.redAwayPermanent = false;
+        model.yellowHomeTotal = 0;
+        model.yellowAwayTotal = 0;
+        model.redHomeTotal = 0;
+        model.redAwayTotal = 0;
     }
 }
