@@ -3,41 +3,41 @@ using Toybox.System;
 using Toybox.Lang;
 
 class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         BehaviorDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onMenu() {
-        WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(view), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(model), WatchUi.SLIDE_UP);
         return true;
     }
 
     function onSelect() {
-        if (view.isLocked) {
+        if (Application.getApp().rugbyView.isLocked) {
             return true;
         }
         // Start/pause/resume game with select button
-        if (view.gameState == STATE_IDLE) {
-            view.startGame();
-        } else if (view.gameState == STATE_PLAYING || view.gameState == STATE_CONVERSION || view.gameState == STATE_PENALTY || view.gameState == STATE_KICKOFF) {
-            view.pauseClock();
-        } else if (view.gameState == STATE_PAUSED) {
-            view.resumeClock();
-        } else if (view.gameState == STATE_HALFTIME) {
-            view.startSecondHalf();
+        if (model.gameState == STATE_IDLE) {
+            model.startGame();
+        } else if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+            model.pauseClock();
+        } else if (model.gameState == STATE_PAUSED) {
+            model.resumeClock();
+        } else if (model.gameState == STATE_HALFTIME) {
+            model.startSecondHalf();
         }
         return true;
     }
 
     function onBack() {
-        if (view.isLocked) {
+        if (Application.getApp().rugbyView.isLocked) {
             return true;
         }
         // Show confirmation menu before exiting
-        if (view.gameState != STATE_IDLE) {
+        if (model.gameState != STATE_IDLE) {
             var menu = new WatchUi.Menu2({:title=>"Exit?"});
             menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
             menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
@@ -45,26 +45,27 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             menu.addItem(new WatchUi.MenuItem("Save Game", null, :save_game, null));
             menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
             menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
-            WatchUi.pushView(menu, new ExitMenuDelegate(view), WatchUi.SLIDE_UP);
+            WatchUi.pushView(menu, new ExitMenuDelegate(model), WatchUi.SLIDE_UP);
             return true;
         }
         return false;
     }
 
     function onNextPage() {
+        var view = Application.getApp().rugbyView;
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
-        if (view.isSpecialOverlayActive() && view.gameState == STATE_CONVERSION) {
+        if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
             view.closeSpecialTimerScreen();
-            view.handleConversionMiss();
+            model.handleConversionMiss();
             return true;
         }
         if (view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }
-        if (view.gameState == STATE_CONVERSION) {
-            view.handleConversionMiss();
+        if (model.gameState == STATE_CONVERSION) {
+            model.handleConversionMiss();
         } else {
             view.showCardDialog();
         }
@@ -72,22 +73,24 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onPreviousPage() {
+        var view = Application.getApp().rugbyView;
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
-        if (view.isSpecialOverlayActive() && view.gameState == STATE_CONVERSION) {
+        if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
             view.closeSpecialTimerScreen();
-            view.handleConversionSuccess();
+            model.handleConversionSuccess();
             return true;
         }
         if (view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }
-        if (view.gameState == STATE_CONVERSION) {
-            view.handleConversionSuccess();
-        } else if (view.gameState == STATE_KICKOFF) {
-            view.cancelKickoff();
-        } else {
+        if (model.gameState == STATE_CONVERSION) {
+            model.handleConversionSuccess();
+        } else if (model.gameState == STATE_KICKOFF) {
+            model.cancelKickoff();
+        }
+        else {
             view.showScoreDialog();
         }
         return true;
@@ -95,32 +98,33 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
 }
 
 class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
+        var view = Application.getApp().rugbyView;
         if (item.getId() == :record_score) {
             view.showScoreDialog();
         } else if (item.getId() == :record_card) {
             view.showCardDialog();
         } else if (item.getId() == :pause_clock) {
-            if (view.gameState == STATE_PAUSED) {
-                view.resumeClock();
+            if (model.gameState == STATE_PAUSED) {
+                model.resumeClock();
             } else {
-                view.pauseClock();
+                model.pauseClock();
             }
         } else if (item.getId() == :start_half2) {
-            view.startSecondHalf();
+            model.startSecondHalf();
         } else if (item.getId() == :end_game) {
-            view.endGame();
+            model.endGame();
         } else if (item.getId() == :undo_last) {
-            view.undoLastEvent();
+            model.undoLastEvent();
         } else if (item.getId() == :adjust_score) {
-            WatchUi.pushView(new AdjustScoreMenu(), new AdjustScoreDelegate(view), WatchUi.SLIDE_UP);
+            WatchUi.pushView(new AdjustScoreMenu(), new AdjustScoreDelegate(model), WatchUi.SLIDE_UP);
             return;
         } else if (item.getId() == :toggle_lock) {
             view.toggleLock();
@@ -144,22 +148,22 @@ class AdjustScoreMenu extends WatchUi.Menu2 {
 }
 
 class AdjustScoreDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
         if (item.getId() == :home_plus) {
-            view.adjustScore(true, 1);
+            model.adjustScore(true, 1);
         } else if (item.getId() == :home_minus) {
-            view.adjustScore(true, -1);
+            model.adjustScore(true, -1);
         } else if (item.getId() == :away_plus) {
-            view.adjustScore(false, 1);
+            model.adjustScore(false, 1);
         } else if (item.getId() == :away_minus) {
-            view.adjustScore(false, -1);
+            model.adjustScore(false, -1);
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
@@ -178,16 +182,16 @@ class ScoreTeamMenu extends WatchUi.Menu2 {
 }
 
 class ScoreTeamDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
         var isHome = (item.getId() == :team_home);
-        WatchUi.pushView(new ScoreTypeMenu(isHome), new ScoreTypeDelegate(view, isHome), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new ScoreTypeMenu(isHome), new ScoreTypeDelegate(model, isHome), WatchUi.SLIDE_UP);
     }
 
     function onBack() {
@@ -198,8 +202,8 @@ class ScoreTeamDelegate extends WatchUi.Menu2InputDelegate {
 class ScoreTypeMenu extends WatchUi.Menu2 {
     function initialize(isHome) {
         Menu2.initialize({:title=> isHome ? "Home Score" : "Away Score"});
-        var view = Application.getApp().rugbyView;
-        if (view != null && view.gameState == STATE_CONVERSION) {
+        var model = Application.getApp().model;
+        if (model != null && model.gameState == STATE_CONVERSION) {
             addItem(new WatchUi.MenuItem("Conversion Made", null, :conv_made, null));
             addItem(new WatchUi.MenuItem("Conversion Missed", null, :conv_miss, null));
         } else {
@@ -212,28 +216,28 @@ class ScoreTypeMenu extends WatchUi.Menu2 {
 }
 
 class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
     var isHome;
 
-    function initialize(v, homeFlag) {
+    function initialize(m, homeFlag) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
         isHome = homeFlag;
     }
 
     function onSelect(item) {
         if (item.getId() == :score_try) {
-            view.recordTry(isHome);
+            model.recordTry(isHome);
         } else if (item.getId() == :score_conv) {
-            view.recordConversion(isHome);
+            model.recordConversion(isHome);
         } else if (item.getId() == :score_pen) {
-            view.recordPenalty(isHome);
+            model.recordPenalty(isHome);
         } else if (item.getId() == :score_drop) {
-            view.recordDropGoal(isHome);
+            model.recordDropGoal(isHome);
         } else if (item.getId() == :conv_made) {
-            view.recordConversion(isHome);
+            model.recordConversion(isHome);
         } else if (item.getId() == :conv_miss) {
-            view.endConversionWithoutScore();
+            model.endConversionWithoutScore();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN); // Close type
         WatchUi.popView(WatchUi.SLIDE_DOWN); // Close team
@@ -253,14 +257,14 @@ class CardTeamMenu extends WatchUi.Menu2 {
 }
 
 class CardTeamDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
-    function initialize(v) {
+    var model;
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
     function onSelect(item) {
         var isHome = (item.getId() == :team_home);
-        WatchUi.pushView(new CardTypeMenu(isHome), new CardTypeDelegate(view, isHome), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new CardTypeMenu(isHome), new CardTypeDelegate(model, isHome), WatchUi.SLIDE_UP);
     }
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
@@ -276,18 +280,18 @@ class CardTypeMenu extends WatchUi.Menu2 {
 }
 
 class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
     var isHome;
-    function initialize(v, homeFlag) {
+    function initialize(m, homeFlag) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
         isHome = homeFlag;
     }
     function onSelect(item) {
         if (item.getId() == :card_yellow) {
-            view.recordYellowCard(isHome);
+            model.recordYellowCard(isHome);
         } else if (item.getId() == :card_red) {
-            view.recordRedCard(isHome);
+            model.recordRedCard(isHome);
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN); // type
         WatchUi.popView(WatchUi.SLIDE_DOWN); // team
@@ -298,30 +302,30 @@ class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
         if (item.getId() == :resume) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :end) {
-            view.endGame();
+            model.endGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :reset) {
-            view.resetGame();
+            model.resetGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :save_game) {
-            view.saveGame();
+            model.saveGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } else if (item.getId() == :view_log) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
-            view.showEventLog();
+            model.showEventLog();
         } else if (item.getId() == :exit) {
-            view.stopRecording();
+            model.stopRecording();
             System.exit();
         }
     }
@@ -340,25 +344,25 @@ class GameTypeMenu extends WatchUi.Menu2 {
 }
 
 class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
         if (item.getId() == :gt_7s) {
-            view.setGameType(true);
+            model.setGameType(true);
         } else if (item.getId() == :gt_15s) {
-            view.setGameType(false);
+            model.setGameType(false);
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 
     function onBack() {
         // Keep prompting on next show until a choice is made
-        view.promptedGameType = false;
+        Application.getApp().rugbyView.promptedGameType = false;
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }
@@ -385,16 +389,16 @@ class EventLogMenu extends WatchUi.Menu2 {
 }
 
 class EventLogDelegate extends WatchUi.Menu2InputDelegate {
-    var view;
+    var model;
 
-    function initialize(v) {
+    function initialize(m) {
         Menu2InputDelegate.initialize();
-        view = v;
+        model = m;
     }
 
     function onSelect(item) {
         if (item.getId() == :save_log) {
-            view.exportEventLog();
+            model.exportEventLog();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         }
     }

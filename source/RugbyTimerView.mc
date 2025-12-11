@@ -430,8 +430,180 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     // Switch state to halftime once first 40 minutes finish.
-    function enterHalfTime() {
-        gameState = STATE_HALFTIME;
+using Toybox.WatchUi;
+using Toybox.Graphics;
+using Toybox.Timer;
+using Toybox.System;
+using Toybox.Lang;
+
+class RugbyTimerView extends WatchUi.View {
+    var model;
+    
+    var promptedGameType;
+    var isLocked;
+    var dimMode;
+    var lastActionTs;
+    var specialTimerOverlayVisible;
+    var specialOverlayMessage;
+    var specialOverlayMessageExpiry;
+    
+    var updateTimer;
+    
+    // Primary initialization: load persisted settings, zero all counters, and prepare timers.
+    function initialize(m) {
+        View.initialize();
+        model = m;
+        
+        promptedGameType = false;
+        isLocked = false;
+        lastActionTs = 0;
+        specialTimerOverlayVisible = false;
+        specialOverlayMessage = null;
+        specialOverlayMessageExpiry = 0;
+        dimMode = Storage.getValue("dimMode");
+        if (dimMode == null) { dimMode = false; }
+    }
+
+    // Layout callback needed by WatchUi; just delegates to the main layout definition.
+    function onLayout(dc) {
+        setLayout(Rez.Layouts.MainLayout(dc));
+    }
+
+    // Display callback: begin the periodic update loop and prompt for game type once on screen.
+    function onShow() {
+        if (updateTimer == null) {
+            updateTimer = new Timer.Timer();
+            updateTimer.start(method(:updateGame), 100, true);
+        }
+        
+        if (!promptedGameType && model.gameState == STATE_IDLE) {
+            promptedGameType = true;
+            showGameTypePrompt();
+        }
+    }
+
+    // Simple debounce for adjustments/quick actions
+    // Simple debounce gate to prevent rapid repeated actions from hardware buttons.
+    function isActionAllowed() {
+        var now = System.getTimer();
+        if (lastActionTs == null || now - lastActionTs > 300) {
+            lastActionTs = now;
+            return true;
+        }
+        return false;
+    }
+
+    function onUpdate(dc) {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+
+        var fonts = RugbyTimerRenderer.chooseFonts(width);
+        var layout = RugbyTimerRenderer.calculateLayout(height);
+
+        RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
+        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
+        RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        if (isLocked) {
+            RugbyTimerRenderer.renderLockIndicator(dc, self, width, fonts[:halfFont], layout[:scoreY]);
+        }
+
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);
+        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
+        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], countdownY);
+        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
+        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], stateY, height);
+        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
+        renderHint(dc, width, fonts[:hintFont], hintY);
+
+        RugbyTimerOverlay.renderSpecialOverlay(self, dc, width, height);
+    }
+
+    function renderHint(dc, width, hintFont, hintY) {
+        var hint = "";
+        if (model.gameState == STATE_IDLE) {
+            hint = "SELECT: Start";
+        } else if (model.gameState == STATE_PLAYING) {
+            hint = "SELECT: Pause";
+        } else if (model.gameState == STATE_PAUSED) {
+            hint = "SELECT: Resume";
+        }
+        if (isLocked) {
+            hint = "LOCKED";
+        }
+        var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
+        dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    function updateGame() as Void {
+        model.updateGame();
+        WatchUi.requestUpdate();
+    }
+
+    // Helper that displays a short M:SS string for cards while hiding zeros.
+    function formatShortTime(seconds) {
+        if (seconds <= 0) {
+            return "--";
+        }
+        var mins = (seconds.toLong() / 60);
+        var secs = (seconds.toLong() % 60);
+        return mins.toString() + ":" + secs.format("%02d");
+    }
+
+    // Presents the menu asking whether the match is 7s or 15s.
+    function showGameTypePrompt() {
+        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(self), WatchUi.SLIDE_UP);
+    }
+
+    // Launches the score dialog stack; respects the locked state.
+    function showScoreDialog() {
+        if (isLocked) {
+            return;
+        }
+        WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(self), WatchUi.SLIDE_UP);
+    }
+
+    // Launches the card/discipline dialog (swap button assigned externally).
+    function showCardDialog() {
+        if (isLocked) {
+            return;
+        }
+        WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(self), WatchUi.SLIDE_UP);
+    }
+
+    function handleConversionSuccess() {
+        if (model.gameState != STATE_CONVERSION || model.conversionTeam == null) {
+            return;
+        }
+        model.recordConversion(model.conversionTeam);
+        RugbyTimerOverlay.displaySpecialOverlayMessage(self, "Conversion recorded");
+    }
+
+    function handleConversionMiss() {
+        if (model.gameState != STATE_CONVERSION) {
+            return;
+        }
+        model.handleConversionMiss();
+        WatchUi.requestUpdate();
+    }
+
+    // Lock/unlock the UI so accidental button presses can't change state.
+    function toggleLock() {
+        isLocked = !isLocked;
+        WatchUi.requestUpdate();
+    }
+
+    // Clean up resources when the view is hidden.
+    function onHide() {
+        if (updateTimer != null) {
+            updateTimer.stop();
+            updateTimer = null;
+        }
+    }
+}
         RugbyTimerOverlay.closeSpecialTimerScreen(self);
         lastUpdate = null;
         RugbyTimerPersistence.saveState(self);

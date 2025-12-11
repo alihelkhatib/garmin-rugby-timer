@@ -6,6 +6,7 @@ using Toybox.Position;
 class RugbyTimerApp extends Application.AppBase {
     var rugbyView;
     var rugbyDelegate;
+    var model;
 
     function initialize() {
         AppBase.initialize();
@@ -17,20 +18,21 @@ class RugbyTimerApp extends Application.AppBase {
 
     function onStop(state) {
         Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition) as Method(info as Position.Info) as Void);
-        if (rugbyView != null) {
-            rugbyView.stopRecording();
+        if (model != null) {
+            model.stopRecording();
         }
     }
 
     function getInitialView() {
-        rugbyView = new RugbyTimerView();
-        rugbyDelegate = new RugbyTimerDelegate(rugbyView);
+        model = new RugbyGameModel();
+        rugbyView = new RugbyTimerView(model);
+        rugbyDelegate = new RugbyTimerDelegate(model);
         return [rugbyView, rugbyDelegate];
     }
 
     function onPosition(info as Position.Info) as Void {
-        if (rugbyView != null) {
-            rugbyView.updatePosition(info);
+        if (model != null) {
+            model.updatePosition(info);
         }
     }
 
