@@ -12,6 +12,11 @@
 - Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
 - Conversion/Kickoff/Penalty states now display the label and countdown as an inline overlay drawn over the scoreboard; the overlay closes automatically before each scoreboard interaction while maintaining the existing UP/DOWN shortcuts.
 
+## [2025-12-30] Conversion overlay countdown & confirmation
+
+- The overlay now shows the running countdown timer above the conversion/kickoff/penalty label so referees retain visibility into the main clock while the special timer is active.
+- Registering a conversion via the overlay’s UP button shows “Conversion recorded” on-screen briefly to confirm the score update.
+
 ## [2025-12-28] Protect countdown layout
 
 - Added inline documentation for the timer stack math in `source/RugbyTimerView.mc` and clamped `countdownY` to keep the big clock away from the state/hint block while still staying above the card timers.

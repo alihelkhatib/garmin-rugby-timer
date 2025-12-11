@@ -70,6 +70,8 @@ class RugbyTimerView extends WatchUi.View {
     var redAwayTotal;
     var specialTimerOverlayVisible;
     var specialAlertTriggered;
+    var specialOverlayMessage;
+    var specialOverlayMessageExpiry;
     
     var positionInfo;
     var distance;
@@ -173,6 +175,8 @@ class RugbyTimerView extends WatchUi.View {
         thirtySecondAlerted = false;
         specialTimerOverlayVisible = false;
         specialAlertTriggered = false;
+        specialOverlayMessage = null;
+        specialOverlayMessageExpiry = 0;
         
         distance = 0.0;
         speed = 0.0;
@@ -223,9 +227,16 @@ class RugbyTimerView extends WatchUi.View {
             dc.clear();
             dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.35, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+            var countdownMain = formatTime(countdownRemaining);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
+            if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
+                dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(width / 2, height * 0.65, Graphics.FONT_XTINY, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+            }
             return;
         }
         
@@ -761,6 +772,7 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         recordConversion(conversionTeam);
+        displaySpecialOverlayMessage("Conversion recorded");
     }
 
     function handleConversionMiss() {
@@ -957,6 +969,17 @@ class RugbyTimerView extends WatchUi.View {
 
     function getSpecialStateColor() {
         return Graphics.COLOR_RED;
+    }
+
+    function displaySpecialOverlayMessage(text) {
+        if (text == null) {
+            specialOverlayMessage = null;
+            specialOverlayMessageExpiry = 0;
+            return;
+        }
+        specialOverlayMessage = text;
+        specialOverlayMessageExpiry = System.getTimer() + 2000;
+        WatchUi.requestUpdate();
     }
 
     // Kick off the match clock and transition into STATE_PLAYING.
