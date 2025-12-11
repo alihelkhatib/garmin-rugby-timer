@@ -10,6 +10,7 @@
 - Entry point: `source/RugbyTimerApp.mc` registers viewer/delegate.
 - View: `source/RugbyTimerView.mc` renders scoreboard, timers, cards, persists state, handles gameplay logic and settings.
 - Delegate/menus: `RugbyTimerDelegate.mc` routes hardware actions and menu interactions.
+- Renderer helper: `RugbyTimerRenderer.mc` centralizes font selection, scoreboard rendering, card timer drawing, and the countdown/state layout math so the view layer can stay lean.
 - Settings/UI resources under `resources/menus`, `resources/strings`, `resources/layouts`.
 - Manifest defines Fenix 6 products and permissions (Fit, Positioning, Sensor, SensorLogging).
 
@@ -19,7 +20,7 @@
 - Card tracking: multiple yellow timers per team, red timers (permanent for 7s). Display stacks with numbering.
 - Persistence: periodic state saves plus final summary stored at game end (`lastGameSummary`).
 - Event log: score and discipline events are recorded with timestamps and surfaced through the Exit/Back menu’s Event Log entry so referees can export a human-readable timeline to Storage for post-match review.
-- Layout and rendering: scoreboard/half text sit near the top, the gray `gameTimerY` lives just above the half indicator, and the card timers stack off `cardsY`. The countdown uses `cardStackBottom`, `countdownCandidate`, `countdownLimit`, and `stateBaseY` to stay above the stacks and keep room for the state/hint block, ensuring the big timers never overlap even when multiple discipline timers appear.
+- Layout and rendering: scoreboard/half text sit near the top, the gray `gameTimerY` lives just above the half indicator, and the card timers stack off `cardsY`. The countdown uses `cardStackBottom`, `countdownCandidate`, `countdownLimit`, `countdownMin`, and `candidateTimerY` to find a position that never sits beneath the card stack or inside the reserved state/hint space, ensuring the big timers stay readable even when multiple discipline timers appear.
 - Card timer metadata: only the first two yellow entries per side render while extras keep counting invisibly, and each dictionary entry carries its `Y#` label and vibration flag so the numbering persists across swaps and loads.
 - Haptic alert at 30 seconds remaining when the countdown is active (if supported).
 - GPS/tracking hook collects position updates, trims stored data, and records the session as `Activity.SPORT_RUGBY` so Garmin Connect logs the activity under rugby.

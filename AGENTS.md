@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
+- `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerRenderer.mc` centralizes the font/layout math and card rendering so the view can focus on timers and overlays, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
 - `resources/` contains menus, strings, layouts, and drawables; keep the launcher bitmap in `resources/drawables/` and list it from `resources/drawables/drawables.xml`.
 - `resources/menus/menu.xml` defines the main menu stack; the Exit / Back menu also exposes the Event Log entry now so referees can open the log via that dialog while in-play.
 - Build outputs land in `bin/`, while `monkey.jungle` is the project descriptor read by `monkeyc`. Manifest metadata and permissions live in `manifest.xml`.
@@ -32,3 +32,4 @@
 - Every code change must include inline context comments or reference documentation (`project_technical_document.md`, `log.md`) so any future agent can trace why logic evolved, especially for the special timer overlay and conversion/penalty handling.
 - Log each session's work in `log.md`, describing the change, why it was made, and how it was validated (mention the `monkeyc` command). Update the log whenever overlay behavior, save-game flow, or button mappings change.
 - Keep `AGENTS.md` current when you add new UX rules (e.g., countdown label color, hint swaps, conversion confirmation) so every contributor reads the rules before touching the code.
+- Document layout math changes in `RugbyTimerRenderer.mc` (base positions, candidate offsets) so the renderer stays the single source of truth for timer/card spacing.

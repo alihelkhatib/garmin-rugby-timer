@@ -4,6 +4,7 @@ This Connect IQ watch app supports the modern Fenix 6/7/8, Epix, Forerunner (255
 
 ## Highlights
 - Game clock and countdown split so referees see both the live game time and the active countdown/bonus window.
+- Layout and font selection now live in `source/RugbyTimerRenderer.mc`, which calculates positions for scores, the countdown, state text, and card timers so the view stays focused on updating the state and overlays.
 - Layout math keeps the countdown, state text, and card stacks from stepping on each other no matter how many timers are visible, letting the main clocks stay readable on every supported screen size.
 - Dialog-driven scoring/card capture with conversion/penalty shortcuts, event log export, GPS activity recording, and auto-cleared timers on reset/end.
 - Event Log accessible from the BACK/LAP (Exit) dialog so referees can save a time-stamped list of every try, conversion, penalty, drop goal, and card.

@@ -1,3 +1,9 @@
+## [2025-12-11] Renderer refactor and docs
+
+- `RugbyTimerView` now delegates all score/timer/card drawing and layout math to `RugbyTimerRenderer`, keeping the view focused on state updates and overlays while ensuring the countdown positioning math stays centralized.
+- Added inline documentation around the renderer's candidate/limit/min timers so future agents understand why `countdownY`, `stateY`, and `hintY` stay spaced based on the card stack and reserved state area.
+- Updated `README.md`, `project_technical_document.md`, and `AGENTS.md` to mention the renderer helper and the documentation expectations; no manual compile was run because the environment is edit-only.
+
 ## [2025-12-31] Countdown overlay polish
 
 - The inline overlay now labels the primary countdown timer, keeps it white, and places the conversion/kickoff/penalty timer squarely in the middle so the referee sees both clocks.
