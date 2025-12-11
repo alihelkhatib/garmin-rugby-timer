@@ -216,32 +216,32 @@ class RugbyTimerView extends WatchUi.View {
     function onUpdate(dc) {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
-        
+
         var width = dc.getWidth();
         var height = dc.getHeight();
 
-        if (specialTimerOverlayVisible && isSpecialState()) {
-            var label = getSpecialStateLabel();
-            var countdown = formatTime(countdownSeconds);
-            var countdownMain = formatTime(countdownRemaining);
-            dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-            dc.clear();
-            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
-            if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
-                dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
-            }
-            return;
+        var fonts = chooseFonts(width);
+        var layout = calculateLayout(height);
+
+        renderScores(dc, width, fonts[:scoreFont], layout[:scoreY]);
+        renderGameTimer(dc, width, fonts[:timerFont], layout[:gameTimerY]);
+        renderHalfAndTries(dc, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        if (isLocked) {
+            renderLockIndicator(dc, width, fonts[:halfFont], layout[:scoreY]);
         }
-        
-        // Choose fonts based on resolution so things stay readable without overlap
+
+        var cardInfo = renderCardTimers(dc, width, layout[:cardsY], height);
+        var countdownY = calculateCountdownPosition(layout, cardInfo, height);
+        renderCountdown(dc, width, fonts[:countdownFont], countdownY);
+        var stateY = calculateStateY(countdownY, layout, height);
+        renderStateText(dc, width, fonts[:stateFont], stateY, height);
+        var hintY = calculateHintY(stateY, layout[:hintBaseY], height);
+        renderHint(dc, width, fonts[:hintFont], hintY);
+
+        renderSpecialOverlay(dc, width, height);
+    }
+
+    function chooseFonts(width) {
         var scoreFont;
         var triesFont;
         var halfFont;
@@ -249,7 +249,7 @@ class RugbyTimerView extends WatchUi.View {
         var countdownFont;
         var stateFont;
         var hintFont;
-        if (width <= 240) { // 6S
+        if (width <= 240) {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
@@ -257,7 +257,7 @@ class RugbyTimerView extends WatchUi.View {
             countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
-        } else if (width <= 260) { // 6 / 6 Pro
+        } else if (width <= 260) {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
             halfFont = Graphics.FONT_XTINY;
@@ -265,7 +265,7 @@ class RugbyTimerView extends WatchUi.View {
             countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
-        } else { // 6X
+        } else {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_SMALL;
             halfFont = Graphics.FONT_XTINY;
@@ -274,49 +274,67 @@ class RugbyTimerView extends WatchUi.View {
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         }
-        
-        // Relative Y positions (fractions of screen height) keep each layer separated vertically.
-        var scoreY = height * 0.10; // scoreboard sits near the top center
-        var halfY = height * 0.18; // half label floats just below the scores
-        var gameTimerY = halfY * 0.5; // running game clock stays centered above the "Half" label
-        var triesY = halfY + height * 0.06; // try counts sit between the half text and card timers
-        var cardsY = height * 0.37; // base offset for the stacked discipline timers
-        var countdownY = height * 0.66; // fallback slot for the countdown/bonus window (adjusted below)
-        var stateBaseY = height * 0.82; // state text block anchors near the lower third
-        var hintBaseY = height * 0.92; // hints float near the hardware button etchings
-        
+        return {
+            :scoreFont => scoreFont,
+            :triesFont => triesFont,
+            :halfFont => halfFont,
+            :timerFont => timerFont,
+            :countdownFont => countdownFont,
+            :stateFont => stateFont,
+            :hintFont => hintFont
+        };
+    }
+
+    function calculateLayout(height) {
+        var scoreY = height * 0.10;
+        var halfY = height * 0.18;
+        var gameTimerY = halfY * 0.5;
+        var triesY = halfY + height * 0.06;
+        var cardsY = height * 0.37;
+        var stateBaseY = height * 0.82;
+        var hintBaseY = height * 0.92;
+        return {
+            :scoreY => scoreY,
+            :halfY => halfY,
+            :gameTimerY => gameTimerY,
+            :triesY => triesY,
+            :cardsY => cardsY,
+            :stateBaseY => stateBaseY,
+            :hintBaseY => hintBaseY
+        };
+    }
+
+    function renderScores(dc, width, scoreFont, scoreY) {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        
-        // Scores
         dc.drawText(width / 4, scoreY, scoreFont, homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+    }
 
-        // Game timer above the half indicator so referees see elapsed game minutes near the center top.
+    function renderGameTimer(dc, width, timerFont, gameTimerY) {
         var gameStr = formatTime(gameTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+    }
 
-        // Half indicator
+    function renderHalfAndTries(dc, width, halfFont, triesFont, halfY, triesY) {
         var halfStr = "Half " + halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-
-        // Tries
         var triesText = homeTries.toString() + "T / " + awayTries.toString() + "T";
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
+    }
 
-        // Lock indicator
-        if (isLocked) {
-            dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
-        }
+    function renderLockIndicator(dc, width, halfFont, scoreY) {
+        dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
+    }
 
-        // Card status line (only show if active/permanent)
+    function renderCardTimers(dc, width, cardsY, height) {
         var visibleYellowHome = yellowHomeTimes.size() > 2 ? 2 : yellowHomeTimes.size();
         var visibleYellowAway = yellowAwayTimes.size() > 2 ? 2 : yellowAwayTimes.size();
         var homeCardRows = visibleYellowHome + ((redHome > 0 || redHomePermanent) ? 1 : 0);
         var awayCardRows = visibleYellowAway + ((redAway > 0 || redAwayPermanent) ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
-        var lineStep = height * 0.1; // keeps each card timer row separated so the stack never intrudes on the central clocks
+        var lineStep = height * 0.1;
         if (maxCardRows > 0) {
             var homeLine = 0;
             var awayLine = 0;
@@ -367,24 +385,34 @@ class RugbyTimerView extends WatchUi.View {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
-        // Keep the countdown above the cards yet comfortably below the status block; `countdownCandidate` hugs the card stack while the limit reserves a buffer for the state text.
-        var cardStackBottom = cardsY + (maxCardRows * lineStep);
-        var countdownCandidate = cardStackBottom + height * 0.04;
-        var countdownLimit = stateBaseY - height * 0.18;
-        var countdownMin = triesY + height * 0.05;
-        var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
-        countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
+        return { :rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY };
+    }
 
-        // State and hint positions stay below the countdown but above the bezel text, growing downward if the clock chunk pushes them.
-        var stateY = (countdownY + height * 0.09 > stateBaseY) ? countdownY + height * 0.09 : stateBaseY;
-        var hintY = (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
-        
-        // Countdown timer (primary)
+    function calculateCountdownPosition(layout, cardInfo, height) {
+        var cardStackBottom = cardInfo[:cardsY] + (cardInfo[:rows] * cardInfo[:lineStep]);
+        var countdownCandidate = cardStackBottom + height * 0.04;
+        var countdownLimit = layout[:stateBaseY] - height * 0.18;
+        var countdownMin = layout[:triesY] + height * 0.05;
+        var candidateTimerY = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
+        var countdownY = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
+        return countdownY;
+    }
+
+    function calculateStateY(countdownY, layout, height) {
+        return (countdownY + height * 0.09 > layout[:stateBaseY]) ? countdownY + height * 0.09 : layout[:stateBaseY];
+    }
+
+    function calculateHintY(stateY, hintBaseY, height) {
+        return (stateY + height * 0.08 > hintBaseY) ? stateY + height * 0.08 : hintBaseY;
+    }
+
+    function renderCountdown(dc, width, countdownFont, countdownY) {
         var countdownStr = formatTime(countdownRemaining);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        
-        // State/status block
+    }
+
+    function renderStateText(dc, width, stateFont, stateY, height) {
         var stateColor = Graphics.COLOR_WHITE;
         if (gameState == STATE_CONVERSION || gameState == STATE_KICKOFF || gameState == STATE_PENALTY) {
             stateColor = Graphics.COLOR_RED;
@@ -409,8 +437,9 @@ class RugbyTimerView extends WatchUi.View {
             dc.drawText(width / 2, stateY, stateFont, "Ready to start", Graphics.TEXT_JUSTIFY_CENTER);
         }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        
-        // Hint
+    }
+
+    function renderHint(dc, width, hintFont, hintY) {
         var hint = "";
         if (gameState == STATE_IDLE) {
             hint = "SELECT: Start";
@@ -425,7 +454,29 @@ class RugbyTimerView extends WatchUi.View {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+    }
 
+    function renderSpecialOverlay(dc, width, height) {
+        if (!specialTimerOverlayVisible || !isSpecialState()) {
+            return;
+        }
+        var label = getSpecialStateLabel();
+        var countdown = formatTime(countdownSeconds);
+        var countdownMain = formatTime(countdownRemaining);
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(getSpecialStateColor(), Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height * 0.55, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, getSpecialOverlayHint(), Graphics.TEXT_JUSTIFY_CENTER);
+        if (specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     // Periodic tick that keeps the clocks, card timers, and persistence in sync.
