@@ -1,6 +1,7 @@
 using Toybox.Graphics;
 using Toybox.System;
 using Toybox.WatchUi;
+using Toybox.Lang;
 using Rez.Strings;
 
 /**
@@ -15,13 +16,13 @@ class RugbyTimerOverlay {
      * @param width The width of the screen
      * @param height The height of the screen
      */
-    static function renderSpecialOverlay(view as RugbyTimerView, model as RugbyGameModel, dc as Graphics.Dc, width as Number, height as Number) as Void {
+    static function renderSpecialOverlay(view as RugbyTimerView, model as RugbyGameModel, dc as Graphics.Dc, width as Lang.Number, height as Lang.Number) as Void {
         if (!view.specialTimerOverlayVisible || !RugbyTimerOverlay.isSpecialState(model)) {
             return;
         }
-        var label = RugbyTimerOverlay.getSpecialStateLabel(model) as String;
-        var countdown = RugbyTimerTiming.formatTime(model.countdownSeconds) as String;
-        var countdownMain = RugbyTimerTiming.formatTime(model.countdownRemaining) as String;
+        var label = RugbyTimerOverlay.getSpecialStateLabel(model) as Lang.String;
+        var countdown = RugbyTimerTiming.formatTime(model.countdownSeconds) as Lang.String;
+        var countdownMain = RugbyTimerTiming.formatTime(model.countdownRemaining) as Lang.String;
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -43,7 +44,7 @@ class RugbyTimerOverlay {
      * @param model The game model
      * @return true if it is a special state, false otherwise
      */
-    static function isSpecialState(model as RugbyGameModel) as Boolean {
+    static function isSpecialState(model as RugbyGameModel) as Lang.Boolean {
         return model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF;
     }
 
@@ -74,7 +75,7 @@ class RugbyTimerOverlay {
      * @param model The game model
      * @return true if the special overlay is active, false otherwise
      */
-    static function isSpecialOverlayActive(view as RugbyTimerView, model as RugbyGameModel) as Boolean {
+    static function isSpecialOverlayActive(view as RugbyTimerView, model as RugbyGameModel) as Lang.Boolean {
         return view.specialTimerOverlayVisible && RugbyTimerOverlay.isSpecialState(model);
     }
 
@@ -83,7 +84,7 @@ class RugbyTimerOverlay {
      * @param model The game model
      * @return The hint text
      */
-    static function getSpecialOverlayHint(model as RugbyGameModel) as String {
+    static function getSpecialOverlayHint(model as RugbyGameModel) as Lang.String {
         if (model.gameState == STATE_CONVERSION) {
             return Rez.Strings.Overlay_Hint_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
@@ -99,7 +100,7 @@ class RugbyTimerOverlay {
      * @param model The game model
      * @return The label for the special state
      */
-    static function getSpecialStateLabel(model as RugbyGameModel) as String {
+    static function getSpecialStateLabel(model as RugbyGameModel) as Lang.String {
         if (model.gameState == STATE_CONVERSION) {
             return Rez.Strings.State_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
@@ -115,7 +116,7 @@ class RugbyTimerOverlay {
      * @param model The game model
      * @return The color for the special state
      */
-    static function getSpecialStateColor(model as RugbyGameModel) as ColorValue {
+    static function getSpecialStateColor(model as RugbyGameModel) {
         if (model.gameState == STATE_CONVERSION || model.gameState == STATE_KICKOFF || model.gameState == STATE_PENALTY) {
             return Graphics.COLOR_RED;
         }
@@ -127,7 +128,7 @@ class RugbyTimerOverlay {
      * @param view The main view
      * @param text The text to display
      */
-    static function displaySpecialOverlayMessage(view as RugbyTimerView, text as String) as Void {
+    static function displaySpecialOverlayMessage(view as RugbyTimerView, text as Lang.String) as Void {
         view.specialOverlayMessage = text;
         view.specialOverlayMessageExpiry = System.getTimer() + 2000;
     }
