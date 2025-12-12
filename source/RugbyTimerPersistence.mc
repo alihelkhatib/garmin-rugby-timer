@@ -9,7 +9,7 @@ class RugbyTimerPersistence {
      * Saves the current game state to storage.
      * @param model The game model
      */
-    static function saveState(model) {
+    static function saveState(model as RugbyGameModel) as Void {
         var snapshot = {
             "homeScore" => model.homeScore,
             "awayScore" => model.awayScore,
@@ -38,8 +38,10 @@ class RugbyTimerPersistence {
             "redHome" => model.redHome,
             "redAway" => model.redAway,
             "redHomePermanent" => model.redHomePermanent,
-            "redAwayPermanent" => model.redAwayPermanent
-        };
+            "redAwayPermanent" => model.redAwayPermanent,
+            "countdownStartedAt" => model.countdownStartedAt,
+            "countdownInitialValue" => model.countdownInitialValue
+        } as Dictionary;
         Storage.setValue("gameStateData", snapshot);
     }
 
@@ -47,7 +49,7 @@ class RugbyTimerPersistence {
      * Finalizes the game data and saves a summary to storage.
      * @param model The game model
      */
-    static function finalizeGameData(model) {
+    static function finalizeGameData(model as RugbyGameModel) as Void {
         var summary = {
             "homeScore" => model.homeScore,
             "awayScore" => model.awayScore,
@@ -62,7 +64,7 @@ class RugbyTimerPersistence {
             "redAway" => model.redAway,
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent
-        };
+        } as Dictionary;
         summary["yellowHomeTotal"] = model.yellowHomeTotal;
         summary["yellowAwayTotal"] = model.yellowAwayTotal;
         summary["redHomeTotal"] = model.redHomeTotal;
@@ -78,75 +80,83 @@ class RugbyTimerPersistence {
      * Loads the saved game state from storage.
      * @param model The game model
      */
-    static function loadSavedState(model) {
-        var data = Storage.getValue("gameStateData") as Lang.Dictionary;
+    static function loadSavedState(model as RugbyGameModel) as Void {
+        var data = Storage.getValue("gameStateData") as Dictionary or Null;
         if (data != null) {
             try {
-                model.homeScore = data["homeScore"];
-                model.awayScore = data["awayScore"];
-                model.homeTries = data["homeTries"];
-                model.awayTries = data["awayTries"];
-                model.halfNumber = data["halfNumber"];
-                model.gameTime = data["gameTime"];
-                model.elapsedTime = data["elapsedTime"];
-                model.countdownRemaining = data["countdownRemaining"];
-                model.countdownSeconds = data["countdownSeconds"];
-                model.gameState = data["gameState"];
-                model.is7s = data["is7s"];
-                model.countdownTimer = data["countdownTimer"];
-                model.conversionTime7s = data["conversionTime7s"];
-                model.conversionTime15s = data["conversionTime1s"];
-                model.penaltyKickTime = data["penaltyKickTime"];
-                model.useConversionTimer = data["useConversionTimer"];
-                model.usePenaltyTimer = data["usePenaltyTimer"];
-                model.conversionTeam = data["conversionTeam"];
-                var yHomeArr = data["yellowHomeTimes"];
+                model.homeScore = data["homeScore"] as Number;
+                model.awayScore = data["awayScore"] as Number;
+                model.homeTries = data["homeTries"] as Number;
+                model.awayTries = data["awayTries"] as Number;
+                model.halfNumber = data["halfNumber"] as Number;
+                model.gameTime = data["gameTime"] as Float;
+                model.elapsedTime = data["elapsedTime"] as Number;
+                model.countdownRemaining = data["countdownRemaining"] as Float;
+                model.countdownSeconds = data["countdownSeconds"] as Float;
+                model.gameState = data["gameState"] as Number;
+                model.is7s = data["is7s"] as Boolean;
+                model.countdownTimer = data["countdownTimer"] as Number;
+                model.conversionTime7s = data["conversionTime7s"] as Number;
+                model.conversionTime15s = data["conversionTime15s"] as Number;
+                model.penaltyKickTime = data["penaltyKickTime"] as Number;
+                model.useConversionTimer = data["useConversionTimer"] as Boolean;
+                model.usePenaltyTimer = data["usePenaltyTimer"] as Boolean;
+                model.conversionTeam = data["conversionTeam"] as Boolean or Null;
+                var yHomeArr = data["yellowHomeTimes"] as Array<Dictionary> or Null;
                 if (yHomeArr != null) {
-                    model.yellowHomeTimes = RugbyTimerCards.normalizeYellowTimers(model, yHomeArr, true);
+                    model.yellowHomeTimes = RugbyTimerCards.normalizeYellowTimers(model, yHomeArr, true) as Array<Dictionary>;
                 } else {
-                    model.yellowHomeTimes = [];
+                    model.yellowHomeTimes = [] as Array<Dictionary>;
                 }
-                model.yellowHomeLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowHomeTimes);
-                var savedHomeLabelCounter = data["yellowHomeLabelCounter"];
+                model.yellowHomeLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowHomeTimes) as Number;
+                var savedHomeLabelCounter = data["yellowHomeLabelCounter"] as Number or Null;
                 if (savedHomeLabelCounter != null && savedHomeLabelCounter > model.yellowHomeLabelCounter) {
                     model.yellowHomeLabelCounter = savedHomeLabelCounter;
                 }
-                var yAwayArr = data["yellowAwayTimes"];
+                var yAwayArr = data["yellowAwayTimes"] as Array<Dictionary> or Null;
                 if (yAwayArr != null) {
-                    model.yellowAwayTimes = RugbyTimerCards.normalizeYellowTimers(model, yAwayArr, false);
+                    model.yellowAwayTimes = RugbyTimerCards.normalizeYellowTimers(model, yAwayArr, false) as Array<Dictionary>;
                 } else {
-                    model.yellowAwayTimes = [];
+                    model.yellowAwayTimes = [] as Array<Dictionary>;
                 }
-                model.yellowAwayLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowAwayTimes);
-                var savedAwayLabelCounter = data["yellowAwayLabelCounter"];
+                model.yellowAwayLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowAwayTimes) as Number;
+                var savedAwayLabelCounter = data["yellowAwayLabelCounter"] as Number or Null;
                 if (savedAwayLabelCounter != null && savedAwayLabelCounter > model.yellowAwayLabelCounter) {
                     model.yellowAwayLabelCounter = savedAwayLabelCounter;
                 }
-                model.redHome = data["redHome"];
-                if (model.redHome == null) { model.redHome = 0; }
-                model.redAway = data["redAway"];
-                if (model.redAway == null) { model.redAway = 0; }
-                model.redHomePermanent = data["redHomePermanent"];
+                model.redHome = (data["redHome"] as Float or Null);
+                if (model.redHome == null) { model.redHome = 0.0f; }
+                model.redAway = (data["redAway"] as Float or Null);
+                if (model.redAway == null) { model.redAway = 0.0f; }
+                model.redHomePermanent = (data["redHomePermanent"] as Boolean or Null);
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
-                model.redAwayPermanent = data["redAwayPermanent"];
+                model.redAwayPermanent = (data["redAwayPermanent"] as Boolean or Null);
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
-                model.yellowHomeTotal = data["yellowHomeTotal"];
+                model.yellowHomeTotal = (data["yellowHomeTotal"] as Number or Null);
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
-                model.yellowAwayTotal = data["yellowAwayTotal"];
+                model.yellowAwayTotal = (data["yellowAwayTotal"] as Number or Null);
                 if (model.yellowAwayTotal == null) { model.yellowAwayTotal = 0; }
-                model.redHomeTotal = data["redHomeTotal"];
+                model.redHomeTotal = (data["redHomeTotal"] as Number or Null);
                 if (model.redHomeTotal == null) { model.redHomeTotal = 0; }
-                model.redAwayTotal = data["redAwayTotal"];
+                model.redAwayTotal = (data["redAwayTotal"] as Number or Null);
                 if (model.redAwayTotal == null) { model.redAwayTotal = 0; }
+
+                // Load new fields
+                model.countdownStartedAt = (data["countdownStartedAt"] as Number or Null);
+                if (model.countdownStartedAt == null) { model.countdownStartedAt = 0; }
+                model.countdownInitialValue = (data["countdownInitialValue"] as Float or Null);
+                if (model.countdownInitialValue == null) { model.countdownInitialValue = 0.0f; }
+
+
             } catch (ex) {
                 System.println("Error loading saved state: " + ex.getErrorMessage());
             }
         }
         if (model.yellowHomeTimes == null) {
-            model.yellowHomeTimes = [];
+            model.yellowHomeTimes = [] as Array<Dictionary>;
         }
         if (model.yellowAwayTimes == null) {
-            model.yellowAwayTimes = [];
+            model.yellowAwayTimes = [] as Array<Dictionary>;
         }
     }
 }
