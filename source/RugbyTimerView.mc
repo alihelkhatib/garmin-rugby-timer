@@ -42,7 +42,7 @@ class RugbyTimerView extends WatchUi.View {
      * Initializes the view.
      * @param m The game model
      */
-    function initialize(m as RugbyGameModel) as Void {
+    function initialize(m as RugbyGameModel) {
         View.initialize();
         model = m;
         
