@@ -13,36 +13,36 @@ using Rez.Strings;
  */
 class RugbyTimerView extends WatchUi.View {
     // The game model
-    var model;
+    var model as RugbyGameModel;
     
     // Cached font information
-    var mFonts;
+    var mFonts as Dictionary;
     // Cached layout information
-    var mLayout;
+    var mLayout as Dictionary;
 
     // A flag to ensure the game type prompt is shown only once
-    var promptedGameType;
+    var promptedGameType as Boolean;
     // A boolean indicating if the screen is locked
-    var isLocked;
+    var isLocked as Boolean;
     // A boolean indicating if the screen is in dim mode
-    var dimMode;
+    var dimMode as Boolean;
     // The timestamp of the last user action
-    var lastActionTs;
+    var lastActionTs as Number;
     // A boolean indicating if the special timer overlay is visible
-    var specialTimerOverlayVisible;
+    var specialTimerOverlayVisible as Boolean;
     // The message to be displayed on the special overlay
-    var specialOverlayMessage;
+    var specialOverlayMessage as String or Null;
     // The expiry timestamp for the special overlay message
-    var specialOverlayMessageExpiry;
+    var specialOverlayMessageExpiry as Number;
     
     // The timer for updating the game state
-    var updateTimer;
+    var updateTimer as Timer.Timer or Null;
     
     /**
      * Initializes the view.
      * @param m The game model
      */
-    function initialize(m) {
+    function initialize(m as RugbyGameModel) as Void {
         View.initialize();
         model = m;
         
@@ -52,15 +52,15 @@ class RugbyTimerView extends WatchUi.View {
         specialTimerOverlayVisible = false;
         specialOverlayMessage = null;
         specialOverlayMessageExpiry = 0;
-        dimMode = Storage.getValue("dimMode");
-        if (dimMode == null) { dimMode = false; }
+        var dimModeValue = Storage.getValue("dimMode") as Boolean or Null;
+        if (dimModeValue == null) { dimMode = false; } else { dimMode = dimModeValue; }
     }
 
     /**
      * This method is called when the view is laid out.
      * @param dc The device context
      */
-    function onLayout(dc) {
+    function onLayout(dc as Graphics.Dc) as Void {
         setLayout(Rez.Layouts.MainLayout(dc));
         // Calculate and cache fonts and layout once
         mFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
@@ -70,7 +70,7 @@ class RugbyTimerView extends WatchUi.View {
     /**
      * This method is called when the view is shown.
      */
-    function onShow() {
+    function onShow() as Void {
         if (updateTimer == null) {
             updateTimer = new Timer.Timer();
             updateTimer.start(method(:updateGame), 100, true);
@@ -87,8 +87,8 @@ class RugbyTimerView extends WatchUi.View {
      * Simple debounce gate to prevent rapid repeated actions from hardware buttons.
      * @return true if the action is allowed, false otherwise
      */
-    function isActionAllowed() {
-        var now = System.getTimer();
+    function isActionAllowed() as Boolean {
+        var now = System.getTimer() as Number;
         if (lastActionTs == null || now - lastActionTs > 300) {
             lastActionTs = now;
             return true;
@@ -100,33 +100,33 @@ class RugbyTimerView extends WatchUi.View {
      * This method is called to update the view.
      * @param dc The device context
      */
-    function onUpdate(dc) {
+    function onUpdate(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
 
-        var width = dc.getWidth();
-        var height = dc.getHeight();
+        var width = dc.getWidth() as Number;
+        var height = dc.getHeight() as Number;
 
         // Use cached fonts and layout
-        var fonts = mFonts;
-        var layout = mLayout;
+        var fonts = mFonts as Dictionary;
+        var layout = mLayout as Dictionary;
 
-        RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
-        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
-        RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        RugbyTimerRenderer.renderScores(dc, model as RugbyGameModel, width, fonts[:scoreFont] as FontResource, layout[:scoreY] as Number);
+        RugbyTimerRenderer.renderGameTimer(dc, model as RugbyGameModel, width, fonts[:timerFont] as FontResource, layout[:gameTimerY] as Number);
+        RugbyTimerRenderer.renderHalfAndTries(dc, model as RugbyGameModel, width, fonts[:halfFont] as FontResource, fonts[:triesFont] as FontResource, layout[:halfY] as Number, layout[:triesY] as Number);
         if (isLocked) {
-            RugbyTimerRenderer.renderLockIndicator(dc, self, width, fonts[:halfFont], layout[:scoreY]);
+            RugbyTimerRenderer.renderLockIndicator(dc, self as RugbyTimerView, width, fonts[:halfFont] as FontResource, layout[:scoreY] as Number);
         }
 
-        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);
-        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], countdownY);
-        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], stateY, height);
-        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
-        renderHint(dc, width, fonts[:hintFont], hintY);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model as RugbyGameModel, width, layout[:cardsY] as Number, height) as Dictionary;
+        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height) as Number;
+        RugbyTimerRenderer.renderCountdown(dc, model as RugbyGameModel, width, fonts[:countdownFont] as FontResource, countdownY);
+        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height) as Number;
+        RugbyTimerRenderer.renderStateText(dc, model as RugbyGameModel, width, fonts[:stateFont] as FontResource, stateY, height);
+        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY] as Number, height) as Number;
+        renderHint(dc, width, fonts[:hintFont] as FontResource, hintY);
 
-        RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
+        RugbyTimerOverlay.renderSpecialOverlay(self as RugbyTimerView, model as RugbyGameModel, dc, width, height);
     }
 
     /**
@@ -136,7 +136,7 @@ class RugbyTimerView extends WatchUi.View {
      * @param hintFont The font to use for the hint
      * @param hintY The Y position of the hint
      */
-    function renderHint(dc, width, hintFont, hintY) {
+    function renderHint(dc as Graphics.Dc, width as Number, hintFont as FontResource, hintY as Number) as Void {
         var hint = "";
         if (model.gameState == STATE_IDLE) {
             hint = Rez.Strings.Hint_Select_Start;
@@ -157,7 +157,7 @@ class RugbyTimerView extends WatchUi.View {
      * This method is called periodically to update the game state and refresh the view.
      */
     function updateGame() as Void {
-        model.updateGame();
+        (model as RugbyGameModel).updateGame();
         WatchUi.requestUpdate();
     }
 
@@ -166,7 +166,7 @@ class RugbyTimerView extends WatchUi.View {
      * @param seconds The number of seconds to format
      * @return A formatted string in M:SS format
      */
-    function formatShortTime(seconds) {
+    function formatShortTime(seconds as Number) as String {
         if (seconds <= 0) {
             return "--";
         }
@@ -178,34 +178,34 @@ class RugbyTimerView extends WatchUi.View {
     /**
      * Presents the menu asking whether the match is 7s or 15s.
      */
-    function showGameTypePrompt() {
-        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(model), WatchUi.SLIDE_UP);
+    function showGameTypePrompt() as Void {
+        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(model as RugbyGameModel), WatchUi.SLIDE_UP);
     }
 
     /**
      * Launches the score dialog stack; respects the locked state.
      */
-    function showScoreDialog() {
+    function showScoreDialog() as Void {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(model), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new ScoreTeamMenu(), new ScoreTeamDelegate(model as RugbyGameModel), WatchUi.SLIDE_UP);
     }
 
     /**
      * Launches the card/discipline dialog (swap button assigned externally).
      */
-    function showCardDialog() {
+    function showCardDialog() as Void {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new CardTeamMenu(), new CardTypeDelegate(model), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new CardTeamMenu(), new CardTypeDelegate(model as RugbyGameModel), WatchUi.SLIDE_UP);
     }
 
     /**
      * Lock/unlock the UI so accidental button presses can't change state.
      */
-    function toggleLock() {
+    function toggleLock() as Void {
         isLocked = !isLocked;
         WatchUi.requestUpdate();
     }
@@ -213,7 +213,7 @@ class RugbyTimerView extends WatchUi.View {
     /**
      * This method is called when the view is hidden.
      */
-    function onHide() {
+    function onHide() as Void {
         if (updateTimer != null) {
             updateTimer.stop();
             updateTimer = null;
@@ -223,29 +223,29 @@ class RugbyTimerView extends WatchUi.View {
     /**
      * @return true if the special overlay is active, false otherwise
      */
-    function isSpecialOverlayActive() {
-        return RugbyTimerOverlay.isSpecialOverlayActive(self, model);
+    function isSpecialOverlayActive() as Boolean {
+        return RugbyTimerOverlay.isSpecialOverlayActive(self as RugbyTimerView, model as RugbyGameModel);
     }
 
     /**
      * Closes the special timer screen.
      */
-    function closeSpecialTimerScreen() {
-        RugbyTimerOverlay.closeSpecialTimerScreen(self);
+    function closeSpecialTimerScreen() as Void {
+        RugbyTimerOverlay.closeSpecialTimerScreen(self as RugbyTimerView);
     }
 
     /**
      * Shows the special timer screen.
      */
-    function showSpecialTimerScreen() {
-        RugbyTimerOverlay.showSpecialTimerScreen(self, model);
+    function showSpecialTimerScreen() as Void {
+        RugbyTimerOverlay.showSpecialTimerScreen(self as RugbyTimerView, model as RugbyGameModel);
     }
 
     /**
      * Displays a message on the special overlay.
      * @param text The text to display
      */
-    function displaySpecialOverlayMessage(text) {
-        RugbyTimerOverlay.displaySpecialOverlayMessage(self, text);
+    function displaySpecialOverlayMessage(text as String) as Void {
+        RugbyTimerOverlay.displaySpecialOverlayMessage(self as RugbyTimerView, text);
     }
 }
