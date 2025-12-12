@@ -10,14 +10,12 @@ on:
         description: 'Tag to release (ignored when triggered by push tags)'
         required: false
 
-env:
-  CONNECTIQ_SDK_URL: https://developer.garmin.com/downloads/connect-iq/sdk/8.3.0/connectiq-sdk-win-8.3.0-2025-09-22-5813687a0.zip
-  CONNECTIQ_SDK_ROOT: ${{ runner.temp }}\\connectiq-sdk
-
 jobs:
   build:
     name: Build PRG
     runs-on: windows-latest
+    env:
+      CONNECTIQ_SDK_ROOT: ${{ runner.temp }}\\connectiq-sdk
     outputs:
       built-prg: ${{ steps.build.outputs.prg-path }}
     steps:
@@ -95,10 +93,12 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Push to Connect IQ Store
-        if: ${{ secrets.CONNECTIQ_STORE_TOKEN }}
+        if: ${{ env.IQ_STORE_TOKEN != '' }}
+        env:
+          IQ_STORE_TOKEN: ${{ secrets.CONNECTIQ_STORE_TOKEN }}
         run: |
           curl -X POST https://developerconnect.garmin.com/connect-iq-store/sales/v1/apps/upload \
-            -H "Authorization: Bearer ${{ secrets.CONNECTIQ_STORE_TOKEN }}" \
+            -H "Authorization: Bearer ${{ env.IQ_STORE_TOKEN }}" \
             -F "app=@bin/rugbytimer.prg" \
             -F "manifest=@monkey.jungle" \
             -F "notes=Automated release ${{ steps.tag.outputs.tag }}"
