@@ -35,3 +35,4 @@
 - `resources/drawables/` now includes a 40×40 launcher icon referenced in `resources/drawables/drawables.xml` and the manifest; replace it only with same-size assets to avoid scaling warnings.
 - Every change touching gameplay logic must be committed separately, and the release flow includes documentation updates in `log.md` + `project_technical_document.md`.
 - `bin/rugbytimer.prg` should be rebuilt via `monkeyc` after every source change, and the path to `monkeyc.exe` (shown in `AGENTS.md`) must be captured in `log.md`.
+- Release automation runs through `.github/workflows/build_and_publish.yml`, which downloads the same SDK, invokes `monkeybrains.jar`, creates a GitHub release, and uploads the PRG to the Connect IQ Store whenever `CONNECTIQ_STORE_TOKEN` is set.
