@@ -1,5 +1,6 @@
 using Toybox.WatchUi;
 using Toybox.System;
+using Toybox.Application;
 using Toybox.Lang;
 
 /**
@@ -22,7 +23,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the menu button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onMenu() as Boolean {
+    function onMenu() as Lang.Boolean {
         WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(model as RugbyGameModel), WatchUi.SLIDE_UP);
         return true;
     }
@@ -31,7 +32,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the select button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onSelect() as Boolean {
+    function onSelect() as Lang.Boolean {
         var app = Application.getApp() as RugbyTimerApp;
         if (app.rugbyView.isLocked) {
             return true;
@@ -53,7 +54,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the back button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onBack() as Boolean {
+    function onBack() as Lang.Boolean {
         var app = Application.getApp() as RugbyTimerApp;
         if (app.rugbyView.isLocked) {
             return true;
@@ -77,7 +78,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the next page button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onNextPage() as Boolean {
+    function onNextPage() as Lang.Boolean {
         var view = Application.getApp().rugbyView as RugbyTimerView;
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
@@ -102,7 +103,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the previous page button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onPreviousPage() as Boolean {
+    function onPreviousPage() as Lang.Boolean {
         var view = Application.getApp().rugbyView as RugbyTimerView;
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
@@ -316,7 +317,7 @@ class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
      * @param m The game model
      * @param homeFlag A boolean indicating if the home team is scoring
      */
-    function initialize(m as RugbyGameModel, homeFlag as Boolean) as Void {
+    function initialize(m as RugbyGameModel, homeFlag as Boolean) {
         Menu2InputDelegate.initialize();
         model = m;
         isHome = homeFlag;
@@ -376,7 +377,7 @@ class CardTeamDelegate extends WatchUi.Menu2InputDelegate {
      * Initializes the delegate.
      * @param m The game model
      */
-    function initialize(m as RugbyGameModel) as Void {
+    function initialize(m as RugbyGameModel) {
         Menu2InputDelegate.initialize();
         model = m;
     }
@@ -425,7 +426,7 @@ class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
      * @param m The game model
      * @param homeFlag A boolean indicating if the home team is receiving the card
      */
-    function initialize(m as RugbyGameModel, homeFlag as Boolean) as Void {
+    function initialize(m as RugbyGameModel, homeFlag as Boolean) {
         Menu2InputDelegate.initialize();
         model = m;
         isHome = homeFlag;
@@ -456,12 +457,50 @@ class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
 /**
  * Delegate for the exit menu.
  */
+class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
+    var model as RugbyGameModel;
+
+    /**
+     * Initializes the delegate.
+     * @param m The game model
+     */
+    function initialize(m as RugbyGameModel) {
+        Menu2InputDelegate.initialize();
+        model = m;
+    }
+
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
+    function onSelect(item as WatchUi.MenuItem) as Void {
+        if (item.getId() == :resume) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :end) {
+            model.endGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :reset) {
+            model.resetGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :save_game) {
+            model.saveGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :view_log) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            model.showEventLog();
+        } else if (item.getId() == :exit) {
+            model.stopRecording();
+            System.exit();
+        }
+    }
+
     /**
      * This method is called when the back button is pressed.
      */
     function onBack() as Void {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
+}
 
 /**
  * Menu for selecting the game type.
@@ -481,11 +520,12 @@ class GameTypeMenu extends WatchUi.Menu2 {
  * Delegate for the game type prompt.
  */
 class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
+    var model as RugbyGameModel;
     /**
      * Initializes the delegate.
      * @param m The game model
      */
-    function initialize(m as RugbyGameModel) as Void {
+    function initialize(m as RugbyGameModel) {
         Menu2InputDelegate.initialize();
         model = m;
     }
@@ -521,7 +561,7 @@ class EventLogMenu extends WatchUi.Menu2 {
      * Initializes the menu.
      * @param entries The event log entries
      */
-    function initialize(entries as Array<Dictionary> or Null) as Void {
+    function initialize(entries as Lang.Array or Null) {
         Menu2.initialize({:title=>"Event Log"});
         var itemsAdded = 0;
         if (entries != null && entries.size() > 0) {
@@ -544,9 +584,33 @@ class EventLogMenu extends WatchUi.Menu2 {
 /**
  * Delegate for the event log menu.
  */
+class EventLogDelegate extends WatchUi.Menu2InputDelegate {
+    var model as RugbyGameModel;
+
+    /**
+     * Initializes the delegate.
+     * @param m The game model
+     */
+    function initialize(m as RugbyGameModel) {
+        Menu2InputDelegate.initialize();
+        model = m;
+    }
+
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
+    function onSelect(item as WatchUi.MenuItem) as Void {
+        if (item.getId() == :save_log) {
+            model.exportEventLog();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        }
+    }
+
     /**
      * This method is called when the back button is pressed.
      */
     function onBack() as Void {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
+}
