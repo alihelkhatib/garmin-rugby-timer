@@ -14,6 +14,11 @@ class RugbyTimerView extends WatchUi.View {
     // The game model
     var model;
     
+    // Cached font information
+    var mFonts;
+    // Cached layout information
+    var mLayout;
+
     // A flag to ensure the game type prompt is shown only once
     var promptedGameType;
     // A boolean indicating if the screen is locked
@@ -56,6 +61,9 @@ class RugbyTimerView extends WatchUi.View {
      */
     function onLayout(dc) {
         setLayout(Rez.Layouts.MainLayout(dc));
+        // Calculate and cache fonts and layout once
+        mFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
+        mLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
     }
 
     /**
@@ -98,8 +106,9 @@ class RugbyTimerView extends WatchUi.View {
         var width = dc.getWidth();
         var height = dc.getHeight();
 
-        var fonts = RugbyTimerRenderer.chooseFonts(width);
-        var layout = RugbyTimerRenderer.calculateLayout(height);
+        // Use cached fonts and layout
+        var fonts = mFonts;
+        var layout = mLayout;
 
         RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
         RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
@@ -189,7 +198,7 @@ class RugbyTimerView extends WatchUi.View {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(model), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new CardTeamMenu(), new CardTypeDelegate(model), WatchUi.SLIDE_UP);
     }
 
     /**
