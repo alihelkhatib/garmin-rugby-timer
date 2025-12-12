@@ -139,7 +139,7 @@ class RugbyTimerPersistence {
                 model.redAwayTotal = data["redAwayTotal"];
                 if (model.redAwayTotal == null) { model.redAwayTotal = 0; }
             } catch (ex) {
-                // ignore malformed state
+                System.println("Error loading saved state: " + ex.getErrorMessage());
             }
         }
         if (model.yellowHomeTimes == null) {
