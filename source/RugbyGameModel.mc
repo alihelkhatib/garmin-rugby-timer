@@ -323,6 +323,8 @@ class RugbyGameModel {
             countdownRemaining = countdownTimer;  // Reset countdown to configured time
             countdownSeconds = 0;
             thirtySecondAlerted = false;
+            countdownStartedAt = null;
+            countdownInitialValue = 0;
             startRecording();
             RugbyTimerPersistence.saveState(self);
         }
@@ -358,6 +360,8 @@ class RugbyGameModel {
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
+            countdownStartedAt = null; // Clear countdown start time when paused
+            countdownInitialValue = countdownSeconds; // Store remaining time as initial value
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -374,6 +378,8 @@ class RugbyGameModel {
             }
             pausedState = null;
             lastUpdate = System.getTimer();
+            countdownStartedAt = System.getTimer(); // Set start time when resumed
+            countdownInitialValue = countdownSeconds; // Use current countdownSeconds as initial value
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -636,6 +642,8 @@ class RugbyGameModel {
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
+        countdownStartedAt = System.getTimer();
+        countdownInitialValue = countdownSeconds;
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }
@@ -647,6 +655,8 @@ class RugbyGameModel {
         conversionTeam = null;
         gameState = STATE_KICKOFF;
         countdownSeconds = KICKOFF_TIME;
+        countdownStartedAt = System.getTimer();
+        countdownInitialValue = KICKOFF_TIME;
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }
@@ -667,6 +677,8 @@ class RugbyGameModel {
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;
         countdownSeconds = penaltyKickTime;
+        countdownStartedAt = System.getTimer();
+        countdownInitialValue = penaltyKickTime;
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }
