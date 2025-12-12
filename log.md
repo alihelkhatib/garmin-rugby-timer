@@ -16,6 +16,11 @@
 ## [2025-12-12] Constructor cleanup
 
 - Removed the remaining `as Void` annotations from the GameType/EventLog constructors so Monkey C treats them correctly as constructors, then rebuilt with the usual `monkeyc` command to confirm the warnings disappear.
+- Logged the monkeybrains build command to reflect the current packaging workflow and noted the remaining launcher icon warning.
+
+## [2025-12-12] Countdown-aligned discipline timers
+
+- Synced the red/yellow timers with the core countdown by calculating the actual countdown delta (`previousCountdownRemaining - countdownRemaining`) and feeding that into every card timer update so the cards only decrement while the main clock moves. Verified this flow via the same Java `monkeybrains.jar` build command (still reporting the launcher icon warning).
 
 ## [2025-12-12] Syntax verification & docs maintenance
 
