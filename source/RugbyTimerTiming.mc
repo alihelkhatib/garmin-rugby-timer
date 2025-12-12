@@ -10,9 +10,9 @@ class RugbyTimerTiming {
      * This method is called periodically to update the game state.
      * @param model The game model
      */
-    static function updateGame(model) as Void {
+    static function updateGame(model) {
         try {
-            const newGameTime = System.getTimer();
+            var newGameTime = System.getTimer();
 
             // If the game hasn't started, just update lastUpdate and return.
             if (model.gameStartTime == null) {
@@ -21,7 +21,7 @@ class RugbyTimerTiming {
             }
 
             // Calculate total elapsed time from the beginning of the game.
-            const totalElapsedTimeSeconds = (newGameTime - model.gameStartTime) / 1000.0f;
+            var totalElapsedTimeSeconds = (newGameTime - model.gameStartTime) / 1000.0f;
             
             // Update gameTime based on total elapsed time.
             model.gameTime = totalElapsedTimeSeconds;
@@ -36,7 +36,7 @@ class RugbyTimerTiming {
 
             if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
                 // Calculate time elapsed since this special countdown started.
-                const timeSinceCountdownStartSeconds = (newGameTime - model.countdownStartedAt) / 1000.0f;
+                var timeSinceCountdownStartSeconds = (newGameTime - model.countdownStartedAt) / 1000.0f;
                 model.countdownSeconds = model.countdownInitialValue - timeSinceCountdownStartSeconds;
 
                 if (model.countdownSeconds <= 0) {
@@ -61,7 +61,7 @@ class RugbyTimerTiming {
             // For yellow and red cards, we still use delta for incremental updates.
             // A more robust solution would be to store start times for each individual card.
             // For now, calculate delta based on lastUpdate.
-            const delta = (newGameTime - model.lastUpdate) / 1000.0f;
+            var delta = (newGameTime - model.lastUpdate) / 1000.0f;
             if (delta < 0) {
                 delta = 0;
             }
