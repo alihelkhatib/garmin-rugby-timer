@@ -24,103 +24,103 @@ enum {
  */
 class RugbyGameModel {
     // The current state of the game, one of the STATE_* enum values
-    var gameState as Number;
+    var gameState as Lang.Number;
     // The score of the home team
-    var homeScore as Number;
+    var homeScore as Lang.Number;
     // The score of the away team
-    var awayScore as Number;
+    var awayScore as Lang.Number;
     // The number of tries scored by the home team
-    var homeTries as Number;
+    var homeTries as Lang.Number;
     // The number of tries scored by the away team
-    var awayTries as Number;
+    var awayTries as Lang.Number;
     // The current half number (1 or 2)
-    var halfNumber as Number;
+    var halfNumber as Lang.Number;
     // The number of seconds for the current countdown (e.g., for conversion, penalty)
-    var countdownSeconds as Float;
+    var countdownSeconds as Lang.Float;
     // The main game time in seconds (can be paused)
-    var gameTime as Float;
+    var gameTime as Lang.Float;
     // The total elapsed time in seconds since the game started (always running)
-    var elapsedTime as Number;
+    var elapsedTime as Lang.Number;
     // The timestamp of the last update
-    var lastUpdate as Number or Null;
+    var lastUpdate as Lang.Number or Null;
     // The timestamp when the game started
-    var gameStartTime as Number or Null;
+    var gameStartTime as Lang.Number or Null;
     
     // The current activity recording session
     var session as ActivityRecording.Session or Null;
     // A boolean indicating if the game is a 7s or 15s match
-    var is7s as Boolean;
+    var is7s as Lang.Boolean;
     // The duration of a half in seconds
-    var halfDuration as Number;
+    var halfDuration as Lang.Number;
     // The configured duration for the main countdown timer
-    var countdownTimer as Number;
+    var countdownTimer as Lang.Number;
     // The remaining time for the main countdown timer
-    var countdownRemaining as Float;
+    var countdownRemaining as Lang.Float;
     // An array of GPS track points
-    var gpsTrack as Array;
+    var gpsTrack as Lang.Array;
     // An array of the last scoring events for the undo functionality
-    var lastEvents as Array;
+    var lastEvents as Lang.Array;
     // An array of all game events for the event log
-    var eventLogEntries as Array;
+    var eventLogEntries as Lang.Array;
     // The timestamp of the last time the state was persisted
-    var lastPersistTime as Number;
+    var lastPersistTime as Lang.Number;
     // The duration of the conversion timer for 7s matches
-    var conversionTime7s as Number;
+    var conversionTime7s as Lang.Number;
     // The duration of the conversion timer for 15s matches
-    var conversionTime15s as Number;
+    var conversionTime15s as Lang.Number;
     // The team that is currently attempting a conversion (true for home, false for away)
-    var conversionTeam as Boolean or Null;
+    var conversionTeam as Lang.Boolean or Null;
     // The duration of the penalty kick timer
-    var penaltyKickTime as Number;
+    var penaltyKickTime as Lang.Number;
     // A boolean indicating if the conversion timer should be used
-    var useConversionTimer as Boolean;
+    var useConversionTimer as Lang.Boolean;
     // A boolean indicating if the penalty timer should be used
-    var usePenaltyTimer as Boolean;
+    var usePenaltyTimer as Lang.Boolean;
     // A boolean indicating if the screen should be locked on game start
-    var lockOnStart as Boolean;
+    var lockOnStart as Lang.Boolean;
     // A flag to ensure the low time alert is triggered only once
-    var lowAlertTriggered as Boolean;
+    var lowAlertTriggered as Lang.Boolean;
     // A flag to ensure the 30-second alert is triggered only once
-    var thirtySecondAlerted as Boolean;
+    var thirtySecondAlerted as Lang.Boolean;
     // The game state before it was paused
-    var pausedState as Number or Null;
+    var pausedState as Lang.Number or Null;
     // An array of timers for yellow cards for the home team
-    var yellowHomeTimes as Array<Dictionary>;
+    var yellowHomeTimes as Lang.Array;
     // An array of timers for yellow cards for the away team
-    var yellowAwayTimes as Array<Dictionary>;
+    var yellowAwayTimes as Lang.Array;
     // A counter for the labels of yellow cards for the home team
-    var yellowHomeLabelCounter as Number;
+    var yellowHomeLabelCounter as Lang.Number;
     // A counter for the labels of yellow cards for the away team
-    var yellowAwayLabelCounter as Number;
+    var yellowAwayLabelCounter as Lang.Number;
     // The timer for a red card for the home team
-    var redHome as Float;
+    var redHome as Lang.Float;
     // The timer for a red card for the away team
-    var redAway as Float;
+    var redAway as Lang.Float;
     // A boolean indicating if the red card for the home team is permanent
-    var redHomePermanent as Boolean;
+    var redHomePermanent as Lang.Boolean;
     // A boolean indicating if the red card for the away team is permanent
-    var redAwayPermanent as Boolean;
+    var redAwayPermanent as Lang.Boolean;
     // The total number of yellow cards for the home team
-    var yellowHomeTotal as Number;
+    var yellowHomeTotal as Lang.Number;
     // The total number of yellow cards for the away team
-    var yellowAwayTotal as Number;
+    var yellowAwayTotal as Lang.Number;
     // The total number of red cards for the home team
-    var redHomeTotal as Number;
+    var redHomeTotal as Lang.Number;
     // The total number of red cards for the away team
-    var redAwayTotal as Number;
+    var redAwayTotal as Lang.Number;
     // The timestamp when the special timer (conversion, penalty) started
-    var countdownStartedAt as Number or Null;
+    var countdownStartedAt as Lang.Number or Null;
     // The initial value of the special timer when it started
-    var countdownInitialValue as Float;
+    var countdownInitialValue as Lang.Float;
     // A flag to ensure the special timer alert is triggered only once
-    var specialAlertTriggered as Boolean;
+    var specialAlertTriggered as Lang.Boolean;
     
     // The current position information from the GPS
     var positionInfo as Position.Info or Null;
     // The total distance covered during the activity
-    var distance as Float;
+    var distance as Lang.Float;
     // The current speed
-    var speed as Float;
+    var speed as Lang.Float;
     
     // Timers
     const CONVERSION_TIME_15S = 90;  // 90 seconds for 15s
@@ -136,7 +136,7 @@ class RugbyGameModel {
      */
     function initialize() {
         // Load settings
-        var is7sValue = Storage.getValue("rugby7s") as Boolean or Null;
+        var is7sValue = Storage.getValue("rugby7s") as Lang.Boolean or Null;
         if (is7sValue == null) {
             is7s = false;
         } else {
@@ -146,34 +146,34 @@ class RugbyGameModel {
         halfDuration = is7s ? 420 : 2400; // 7 min or 40 min in seconds
         
         // Load countdown timer setting
-        var savedCountdown = Storage.getValue("countdownTimer") as Number or Null;
+        var savedCountdown = Storage.getValue("countdownTimer") as Lang.Number or Null;
         if (savedCountdown == null) {
             countdownTimer = halfDuration;  // Default to half duration
         } else {
             countdownTimer = savedCountdown;
         }
         
-        var ct7 = Storage.getValue("conversionTime7s") as Number or Null;
+        var ct7 = Storage.getValue("conversionTime7s") as Lang.Number or Null;
         if (ct7 != null) {
             conversionTime7s = ct7;
         }
-        var ct15 = Storage.getValue("conversionTime15s") as Number or Null;
+        var ct15 = Storage.getValue("conversionTime15s") as Lang.Number or Null;
         if (ct15 != null) {
             conversionTime15s = ct15;
         }
-        var pt = Storage.getValue("penaltyKickTime") as Number or Null;
+        var pt = Storage.getValue("penaltyKickTime") as Lang.Number or Null;
         if (pt != null) {
             penaltyKickTime = pt;
         }
-        var useConv = Storage.getValue("useConversionTimer") as Boolean or Null;
+        var useConv = Storage.getValue("useConversionTimer") as Lang.Boolean or Null;
         if (useConv != null) {
             useConversionTimer = useConv;
         }
-        var usePen = Storage.getValue("usePenaltyTimer") as Boolean or Null;
+        var usePen = Storage.getValue("usePenaltyTimer") as Lang.Boolean or Null;
         if (usePen != null) {
             usePenaltyTimer = usePen;
         }
-        var lockOnStartValue = Storage.getValue("lockOnStart") as Boolean or Null;
+        var lockOnStartValue = Storage.getValue("lockOnStart") as Lang.Boolean or Null;
         if (lockOnStartValue == null) { lockOnStart = false; } else { lockOnStart = lockOnStartValue; }
         
         gameState = STATE_IDLE;
@@ -228,7 +228,7 @@ class RugbyGameModel {
      * @param seconds The number of seconds to format
      * @return A formatted string in M:SS format
      */
-    function formatShortTime(seconds as Number) as String {
+    function formatShortTime(seconds as Lang.Number) as Lang.String {
         if (seconds <= 0) {
             return "--";
         }
@@ -266,7 +266,7 @@ class RugbyGameModel {
      * Updates timers/durations per rugby 7s vs 15s selection.
      * @param is7sFlag A boolean indicating if the game is a 7s match
      */
-    function setGameType(is7sFlag as Boolean) as Void {
+    function setGameType(is7sFlag as Lang.Boolean) as Void {
         is7s = is7sFlag;
         Storage.setValue("rugby7s", is7sFlag);
         halfDuration = is7s ? 420 : 2400;
@@ -283,7 +283,7 @@ class RugbyGameModel {
         if (gameState != STATE_CONVERSION || conversionTeam == null) {
             return;
         }
-        recordConversion(conversionTeam as Boolean);
+        recordConversion(conversionTeam as Lang.Boolean);
     }
 
     /**
@@ -294,7 +294,7 @@ class RugbyGameModel {
             return;
         }
         if (conversionTeam != null) {
-            RugbyTimerEventLog.appendEntry(self as RugbyGameModel, (conversionTeam as Boolean ? "Home" : "Away") + " Conversion Miss");
+            RugbyTimerEventLog.appendEntry(self as RugbyGameModel, (conversionTeam as Lang.Boolean ? "Home" : "Away") + " Conversion Miss");
         }
         endConversionWithoutScore();
     }
@@ -370,7 +370,7 @@ class RugbyGameModel {
     function resumeClock() as Void {
         if (gameState == STATE_PAUSED) {
             if (pausedState != null) {
-                gameState = pausedState as Number;
+                gameState = pausedState as Lang.Number;
             } else {
                 gameState = STATE_PLAYING;
             }
@@ -433,7 +433,7 @@ class RugbyGameModel {
      * Score helpers: tries add five points plus conversion clock.
      * @param isHome A boolean indicating if the home team scored
      */
-    function recordTry(isHome as Boolean) as Void {
+    function recordTry(isHome as Lang.Boolean) as Void {
         if (isHome) {
             homeScore += 5;
             homeTries += 1;
@@ -456,7 +456,7 @@ class RugbyGameModel {
      * Conversion attempt scoring (2 points) triggered by the conversion state.
      * @param isHome A boolean indicating if the home team scored
      */
-    function recordConversion(isHome as Boolean) as Void {
+    function recordConversion(isHome as Lang.Boolean) as Void {
         if (isHome) {
             homeScore += 2;
         } else {
@@ -475,7 +475,7 @@ class RugbyGameModel {
      * Track penalty goals/drops and optionally start a penalty timer.
      * @param isHome A boolean indicating if the home team scored
      */
-    function recordPenalty(isHome as Boolean) as Void {
+    function recordPenalty(isHome as Lang.Boolean) as Void {
         if (isHome) {
             homeScore += 3;
         } else {
@@ -495,7 +495,7 @@ class RugbyGameModel {
      * Drop goal scoring is 3 points without extra timers.
      * @param isHome A boolean indicating if the home team scored
      */
-    function recordDropGoal(isHome as Boolean) as Void {
+    function recordDropGoal(isHome as Lang.Boolean) as Void {
         if (isHome) {
             homeScore += 3;
         } else {
@@ -510,9 +510,9 @@ class RugbyGameModel {
      * Add a yellow-card timer entry, tracking its label and vibration state.
      * @param isHome A boolean indicating if the home team received the card
      */
-    function recordYellowCard(isHome as Boolean) as Void {
+    function recordYellowCard(isHome as Lang.Boolean) as Void {
         var duration = is7s ? 120 : 600;
-        var cardId = RugbyTimerCards.allocateYellowCardId(self as RugbyGameModel, isHome) as Number;
+        var cardId = RugbyTimerCards.allocateYellowCardId(self as RugbyGameModel, isHome) as Lang.Number;
         var label = "Y" + cardId.toString();
         var entry = { "remaining" => duration, "vibeTriggered" => false, "label" => label, "cardId" => cardId } as Lang.Dictionary;
         if (isHome) {
@@ -529,7 +529,7 @@ class RugbyGameModel {
      * Handle red cards (permanent for 7s, timed for 15s).
      * @param isHome A boolean indicating if the home team received the card
      */
-    function recordRedCard(isHome as Boolean) as Void {
+    function recordRedCard(isHome as Lang.Boolean) as Void {
         if (is7s) {
             if (isHome) {
                 redHomePermanent = true;
@@ -561,7 +561,7 @@ class RugbyGameModel {
      * @param isHome A boolean indicating if the home team's score should be adjusted
      * @param delta The amount to adjust the score by
      */
-    function adjustScore(isHome as Boolean, delta as Number) as Void {
+    function adjustScore(isHome as Lang.Boolean, delta as Lang.Number) as Void {
         if (isHome) {
             homeScore = (homeScore + delta < 0) ? 0 : homeScore + delta;
         } else {
@@ -579,7 +579,7 @@ class RugbyGameModel {
             return false;
         }
         var e = lastEvents.remove(lastEvents.size() - 1) as Lang.Dictionary;
-        var isHome = e[:home] as Boolean;
+        var isHome = e[:home] as Lang.Boolean;
         if (e[:type] == :try) {
             if (isHome) {
                 homeScore = homeScore - 5;
@@ -721,10 +721,10 @@ class RugbyGameModel {
     function updatePosition(info as Position.Info) as Void {
         positionInfo = info;
         if (info has :speed && info.speed != null) {
-            speed = info.speed as Float;
+            speed = info.speed as Lang.Float;
         }
         if (info has :distance && info.distance != null) {
-            distance = info.distance as Float;
+            distance = info.distance as Lang.Float;
         }
         // Collect GPS points for simple breadcrumb trail
         if (info has :position && info.position != null) {
