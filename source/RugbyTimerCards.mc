@@ -12,21 +12,21 @@ class RugbyTimerCards {
      * @return The updated list of yellow card timers
      */
     static function updateYellowTimers(model as RugbyGameModel, list as Array<Dictionary>, delta as Float) as Array<Dictionary> {
-        var newList = [] as Array<Dictionary>;
-        for (var i as Number = 0; i < list.size(); i = i + 1) {
+        var newList = [];
+        for (var i = 0; i < list.size(); i = i + 1) {
             var rawEntry = list[i];
             var entry = rawEntry as Lang.Dictionary or Null;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
+            var remaining;
+            var vibTriggered;
+            var label;
+            var cardId;
             if (entry != null) {
-                remaining = entry["remaining"] as Float;
-                vibTriggered = entry["vibeTriggered"] as Boolean;
-                label = entry["label"] as String;
-                cardId = entry["cardId"] as Number;
+                remaining = entry["remaining"];
+                vibTriggered = entry["vibeTriggered"];
+                label = entry["label"];
+                cardId = entry["cardId"];
             } else {
-                remaining = rawEntry as Float;
+                remaining = rawEntry;
             }
             if (remaining == null) {
                 continue;
@@ -40,7 +40,7 @@ class RugbyTimerCards {
                 vibTriggered = true;
                 RugbyTimerTiming.triggerYellowTimerVibe();
             }
-            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId } as Dictionary);
+            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
         }
         return newList;
     }
@@ -62,21 +62,21 @@ class RugbyTimerCards {
      * @return The normalized list of yellow card timers
      */
     static function normalizeYellowTimers(model as RugbyGameModel, list as Array<Any>, isHome as Boolean) as Array<Dictionary> {
-        var normalized = [] as Array<Dictionary>;
-        for (var i as Number = 0; i < list.size(); i = i + 1) {
+        var normalized = [];
+        for (var i = 0; i < list.size(); i = i + 1) {
             var rawEntry = list[i];
             var dict = rawEntry as Lang.Dictionary or Null;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
+            var remaining;
+            var vibTriggered;
+            var label;
+            var cardId;
             if (dict != null) {
-                remaining = dict["remaining"] as Float;
-                vibTriggered = dict["vibeTriggered"] as Boolean;
-                label = dict["label"] as String;
-                cardId = dict["cardId"] as Number;
+                remaining = dict["remaining"];
+                vibTriggered = dict["vibeTriggered"];
+                label = dict["label"];
+                cardId = dict["cardId"];
             } else {
-                remaining = rawEntry as Float;
+                remaining = rawEntry;
             }
             if (remaining == null) {
                 continue;
@@ -93,7 +93,7 @@ class RugbyTimerCards {
                 label = "Y" + cardId.toString();
             }
             RugbyTimerCards.ensureYellowLabelCounter(model, isHome, cardId);
-            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId } as Dictionary);
+            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
         }
         return normalized;
     }
@@ -104,8 +104,8 @@ class RugbyTimerCards {
      * @return The highest label number
      */
     static function computeYellowLabelCounter(list as Array<Dictionary>) as Number {
-        var maxLabel as Number = 0;
-        for (var i as Number = 0; i < list.size(); i = i + 1) {
+        var maxLabel = 0;
+        for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i] as Lang.Dictionary or Null;
             if (entry == null) {
                 continue;
@@ -114,7 +114,7 @@ class RugbyTimerCards {
             if (label == null) {
                 continue;
             }
-            var labelNumber = RugbyTimerCards.parseLabelNumber(label) as Number;
+            var labelNumber = RugbyTimerCards.parseLabelNumber(label);
             if (labelNumber > maxLabel) {
                 maxLabel = labelNumber;
             }
@@ -133,8 +133,8 @@ class RugbyTimerCards {
         }
         var digits = label as String;
         if (digits.length() > 0 && digits[0] == "Y") {
-            var trimmed as String = "";
-            for (var idx as Number = 1; idx < digits.length(); idx = idx + 1) {
+            var trimmed = "";
+            for (var idx = 1; idx < digits.length(); idx = idx + 1) {
                 trimmed = trimmed + digits[idx];
             }
             digits = trimmed;
@@ -192,8 +192,8 @@ class RugbyTimerCards {
      * @param model The game model
      */
     static function clearCardTimers(model as RugbyGameModel) as Void {
-        model.yellowHomeTimes = [] as Array<Dictionary>;
-        model.yellowAwayTimes = [] as Array<Dictionary>;
+        model.yellowHomeTimes = [];
+        model.yellowAwayTimes = [];
         model.yellowHomeLabelCounter = 0;
         model.yellowAwayLabelCounter = 0;
         model.redHome = 0.0f;
