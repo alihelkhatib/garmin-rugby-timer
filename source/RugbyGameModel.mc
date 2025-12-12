@@ -2,6 +2,8 @@ using Toybox.Application.Storage;
 using Toybox.System;
 using Toybox.ActivityRecording;
 using Toybox.Activity;
+using Toybox.Position;
+using Toybox.Lang;
 
 // Represents the game state
 enum {
@@ -55,11 +57,11 @@ class RugbyGameModel {
     // The remaining time for the main countdown timer
     var countdownRemaining as Float;
     // An array of GPS track points
-    var gpsTrack as Array<Dictionary>;
+    var gpsTrack as Array;
     // An array of the last scoring events for the undo functionality
-    var lastEvents as Array<Dictionary>;
+    var lastEvents as Array;
     // An array of all game events for the event log
-    var eventLogEntries as Array<Dictionary>;
+    var eventLogEntries as Array;
     // The timestamp of the last time the state was persisted
     var lastPersistTime as Number;
     // The duration of the conversion timer for 7s matches
@@ -132,7 +134,7 @@ class RugbyGameModel {
      * Initializes the game model.
      * Loads settings from storage and initializes the game state.
      */
-    function initialize() as Void {
+    function initialize() {
         // Load settings
         var is7sValue = Storage.getValue("rugby7s") as Boolean or Null;
         if (is7sValue == null) {
@@ -439,7 +441,7 @@ class RugbyGameModel {
             awayScore += 5;
             awayTries += 1;
         }
-        lastEvents.add({:type => :try, :home => isHome} as Dictionary);
+        lastEvents.add({:type => :try, :home => isHome} as Lang.Dictionary);
         trimEvents();
         
         // Only start conversion countdown if game is playing
@@ -460,7 +462,7 @@ class RugbyGameModel {
         } else {
             awayScore += 2;
         }
-        lastEvents.add({:type => :conversion, :home => isHome} as Dictionary);
+        lastEvents.add({:type => :conversion, :home => isHome} as Lang.Dictionary);
         trimEvents();
         conversionTeam = null;
         if (gameState == STATE_CONVERSION) {
@@ -480,7 +482,7 @@ class RugbyGameModel {
             awayScore += 3;
         }
         
-        lastEvents.add({:type => :penalty, :home => isHome} as Dictionary);
+        lastEvents.add({:type => :penalty, :home => isHome} as Lang.Dictionary);
         trimEvents();
         
         if (gameState == STATE_PLAYING && usePenaltyTimer) {
@@ -499,7 +501,7 @@ class RugbyGameModel {
         } else {
             awayScore += 3;
         }
-        lastEvents.add({:type => :drop, :home => isHome} as Dictionary);
+        lastEvents.add({:type => :drop, :home => isHome} as Lang.Dictionary);
         trimEvents();
         RugbyTimerEventLog.appendEntry(self as RugbyGameModel, (isHome ? "Home" : "Away") + " Drop Goal");
     }
@@ -512,7 +514,7 @@ class RugbyGameModel {
         var duration = is7s ? 120 : 600;
         var cardId = RugbyTimerCards.allocateYellowCardId(self as RugbyGameModel, isHome) as Number;
         var label = "Y" + cardId.toString();
-        var entry = { "remaining" => duration, "vibeTriggered" => false, "label" => label, "cardId" => cardId } as Dictionary;
+        var entry = { "remaining" => duration, "vibeTriggered" => false, "label" => label, "cardId" => cardId } as Lang.Dictionary;
         if (isHome) {
             yellowHomeTimes.add(entry);
             yellowHomeTotal = yellowHomeTotal + 1;
@@ -576,7 +578,7 @@ class RugbyGameModel {
         if (lastEvents.size() == 0) {
             return false;
         }
-        var e = lastEvents.remove(lastEvents.size() - 1) as Dictionary;
+        var e = lastEvents.remove(lastEvents.size() - 1) as Lang.Dictionary;
         var isHome = e[:home] as Boolean;
         if (e[:type] == :try) {
             if (isHome) {
@@ -727,8 +729,8 @@ class RugbyGameModel {
         // Collect GPS points for simple breadcrumb trail
         if (info has :position && info.position != null) {
             try {
-                var loc = info.position.toDegrees() as Array<Float>;
-                gpsTrack.add({:lat => loc[0], :lon => loc[1]} as Dictionary);
+                var loc = info.position.toDegrees() as Array;
+                gpsTrack.add({:lat => loc[0], :lon => loc[1]} as Lang.Dictionary);
                 if (gpsTrack.size() > MAX_TRACK_POINTS) {
                     gpsTrack.remove(0);
                 }
