@@ -3,45 +3,36 @@
 ## Overview
 - Repository: `rugby-timer`
 - Language: Monkey C (Garmin Connect IQ)
-- Target platforms: Garmin Fenix 6 family (260x260), Handle differences for `6S/6X`
-- Purpose: Rugby match timing, scorekeeping, discipline tracking, GPS recording with session persistence.
+- Target platforms: Garmin Fenix 6/7/8 families, Epix (Pro/Sapphire), Forerunner 255/255S/255S+, 745/945/955/965 series, Venu 2/2+, and Instinct 2—any device that can render the current layout without additional scaling.
+- Purpose: Rugby match timing, scoring, discipline tracking, GPS `SPORT_RUGBY` recording, overlay dialogs for conversions/penalties/kickoffs, event-logging, and data persistence/export.
 
 ## Architecture
-- Entry point: `source/RugbyTimerApp.mc` registers viewer/delegate.
-- View: `source/RugbyTimerView.mc` renders scoreboard, timers, cards, persists state, handles gameplay logic and settings.
-- Delegate/menus: `RugbyTimerDelegate.mc` routes hardware actions and menu interactions.
-- Settings/UI resources under `resources/menus`, `resources/strings`, `resources/layouts`.
-- Manifest defines Fenix 6 products and permissions (Fit, Positioning, Sensor, SensorLogging).
+- `RugbyTimerApp.mc`: App entry point and provider for the main view/delegate pair.
+- `RugbyTimerDelegate.mc`: Handles button presses and menu entries, including BACK/LAP menu items (`Event Log`, `Save Game`, `Reset Game`) and delegating to the overlay/timing helpers.
+- `RugbyTimerView.mc`: Central orchestrator that wires the helper modules, triggers UI updates, and keeps gameplay state (scores, conversions, card timers, GPS tracking, persisted summaries) in sync.
+- `RugbyTimerRenderer.mc`: Computes layout offsets for the scoreboard (`baseTimerY`, `candidateTimerY`, half/state text, card stack positions) and draws the card timers, countdown/game clocks, and overlay background so the view can remain lean.
+- `RugbyTimerTiming.mc`: Runs the shared `onUpdate` loop, keeps the `countdownTimer` and `gameTimer` decoupled, emits haptics (30s/15s warnings, yellow-expire), and manages conversion/kickoff/penalty timer synchronization.
+- `RugbyTimerCards.mc`: Tracks yellow/red timer dictionaries per team, enforces “only two visible timers per side” while keeping hidden ones ticking, preserves `Y#`/`R#` labels across replacements, and exposes pause/resume helpers.
+- `RugbyTimerOverlay.mc`: Renders the conversion/kickoff/penalty overlay screen with prompts (UP = success, DOWN = miss) plus countdown text, confirmation message, and ensures the main countdown label stays white while the special timer matches the overlay color.
+- `RugbyTimerPersistence.mc`: Saves/restores game state (`gameStateData`, `eventLog`, `lastGameSummary`), clears cards on reset/finish, records totals per color/team, and wires the “Save log” action to Storage.
+- `RugbyTimerEventLog.mc`: Formats timestamped entries (`HH:MM – Home Try`) into `lastEvents` and exposes the log view so referees can export it via the Exit dialog.
+
+## Layout Math Notes
+- `baseTimerY` defines the preferred vertical anchor for the big clocks (game timer at the top, countdown below when overlay inactive). `candidateTimerY` is a computed Y coordinate that moves up/down to avoid overlapping with the card stack; the renderer clamps the final `countdownY` between `countdownMin` and `countdownLimit`.
+- `stateY` and `hintY` define where the “Half #” text, tries indicator, and hint text reside. The renderer shifts these downward whenever the countdown climbs into the card stack zone so the timers and card displays never overlap.
+- Card timers start at `cardsY` and push down incrementally; the renderer adds vertical padding between each card and between colors so stacked timers remain legible even when extras remain hidden (tracked internally).
+- The overlay keeps the main countdown visible near the top and the special timer centered, preventing the red conversion text from touching the scoreboard.
 
 ## Key Behaviors
-- Game states: playing, paused, conversion, penalty, halftime, ended.
-- Score dialog: team → score type, limited during conversion timer (made/miss).
-- Card tracking: multiple yellow timers per team, red timers (permanent for 7s). Display stacks with numbering.
-- Persistence: periodic state saves plus final summary stored at game end (`lastGameSummary`).
-- Event log: score and discipline events are recorded with timestamps and surfaced through the Exit/Back menu’s Event Log entry so referees can export a human-readable timeline to Storage for post-match review.
-- Layout and rendering: positions for the scoreboard, main timers, and card timers adjust dynamically so the game/countdown clocks stay visible even when several card timers stack below, with the main game clock in gray just above the half indicator and the countdown/bonus timer near the bottom.
-- Card timer metadata: only the first two yellow entries per side render while extras keep counting invisibly, and each dictionary entry carries its `Y#` label and vibration flag so the numbering persists across swaps and loads.
-- Haptic alert at 30 seconds remaining when the countdown is active (if supported).
-- GPS/tracking hook collects position updates, trims stored data, and records the session as `Activity.SPORT_RUGBY` so Garmin Connect logs the activity under rugby.
+- Game states: readiness prompt (choosing 7s/15s), countdown sharing (minutes/seconds), conversion/penalty/kickoff overlays, halftime, and finished.
+- Conversion flow: pressing `UP`/`DOWN` during the overlay records success/miss, applies score updates, vibrates once at confirmation, and closes overlay while keeping the main countdown and card timers running.
+- Countdown/kickoff/penalty timers stay synchronized with the main countdown; they never pause unless the user pauses the countdown (Select), but the game timer continues running regardless of countdown state.
+- Card stacks: Up to two visible timers per team. Additional timers keep counting without visibility until a slot frees up. Yellow timers vibrate once when <=10 seconds. All timers reset on “Reset Game” or game completion.
+- Event log: Every scoring or card event logs a human-readable string with `System.getTimer()` timestamps and appends to `lastEvents`. The BACK/LAP dialog exposes the Event Log view and a “Save log” action that persists the list to Storage for post-match sharing.
+- GPS tracking: When the match starts, `Activity.SPORT_RUGBY` recording begins automatically (distance/speed overlays are queued for future work); stopping the game halts GPS logging and writes the record so Connect IQ syncs the rugby session.
 
-## Settings and Resources
-- Settings menu allows toggling conversion/penalty timers, adjusting durations, lock-on-start, dim theme.
-- Layouts and strings contain simple label-based content; additional menus defined in `resources/menus/menu.xml`.
-- `resources/drawables/drawables.xml` now points at `launcher_icon_40.png`, supplying the 40×40 icon size expected by the Fenix 6 launcher.
-
-## Build
-```
-monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6
-```
-Requires Connect IQ SDK 8.x (path configured via `monkeybrains.jar`).
-
-## Development Notes
-- Monitor `log.md` for session recap before continuing.
-- Keep `source/` contents updated; `monkey.jungle` points there.
-- Use storage keys consistently (e.g., `gameStateData`, `lastGameSummary`).
-- The `eventLogExport` storage key stores the human-readable timeline saved from the Event Log menu and can be read by companion apps for sync/sharing.
-
-## Next Steps (Example)
-1. Add haptics for conversion completion.
-2. Introduce stats view with GPS distance/speed.
-3. Improve layout for small devices if needed.
+## Persistence & Release Notes
+- `resources/drawables/` now includes a 40×40 launcher icon referenced in `resources/drawables/drawables.xml` and the manifest; replace it only with same-size assets to avoid scaling warnings.
+- Every change touching gameplay logic must be committed separately, and the release flow includes documentation updates in `log.md` + `project_technical_document.md`.
+- `bin/rugbytimer.prg` should be rebuilt via `monkeyc` after every source change, and the path to `monkeyc.exe` (shown in `AGENTS.md`) must be captured in `log.md`.
+- Release automation runs through `.github/workflows/build_and_publish.yml`, which downloads the same SDK, invokes `monkeybrains.jar`, creates a GitHub release, and uploads the PRG to the Connect IQ Store whenever `CONNECTIQ_STORE_TOKEN` is set.

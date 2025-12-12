@@ -2,7 +2,13 @@ using Toybox.WatchUi;
 using Toybox.Application;
 using Toybox.Application.Storage;
 
+/**
+ * The menu for the application settings.
+ */
 class RugbySettingsMenu extends WatchUi.Menu2 {
+    /**
+     * Initializes the menu.
+     */
     function initialize() {
         Menu2.initialize({:title=>"Rugby Settings"});
         
@@ -53,6 +59,11 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
     }
     
+    /**
+     * Formats a time in seconds into a MM:SS string.
+     * @param seconds The time in seconds
+     * @return The formatted time string
+     */
     function formatTime(seconds) {
         var mins = (seconds.toLong() / 60).toLong();
         var secs = (seconds.toLong() % 60).toLong();
@@ -60,11 +71,21 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     }
 }
 
+/**
+ * Delegate for the settings menu.
+ */
 class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
+    /**
+     * Initializes the delegate.
+     */
     function initialize() {
         Menu2InputDelegate.initialize();
     }
 
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
     function onSelect(item) {
         if (item.getId() == :game_type) {
             var is7s = Storage.getValue("rugby7s");
@@ -125,24 +146,33 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.requestUpdate();
         } else if (item.getId() == :reset) {
             var app = Application.getApp() as RugbyTimerApp;
-            if (app != null && app.rugbyView != null) {
+            if (app != null && app.model != null) {
                 // Reset countdown timer to stored value
                 var countdownTimer = Storage.getValue("countdownTimer");
                 if (countdownTimer != null) {
-                    app.rugbyView.countdownTimer = countdownTimer;
+                    app.model.countdownTimer = countdownTimer;
                 }
-                app.rugbyView.resetGame();
+                app.model.resetGame();
             }
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         }
     }
 
+    /**
+     * This method is called when the back button is pressed.
+     */
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }
 
+/**
+ * Menu for adjusting the half timer.
+ */
 class TimerAdjustMenu extends WatchUi.Menu2 {
+    /**
+     * Initializes the menu.
+     */
     function initialize() {
         Menu2.initialize({:title=>"Half Timer"});
         
@@ -157,14 +187,25 @@ class TimerAdjustMenu extends WatchUi.Menu2 {
     }
 }
 
+/**
+ * Delegate for the timer adjust menu.
+ */
 class TimerAdjustMenuDelegate extends WatchUi.Menu2InputDelegate {
     var parentItem;
     
+    /**
+     * Initializes the delegate.
+     * @param parent The parent menu item
+     */
     function initialize(parent) {
         Menu2InputDelegate.initialize();
         parentItem = parent;
     }
 
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
     function onSelect(item) {
         var timerValue = 0;
         
@@ -192,29 +233,45 @@ class TimerAdjustMenuDelegate extends WatchUi.Menu2InputDelegate {
         var timeStr = formatTime(timerValue);
         parentItem.setSubLabel(timeStr);
         
-        // Update the view's countdown timer if idle
+        // Update the model's countdown timer if idle
         var app = Application.getApp() as RugbyTimerApp;
-        if (app != null && app.rugbyView != null && app.rugbyView.gameState == 0) {  // STATE_IDLE
-            app.rugbyView.countdownTimer = timerValue;
-            app.rugbyView.countdownRemaining = timerValue;
+        if (app != null && app.model != null && app.model.gameState == 0) {  // STATE_IDLE
+            app.model.countdownTimer = timerValue;
+            app.model.countdownRemaining = timerValue;
             WatchUi.requestUpdate();
         }
         
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
     
+    /**
+     * Formats a time in seconds into a MM:SS string.
+     * @param seconds The time in seconds
+     * @return The formatted time string
+     */
     function formatTime(seconds) {
         var mins = (seconds.toLong() / 60).toLong();
         var secs = (seconds.toLong() % 60).toLong();
         return mins.format("%02d") + ":" + secs.format("%02d");
     }
 
+    /**
+     * This method is called when the back button is pressed.
+     */
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }
 
+/**
+ * Menu for adjusting the conversion timer.
+ */
 class ConversionAdjustMenu extends WatchUi.Menu2 {
+    /**
+     * Initializes the menu.
+     * @param is7s A boolean indicating if it is a 7s match
+     * @param parent The parent menu item
+     */
     function initialize(is7s, parent) {
         Menu2.initialize({:title=> is7s ? "7s Conversion" : "15s Conversion"});
         addItem(new WatchUi.MenuItem("30 sec", "00:30", :t30, null));
@@ -226,16 +283,28 @@ class ConversionAdjustMenu extends WatchUi.Menu2 {
     }
 }
 
+/**
+ * Delegate for the conversion adjust menu.
+ */
 class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
     var parentItem;
     var is7s;
     
+    /**
+     * Initializes the delegate.
+     * @param isSevens A boolean indicating if it is a 7s match
+     * @param parent The parent menu item
+     */
     function initialize(isSevens, parent) {
         Menu2InputDelegate.initialize();
         parentItem = parent;
         is7s = isSevens;
     }
 
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
     function onSelect(item) {
         var val = 0;
         if (item.getId() == :t30) { val = 30; }
@@ -251,21 +320,29 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
         parentItem.setSubLabel(formatTime(val));
         
         var app = Application.getApp() as RugbyTimerApp;
-        if (app != null && app.rugbyView != null) {
+        if (app != null && app.model != null) {
             if (is7s) {
-                app.rugbyView.conversionTime7s = val;
+                app.model.conversionTime7s = val;
             } else {
-                app.rugbyView.conversionTime15s = val;
+                app.model.conversionTime15s = val;
             }
         }
         
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
     
+    /**
+     * This method is called when the back button is pressed.
+     */
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
     
+    /**
+     * Formats a time in seconds into a MM:SS string.
+     * @param seconds The time in seconds
+     * @return The formatted time string
+     */
     function formatTime(seconds) {
         var mins = (seconds.toLong() / 60).toLong();
         var secs = (seconds.toLong() % 60).toLong();
@@ -273,7 +350,14 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
     }
 }
 
+/**
+ * Menu for adjusting the penalty kick timer.
+ */
 class PenaltyAdjustMenu extends WatchUi.Menu2 {
+    /**
+     * Initializes the menu.
+     * @param parent The parent menu item
+     */
     function initialize(parent) {
         Menu2.initialize({:title=>"Penalty Kick"});
         addItem(new WatchUi.MenuItem("30 sec", "00:30", :p30, null));
@@ -282,13 +366,25 @@ class PenaltyAdjustMenu extends WatchUi.Menu2 {
     }
 }
 
+/**
+ * Delegate for the penalty adjust menu.
+ */
 class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
     var parentItem;
+
+    /**
+     * Initializes the delegate.
+     * @param parent The parent menu item
+     */
     function initialize(parent) {
         Menu2InputDelegate.initialize();
         parentItem = parent;
     }
 
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
     function onSelect(item) {
         var val = 0;
         if (item.getId() == :p30) { val = 30; }
@@ -299,17 +395,25 @@ class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
         parentItem.setSubLabel(formatTime(val));
         
         var app = Application.getApp() as RugbyTimerApp;
-        if (app != null && app.rugbyView != null) {
-            app.rugbyView.penaltyKickTime = val;
+        if (app != null && app.model != null) {
+            app.model.penaltyKickTime = val;
         }
         
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
     
+    /**
+     * This method is called when the back button is pressed.
+     */
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
     
+    /**
+     * Formats a time in seconds into a MM:SS string.
+     * @param seconds The time in seconds
+     * @return The formatted time string
+     */
     function formatTime(seconds) {
         var mins = (seconds.toLong() / 60).toLong();
         var secs = (seconds.toLong() % 60).toLong();

@@ -1,9 +1,105 @@
-## [2025-12-27] Highlight conversion text
-
-
-- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
-
-
+## [2025-12-31] Documentation, icon, and build sync
+
+- Resized `resources/drawables/icon.jpg` down to 40×40 so the launcher asset now matches Garmin's requirements and no longer triggers the scaling warning.
+- Rewrote `README.md` with the latest workflow/feature summary and trimmed `AGENTS.md` to the requested 200‑400 words with sections for architecture, commands, testing, and the “one commit per change” rule; added a release workflow note to `project_technical_document.md`.
+- Ran the signed build via `java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true -jar C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeybrains.jar -o bin\rugbytimer.prg -f monkey.jungle -y developer_key -d fenix6_sim -w` so the PRG updates (warnings about container access detection remain but the build succeeds).
+
+## [2025-12-12] Render/timing syntax & icon fix
+
+- Removed the invalid local-type annotations and constructor return types so the renderer/timing modules now follow Monkey C's inferred typing rules and compile correctly.
+- Regenerated `resources/drawables/icon.jpg` as a 40×40 launcher asset so the Fenix 6 no longer reports scale warnings.
+- Verified the build via `& 'C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeyc' -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
+
+## [2025-12-12] Delegate constructors
+
+- Removed the lingering `as Void` return types from the `initialize` constructors in `RugbyTimerDelegate` so the delegate compiles cleanly, and reran the same `monkeyc` build to confirm the fix held.
+
+## [2025-12-12] Type imports & delegate helpers
+
+- Added the missing `Toybox.Lang`, `Toybox.Application`, `Toybox.Position`, and `Toybox.System` imports across the helper modules so `Number`, `String`, `Array`, `Dictionary`, and `Application` resolve without compiler errors.
+- Restored typed implementations for `ExitMenuDelegate` and `EventLogDelegate`, and aligned the GameType prompt/event log classes with the expected fields/methods, then rebuilt via the same `monkeyc` invocation.
+
+## [2025-12-12] Constructor cleanup
+
+- Removed the remaining `as Void` annotations from the GameType/EventLog constructors so Monkey C treats them correctly as constructors, then rebuilt with the usual `monkeyc` command to confirm the warnings disappear.
+- Logged the monkeybrains build command to reflect the current packaging workflow and noted the remaining launcher icon warning.
+
+## [2025-12-12] Countdown-aligned discipline timers
+
+- Synced the red/yellow timers with the core countdown by calculating the actual countdown delta (`previousCountdownRemaining - countdownRemaining`) and feeding that into every card timer update so the cards only decrement while the main clock moves. Verified this flow via the same Java `monkeybrains.jar` build command (still reporting the launcher icon warning).
+
+## [2025-12-12] Syntax verification & docs maintenance
+
+- Reviewed every Monkey C module to understand the multi-module layout helpers (`Renderer`, `Cards`, `Timing`, `Overlay`, `Persistence`, `EventLog`) so I could keep updates consistent with the desired behaviors.
+- Compiled the app via `& 'C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeyc' -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6` to ensure Monkey C syntax is clean across all source files.
+- Updated `AGENTS.md` to codify the “atomic commit per change” and documentation expectations plus the event log/overlay hints, refreshed `project_technical_document.md` to explain `baseTimerY/candidateTimerY`, layout math, and multi-device targets, and captured this session in `log.md`.
+
+## [2025-12-11] Renderer refactor and docs
+
+- `RugbyTimerView` now delegates all score/timer/card drawing and layout math to `RugbyTimerRenderer`, keeping the view focused on state updates and overlays while ensuring the countdown positioning math stays centralized.
+- Added inline documentation around the renderer's candidate/limit/min timers so future agents understand why `countdownY`, `stateY`, and `hintY` stay spaced based on the card stack and reserved state area.
+- Updated `README.md`, `project_technical_document.md`, and `AGENTS.md` to mention the renderer helper and the documentation expectations; no manual compile was run because the environment is edit-only.
+
+## [2025-12-12] Timer/persistence/overlay modules
+
+- Pulled the scoring overlay drawing, countdown math, and haptics into `RugbyTimerTiming.mc`, so the update loop sits outside the view and just orchestrates what state changes happen.
+- Created `RugbyTimerPersistence.mc` for `saveState`, `loadSavedState`, and `finalizeGameData`, keeping the view’s persistence logic centralized and shareable.
+- Added `RugbyTimerOverlay.mc` to draw the inline conversion/penalty/kickoff overlay, handle hints, and keep the view focused on state updates, plus noted the new helpers in `AGENTS.md` and `project_technical_document.md`.
+
+## [2025-12-31] Countdown overlay polish
+
+- The inline overlay now labels the primary countdown timer, keeps it white, and places the conversion/kickoff/penalty timer squarely in the middle so the referee sees both clocks.
+- The special timer confirmation text is larger and still appears briefly when the referee confirms a conversion.
+
+## [2025-12-12] Modular cards and event log helpers
+
+- Created `RugbyTimerCards.mc` to house the yellow/red timer math, numbering helpers, and card-stack resets so the view no longer kept that entire block of logic.
+- Added `RugbyTimerEventLog.mc` to format/export the event log text and keep the `EVENT_LOG` wiring out of the main view; the view now just orchestrates the helper and a few thin wrappers.
+- Updated the documentation to call out the new helper modules so future contributors know where the card and log behaviors live.
+
+## [2025-12-28] Special timer alert
+
+- Added a 15-second vibration for conversion/penalty/kickoff countdowns so referees are alerted ahead of the kick window.
+- Reset the alert flag whenever those timers start so the notification only fires once per phase.
+
+## [2025-12-29] Conversion overlay shortcuts
+
+- When the conversion overlay is visible, the UP button logs a successful kick and adds two points while the DOWN button records a miss, and the onscreen hint updates to remind the referee which buttons perform which action.
+- The overlay now renders the conversion countdown in the center (with the main countdown above it, both using the same high-contrast color) and flips the hint text order so the DOWN prompt appears before UP, matching the new layout focus.
+
+## [2025-12-28] Special timer screen and save option
+
+- Save Game now appears in the Exit dialog, writing the current match summary via `saveGame()` so referees can capture the state without ending play.
+- Conversion/Kickoff/Penalty states now display the label and countdown as an inline overlay drawn over the scoreboard; the overlay closes automatically before each scoreboard interaction while maintaining the existing UP/DOWN shortcuts.
+
+## [2025-12-30] Conversion overlay countdown & confirmation
+
+- The overlay now shows the running countdown timer above the conversion/kickoff/penalty label so referees retain visibility into the main clock while the special timer is active.
+- Registering a conversion via the overlay’s UP button shows “Conversion recorded” on-screen briefly to confirm the score update.
+
+## [2025-12-28] Protect countdown layout
+
+- Added inline documentation for the timer stack math in `source/RugbyTimerView.mc` and clamped `countdownY` to keep the big clock away from the state/hint block while still staying above the card timers.
+- Noted the adaptive timer geometry and multi-platform coverage in `project_technical_document.md` and `README.md` so future agents understand the device scope and spacing guarantees.
+
+## [2025-12-27] Highlight conversion text
+
+
+
+- Added cover.jpg (512x512, <300 KB) for the Connect IQ Store listing so the app has a compliant cover image alongside the launcher icon.
+
+
+
+
+
+
+
+- Rendered the CONVERSION/KICKOFF/PENALTY labels in high-contrast red to keep them legible against the countdown display.
+
+
+
+
+
 ## [2025-12-27] Avoid timer overlap
 
 
@@ -760,7 +856,7 @@
 
 
 
-- Preserved each yellow entry’s `Y#` label so replacing a card that was hidden still shows the same identifier when it finally appears.
+- Preserved each yellow entryâ€™s `Y#` label so replacing a card that was hidden still shows the same identifier when it finally appears.
 
 
 
@@ -888,7 +984,7 @@
 
 
 
-- Replaced the unsupported `substr` call in `parseLabelNumber` with a manual loop that drops the leading �Y�, preventing the undefined symbol build error on Fenix 6.
+- Replaced the unsupported `substr` call in `parseLabelNumber` with a manual loop that drops the leading “Y”, preventing the undefined symbol build error on Fenix 6.
 
 
 
@@ -1072,7 +1168,7 @@
 
 ## [2025-12-21] Decouple timers
 
-- Moved the running game timer above the �Half #� label and kept the countdown clock down below with its own position logic so the two clocks stay separate.
+- Moved the running game timer above the “Half #” label and kept the countdown clock down below with its own position logic so the two clocks stay separate.
 
 
 
@@ -1441,6 +1537,3 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
-
-
-

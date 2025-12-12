@@ -1,29 +1,22 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
-- `resources/` contains menus, strings, layouts, and drawables; keep the launcher bitmap in `resources/drawables/` and list it from `resources/drawables/drawables.xml`.
-- `resources/menus/menu.xml` defines the main menu stack; the Exit / Back menu also exposes the Event Log entry now so referees can open the log via that dialog while in-play.
-- Build outputs land in `bin/`, while `monkey.jungle` is the project descriptor read by `monkeyc`. Manifest metadata and permissions live in `manifest.xml`.
-- Use `project_technical_document.md` for architecture notes and `log.md` to record the narrative of each session so future agents can resume work quickly.
+- source/ houses the Monkey C modules. RugbyTimerApp.mc boots the view/delegate, RugbyTimerDelegate.mc wires the buttons/menus, and RugbyTimerView.mc orchestrates state while delegating drawing to RugbyTimerRenderer.mc and helpers (RugbyTimerTiming, RugbyTimerCards, RugbyTimerOverlay, RugbyTimerPersistence, RugbyTimerEventLog). Keep each module focused: view/state management remains in the view, layout math in the renderer, timing logic in the timing helper, and persistence/log export in their dedicated files.
+- esources/ stores drawables (the launcher icon must stay 40�40), layouts, menus, and strings referenced in the manifest. Build artifacts land in in/; the project descriptor is monkey.jungle, and the developer key belongs at the repo root.
 
 ## Build, Test, and Development Commands
-- Build with the Connect IQ compiler: `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`. Adjust the `-d` flag per target (fenix6pro, fenix6s, fenix6spro, fenix6xpro); the SDK lives under the provided `connectiq-sdk-win-8.3.0-...`.
-- After compilation, load the resulting `.prg` into the Fenix 6 simulator (via the SDK’s `monkeydo` or Garmin Express) to verify layout, conversion workflow, and card timers.
-- Document any manual validation steps in `log.md`, e.g., “Built with `monkeyc ...` and confirmed countdown timer spacing on the Fenix 6 simulator.”
+- Use the bundled SDK (C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0). monkeyc.exe and monkeybrains.jar live under ...\bin. Build with:
+`
+java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true \
+  -jar <SDK>/bin/monkeybrains.jar -o bin\rugbytimer.prg -f C:\Users\aliel\Projects\rugby-timer\monkey.jungle -y C:\Users\aliel\Projects\rugby-timer\developer_key -d fenix6_sim -w
+`
+- Log every build command in log.md (include simulator/device details). The GitHub Action mirrors this workflow, produces the PRG, and uploads it to the Connect IQ Store when CONNECTIQ_STORE_TOKEN is populated.
 
 ## Coding Style & Naming Conventions
-- Follow Monkey C idioms: 4-space indentation, PascalCase for classes/menus, camelCase for functions/fields, and ALL_CAPS constants. Prefer descriptive names (`countdownRemaining`, `yellowHomeTimes`, `triggerYellowTimerVibe`).
-- Keep inline comments tight and explain non-obvious math (layout offsets, timer stacking, and persistent keys). Add doc comments in `project_technical_document.md` when new flows appear.
-- Stick to ASCII characters unless existing assets already contain Unicode; file encodings should stay consistent with the SDK expectations.
+- Stick to four-space indentation, PascalCase for classes, camelCase for methods/fields, and UPPER_CASE for constants. Avoid explicit type hints (ar foo as Number); Monkey C infers local types automatically. Document complex math (why aseTimerY vs. candidateTimerY, card spacing, overlay positioning) with concise inline comments.
 
 ## Testing Guidelines
-- There are no automated tests yet. Use the simulator to confirm timer positions, countdown/clock separation, card and conversion handling, and the 30-second warning haptic.
-- Track manual regressions in `log.md` with the date, short summary, and steps taken (include the command used to build the project).
-- When introducing new logic (e.g., additional card timers, GPS recording), note the coverage expectations so future agents know what to verify.
+- Manual tests include timing flows (countdown pause/resume, conversion/kickoff/penalty overlays, card timer stacking), event log exports, GPS recording, and the 10-second yellow warning. Run the Java build before any release and confirm the PRG loads into the simulator or hardware.
 
 ## Commit & Pull Request Guidelines
-- Keep each commit focused and describe it in present tense (examples: “Clarify timer layout comments,” “Add 40×40 launcher icon,” “Update contributor docs”). Avoid bundling unrelated fixes.
-- Every substantive code or resource change must be followed by its own git commit so the history remains easy to trace.
-- A PR should include a short summary, the key files touched, and the manual tests executed (mention the `monkeyc` command used and any simulator checks). Add screenshots only if they illustrate a UI change.
-- Link to the relevant `log.md` entry if the change follows from a previous session, and mention any outstanding items for the next contributor at the end of the PR description.
+- Commit each logical change separately with present-tense messages (e.g., �Resize launcher icon� or �Document timing math�). No change is complete without building, updating log.md, and refreshing project_technical_document.md when you adjust layout, timing, persistence, or release behavior. PR descriptions should cite the tests executed and link to the relevant log.md entry.
