@@ -1,5 +1,6 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
+using Toybox.System;
 
 /**
  * A helper class for saving and loading the game state.
