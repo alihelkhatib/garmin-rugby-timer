@@ -1,36 +1,52 @@
 # Repository Guidelines
 
+## Workflow Expectations
+- Every code or resource change requires its own atomic `git commit` (use present-tense messages such as `Add conversion overlay hints` or `Document timing math`). This keeps `git log` traceable and satisfies the user’s “every change must be committed” requirement.
+- Record the work done during each session in `log.md`. Include the `monkeyc` command used for any builds so the next contributor knows how to reproduce the validation.
+- Update `project_technical_document.md` with architecture notes when you add new flows (timing helpers, persistence, GPS stats, overlays, etc.) and keep the entry under active maintenance so future agents quickly understand the current topology.
+
 ## Project Structure & Module Organization
-- `source/` houses the Monkey C classes. `RugbyTimerView.mc` is the rendering/logic surface, `RugbyTimerRenderer.mc` centralizes the font/layout math and card rendering so the view can focus on timers and overlays, `RugbyTimerDelegate.mc` wires the buttons, and `RugbyTimerApp.mc` wires the behaviors and resources.
-- `source/RugbyTimerCards.mc` keeps the yellow/red card helpers, numbering, and countdown updates separate, `source/RugbyTimerEventLog.mc` owns the event-log formatting/export helpers, `source/RugbyTimerTiming.mc` runs the shared update loop and haptics, `source/RugbyTimerPersistence.mc` owns the state snapshot/summary plumbing, and `source/RugbyTimerOverlay.mc` draws the special timer overlay so the view just wires the flow.
-- `resources/` contains menus, strings, layouts, and drawables; keep the launcher bitmap in `resources/drawables/` and list it from `resources/drawables/drawables.xml`.
-- `resources/menus/menu.xml` defines the main menu stack; the Exit / Back menu also exposes the Event Log entry now so referees can open the log via that dialog while in-play.
-- Build outputs land in `bin/`, while `monkey.jungle` is the project descriptor read by `monkeyc`. Manifest metadata and permissions live in `manifest.xml`.
-- Use `project_technical_document.md` for architecture notes and `log.md` to record the narrative of each session so future agents can resume work quickly.
+- `source/` holds the Monkey C code. Key entry points:
+  - `RugbyTimerApp.mc` registers the view and delegate.
+  - `RugbyTimerDelegate.mc` wires the menus/keys (Back/Lap now surfaces Event Log and Save Game entries).
+  - `RugbyTimerView.mc` orchestrates states, overlays, and persistence while delegating layout math.
+  - `RugbyTimerRenderer.mc` centralizes font selection, layout offsets (`baseTimerY`, `candidateTimerY`, etc.), and card/gps overlay drawing so spacing is consistent across devices.
+  - `RugbyTimerTiming.mc` owns the shared timer loop, countdown/game timer separation, and haptics (including the 30s/15s warnings).
+  - `RugbyTimerCards.mc` manages yellow/red timers, numbering (`Y1`, `R1`), stacking rules, and screen persistence.
+  - `RugbyTimerOverlay.mc` paints the conversion/kickoff/penalty overlay, keeps the countdown label white, and handles UP/DOWN button hints plus confirmation text.
+  - `RugbyTimerPersistence.mc` snapshots/resumes state, clears cards on resets/finishes, and saves the final summary.
+  - `RugbyTimerEventLog.mc` formats timestamped entries and exposes the “Save log” action tied to the Exit dialog’s Event Log entry.
+- Keep drawables/menus/strings under `resources/`, and update `resources/drawables/drawables.xml` whenever icons or launcher sizes change (launcher icons must match each device’s 40×40 requirement).
+- Build artifacts live in `bin/`; `monkey.jungle` is the project descriptor.
 
 ## Build, Test, and Development Commands
-- Build with the Connect IQ compiler: `monkeyc -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`. Adjust the `-d` flag per target (fenix6pro, fenix6s, fenix6spro, fenix6xpro); the SDK lives under the provided `connectiq-sdk-win-8.3.0-...`.
-- After compilation, load the resulting `.prg` into the Fenix 6 simulator (via the SDK’s `monkeydo` or Garmin Express) to verify layout, conversion workflow, and card timers.
-- Document any manual validation steps in `log.md`, e.g., “Built with `monkeyc ...` and confirmed countdown timer spacing on the Fenix 6 simulator.”
+- Run the compiler via the SDK root:  
+  `& 'C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeyc' -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`  
+  Adjust `-d` per target (fenix6pro, epixpro, venu2, etc.) and note the full path in `log.md` after the build.
+- Use the simulator (`simulator.exe` in the same SDK `bin`) or the watch itself to verify conversions, cards, overlays, GPS recording, and event log exports.
+- Manual verification steps (state transitions, overlay hints, 30s vibration, event log save) should also be recorded in `log.md`.
 
 ## Coding Style & Naming Conventions
-- Follow Monkey C idioms: 4-space indentation, PascalCase for classes/menus, camelCase for functions/fields, and ALL_CAPS constants. Prefer descriptive names (`countdownRemaining`, `yellowHomeTimes`, `triggerYellowTimerVibe`).
-- Keep inline comments tight and explain non-obvious math (layout offsets, timer stacking, and persistent keys). Add doc comments in `project_technical_document.md` when new flows appear.
-- Stick to ASCII characters unless existing assets already contain Unicode; file encodings should stay consistent with the SDK expectations.
+- Monkey C style: 4-space indentation, PascalCase classes, camelCase fields/functions, and ALL_CAPS constants. Keep file names descriptive (`RugbyTimerCards`, `RugbyTimerRenderer`).
+- Provide inline comments for non-obvious layout math (why `baseTimerY` offsets are used, how `candidateTimerY` predicts where the countdown sits relative to `cardsY`).
+- Document new helpers in `project_technical_document.md` and explain any UI changes (e.g., countdown overlay now sits above the conversion timer).
+- Avoid Unicode unless asset already contains it; prefer ASCII for compatibility.
 
 ## Testing Guidelines
-- There are no automated tests yet. Use the simulator to confirm timer positions, countdown/clock separation, card and conversion handling, and the 30-second warning haptic.
-- Track manual regressions in `log.md` with the date, short summary, and steps taken (include the command used to build the project).
-- When introducing new logic (e.g., additional card timers, GPS recording), note the coverage expectations so future agents know what to verify.
+- No automated suite yet; rely on the simulator or real watch for:
+  1. Countdown/game timer separation during conversions, penalties, kickoffs, and pauses.
+  2. Event Log recording and “Save log” export.
+  3. Card timer stacking behavior (max two visible per side, extras hidden but tracked) plus the 10-second yellow warning.
+  4. GPS tracking recorded as `Activity.SPORT_RUGBY`.
+- If you add new behaviors (overlay screen, event log export, GPS stats), expand `log.md` with the test steps and mention any outstanding verification.
 
 ## Commit & Pull Request Guidelines
-- Keep each commit focused and describe it in present tense (examples: “Clarify timer layout comments,” “Add 40×40 launcher icon,” “Update contributor docs”). Avoid bundling unrelated fixes.
-- Every substantive code or resource change must be followed by its own git commit so the history remains easy to trace.
-- A PR should include a short summary, the key files touched, and the manual tests executed (mention the `monkeyc` command used and any simulator checks). Add screenshots only if they illustrate a UI change.
-- Link to the relevant `log.md` entry if the change follows from a previous session, and mention any outstanding items for the next contributor at the end of the PR description.
+- Each change must be committed immediately after verification; do not bundle multiple feature deliveries into one commit. Mention the linked `log.md` entry or session notes in the PR description so reviewers understand the intent.
+- PRs should summarize affected helpers (renderer, cards, overlay, persistence, timing) and reference the manual tests executed (including the `monkeyc` command).
+- Attach screenshots when UI layout changes occur and note Cinemations/haptics if they were touched.
 
 ## Documentation & Collaboration Expectations
-- Every code change must include inline context comments or reference documentation (`project_technical_document.md`, `log.md`) so any future agent can trace why logic evolved, especially for the special timer overlay and conversion/penalty handling.
-- Log each session's work in `log.md`, describing the change, why it was made, and how it was validated (mention the `monkeyc` command). Update the log whenever overlay behavior, save-game flow, or button mappings change.
-- Keep `AGENTS.md` current when you add new UX rules (e.g., countdown label color, hint swaps, conversion confirmation) so every contributor reads the rules before touching the code.
-- Document layout math changes in `RugbyTimerRenderer.mc` (base positions, candidate offsets) so the renderer stays the single source of truth for timer/card spacing.
+- Inline code modifications must be accompanied by succinct comments explaining “why,” not just “what.”
+- Update `project_technical_document.md` whenever you add a module or change layout rules so future agents can quickly onboard.
+- Use `log.md` for chronological session notes, including build/test commands and resulting issues/fixes.
+- `AGENTS.md` must stay consistent with the latest instructions—if the user adds new behavior (e.g., overlay hints, event log export, GPS stats), mention it here so every contributor reads the current rules before coding.

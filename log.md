@@ -1,3 +1,28 @@
+## [2025-12-12] Render/timing syntax & icon fix
+
+- Removed the invalid local-type annotations and constructor return types so the renderer/timing modules now follow Monkey C's inferred typing rules and compile correctly.
+- Regenerated `resources/drawables/icon.jpg` as a 40×40 launcher asset so the Fenix 6 no longer reports scale warnings.
+- Verified the build via `& 'C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeyc' -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6`.
+
+## [2025-12-12] Delegate constructors
+
+- Removed the lingering `as Void` return types from the `initialize` constructors in `RugbyTimerDelegate` so the delegate compiles cleanly, and reran the same `monkeyc` build to confirm the fix held.
+
+## [2025-12-12] Type imports & delegate helpers
+
+- Added the missing `Toybox.Lang`, `Toybox.Application`, `Toybox.Position`, and `Toybox.System` imports across the helper modules so `Number`, `String`, `Array`, `Dictionary`, and `Application` resolve without compiler errors.
+- Restored typed implementations for `ExitMenuDelegate` and `EventLogDelegate`, and aligned the GameType prompt/event log classes with the expected fields/methods, then rebuilt via the same `monkeyc` invocation.
+
+## [2025-12-12] Constructor cleanup
+
+- Removed the remaining `as Void` annotations from the GameType/EventLog constructors so Monkey C treats them correctly as constructors, then rebuilt with the usual `monkeyc` command to confirm the warnings disappear.
+
+## [2025-12-12] Syntax verification & docs maintenance
+
+- Reviewed every Monkey C module to understand the multi-module layout helpers (`Renderer`, `Cards`, `Timing`, `Overlay`, `Persistence`, `EventLog`) so I could keep updates consistent with the desired behaviors.
+- Compiled the app via `& 'C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeyc' -f monkey.jungle -o bin\rugbytimer.prg -y developer_key -d fenix6` to ensure Monkey C syntax is clean across all source files.
+- Updated `AGENTS.md` to codify the “atomic commit per change” and documentation expectations plus the event log/overlay hints, refreshed `project_technical_document.md` to explain `baseTimerY/candidateTimerY`, layout math, and multi-device targets, and captured this session in `log.md`.
+
 ## [2025-12-11] Renderer refactor and docs
 
 - `RugbyTimerView` now delegates all score/timer/card drawing and layout math to `RugbyTimerRenderer`, keeping the view focused on state updates and overlays while ensuring the countdown positioning math stays centralized.
