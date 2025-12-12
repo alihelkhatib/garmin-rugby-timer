@@ -12,67 +12,78 @@ class RugbyTimerTiming {
      */
     static function updateGame(model) as Void {
         try {
-            var now = System.getTimer();
-            if (model.gameStartTime != null) {
-                model.elapsedTime = (now - model.gameStartTime) / 1000;
+            const newGameTime = System.getTimer();
+
+            // If the game hasn't started, just update lastUpdate and return.
+            if (model.gameStartTime == null) {
+                model.lastUpdate = newGameTime;
+                return;
             }
 
-            var delta = 0;
-            if (model.lastUpdate != null) {
-                delta = (now - model.lastUpdate) / 1000.0;
-                if (delta < 0) {
-                    delta = 0;
-                }
+            // Calculate total elapsed time from the beginning of the game.
+            const totalElapsedTimeSeconds = (newGameTime - model.gameStartTime) / 1000.0f;
+            
+            // Update gameTime based on total elapsed time.
+            model.gameTime = totalElapsedTimeSeconds;
+
+            // Update countdownRemaining based on total elapsed game time.
+            model.countdownRemaining = model.countdownTimer - totalElapsedTimeSeconds;
+            if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
+            if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
+                model.thirtySecondAlerted = true;
+                RugbyTimerTiming.triggerThirtySecondVibe();
             }
-            if (delta > 0 && model.gameState != STATE_IDLE && model.gameState != STATE_ENDED) {
-                model.gameTime = model.gameTime + delta;
-            }
 
-            if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
-                model.countdownRemaining = model.countdownRemaining - delta;
-                if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
-                if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
-                    model.thirtySecondAlerted = true;
-                    RugbyTimerTiming.triggerThirtySecondVibe();
-                }
+            if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+                // Calculate time elapsed since this special countdown started.
+                const timeSinceCountdownStartSeconds = (newGameTime - model.countdownStartedAt) / 1000.0f;
+                model.countdownSeconds = model.countdownInitialValue - timeSinceCountdownStartSeconds;
 
-                if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
-                    model.countdownSeconds = model.countdownSeconds - delta;
-                    if (model.countdownSeconds <= 0) {
-                        model.countdownSeconds = 0;
-                        if (model.gameState == STATE_CONVERSION) {
-                            model.startKickoffCountdown();
-                        } else if (model.gameState == STATE_PENALTY) {
-                            model.resumePlay();
-                        } else {
-                            model.resumePlay();
-                        }
-                    }
-                    if (model.countdownSeconds <= 15 && model.countdownSeconds > 0 && !model.specialAlertTriggered) {
-                        model.specialAlertTriggered = true;
-                        RugbyTimerTiming.triggerSpecialTimerVibe();
-                    }
-                }
+                if (model.countdownSeconds <= 0) {
+                    model.countdownSeconds = 0;
+                    model.countdownStartedAt = null; // Reset start time for next special timer
+                    model.countdownInitialValue = 0; // Reset initial value
 
-                model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta);
-                model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta);
-                if (!model.redHomePermanent && model.redHome > 0) { model.redHome = model.redHome - delta; if (model.redHome < 0) { model.redHome = 0; } }
-                if (!model.redAwayPermanent && model.redAway > 0) { model.redAway = model.redAway - delta; if (model.redAway < 0) { model.redAway = 0; } }
-
-                if (model.countdownRemaining <= 0) {
-                    model.countdownRemaining = 0;
-                    if (model.halfNumber == 1) {
-                        model.enterHalfTime();
+                    if (model.gameState == STATE_CONVERSION) {
+                        model.startKickoffCountdown();
+                    } else if (model.gameState == STATE_PENALTY) {
+                        model.resumePlay();
                     } else {
-                        model.endGame();
+                        model.resumePlay();
                     }
+                }
+                if (model.countdownSeconds <= 15 && model.countdownSeconds > 0 && !model.specialAlertTriggered) {
+                    model.specialAlertTriggered = true;
+                    RugbyTimerTiming.triggerSpecialTimerVibe();
                 }
             }
 
-            model.lastUpdate = now;
-            if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
+            // For yellow and red cards, we still use delta for incremental updates.
+            // A more robust solution would be to store start times for each individual card.
+            // For now, calculate delta based on lastUpdate.
+            const delta = (newGameTime - model.lastUpdate) / 1000.0f;
+            if (delta < 0) {
+                delta = 0;
+            }
+
+            model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta);
+            model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta);
+            if (!model.redHomePermanent && model.redHome > 0) { model.redHome = model.redHome - delta; if (model.redHome < 0) { model.redHome = 0; } }
+            if (!model.redAwayPermanent && model.redAway > 0) { model.redAway = model.redAway - delta; if (model.redAway < 0) { model.redAway = 0; } }
+
+            if (model.countdownRemaining <= 0) {
+                model.countdownRemaining = 0;
+                if (model.halfNumber == 1) {
+                    model.enterHalfTime();
+                } else {
+                    model.endGame();
+                }
+            }
+
+            model.lastUpdate = newGameTime;
+            if (model.lastPersistTime == 0 || newGameTime - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
                 RugbyTimerPersistence.saveState(model);
-                model.lastPersistTime = now;
+                model.lastPersistTime = newGameTime;
             }
 
         } catch (ex) {
