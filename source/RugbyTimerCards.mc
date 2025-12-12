@@ -11,22 +11,22 @@ class RugbyTimerCards {
      * @param delta The time delta since the last update
      * @return The updated list of yellow card timers
      */
-    static function updateYellowTimers(model, list, delta) {
-        var newList = [];
-        for (var i = 0; i < list.size(); i = i + 1) {
+    static function updateYellowTimers(model as RugbyGameModel, list as Array<Dictionary>, delta as Float) as Array<Dictionary> {
+        var newList = [] as Array<Dictionary>;
+        for (var i as Number = 0; i < list.size(); i = i + 1) {
             var rawEntry = list[i];
-            var entry = rawEntry as Lang.Dictionary;
+            var entry = rawEntry as Lang.Dictionary or Null;
             var remaining = null;
             var vibTriggered = false;
             var label = null;
             var cardId = null;
             if (entry != null) {
-                remaining = entry["remaining"];
-                vibTriggered = entry["vibeTriggered"];
-                label = entry["label"];
-                cardId = entry["cardId"];
+                remaining = entry["remaining"] as Float;
+                vibTriggered = entry["vibeTriggered"] as Boolean;
+                label = entry["label"] as String;
+                cardId = entry["cardId"] as Number;
             } else {
-                remaining = rawEntry;
+                remaining = rawEntry as Float;
             }
             if (remaining == null) {
                 continue;
@@ -40,7 +40,7 @@ class RugbyTimerCards {
                 vibTriggered = true;
                 RugbyTimerTiming.triggerYellowTimerVibe();
             }
-            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
+            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId } as Dictionary);
         }
         return newList;
     }
@@ -53,25 +53,30 @@ class RugbyTimerCards {
      * @param isHome A boolean indicating if the timers are for the home team
      * @return The normalized list of yellow card timers
      */
-    static function normalizeYellowTimers(model, list, isHome) {
-        var normalized = [];
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i];
-            if (entry == null) {
-                continue;
-            }
-            var dict = entry as Lang.Dictionary;
+    /**
+     * Normalizes the yellow card timers.
+     * This is used to ensure that the data structure is consistent after being loaded from storage.
+     * @param model The game model
+     * @param list The list of yellow card timers
+     * @param isHome A boolean indicating if the timers are for the home team
+     * @return The normalized list of yellow card timers
+     */
+    static function normalizeYellowTimers(model as RugbyGameModel, list as Array<Any>, isHome as Boolean) as Array<Dictionary> {
+        var normalized = [] as Array<Dictionary>;
+        for (var i as Number = 0; i < list.size(); i = i + 1) {
+            var rawEntry = list[i];
+            var dict = rawEntry as Lang.Dictionary or Null;
             var remaining = null;
             var vibTriggered = false;
             var label = null;
             var cardId = null;
             if (dict != null) {
-                remaining = dict["remaining"];
-                vibTriggered = dict["vibeTriggered"];
-                label = dict["label"];
-                cardId = dict["cardId"];
+                remaining = dict["remaining"] as Float;
+                vibTriggered = dict["vibeTriggered"] as Boolean;
+                label = dict["label"] as String;
+                cardId = dict["cardId"] as Number;
             } else {
-                remaining = entry;
+                remaining = rawEntry as Float;
             }
             if (remaining == null) {
                 continue;
@@ -88,7 +93,7 @@ class RugbyTimerCards {
                 label = "Y" + cardId.toString();
             }
             RugbyTimerCards.ensureYellowLabelCounter(model, isHome, cardId);
-            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
+            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId } as Dictionary);
         }
         return normalized;
     }
@@ -98,18 +103,18 @@ class RugbyTimerCards {
      * @param list The list of yellow card timers
      * @return The highest label number
      */
-    static function computeYellowLabelCounter(list) {
-        var maxLabel = 0;
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i] as Lang.Dictionary;
+    static function computeYellowLabelCounter(list as Array<Dictionary>) as Number {
+        var maxLabel as Number = 0;
+        for (var i as Number = 0; i < list.size(); i = i + 1) {
+            var entry = list[i] as Lang.Dictionary or Null;
             if (entry == null) {
                 continue;
             }
-            var label = entry["label"];
+            var label = entry["label"] as String or Null;
             if (label == null) {
                 continue;
             }
-            var labelNumber = RugbyTimerCards.parseLabelNumber(label);
+            var labelNumber = RugbyTimerCards.parseLabelNumber(label) as Number;
             if (labelNumber > maxLabel) {
                 maxLabel = labelNumber;
             }
@@ -122,14 +127,14 @@ class RugbyTimerCards {
      * @param label The label string (e.g., "Y1")
      * @return The parsed number
      */
-    static function parseLabelNumber(label) {
+    static function parseLabelNumber(label as String or Null) as Number {
         if (label == null) {
             return 0;
         }
-        var digits = label;
+        var digits = label as String;
         if (digits.length() > 0 && digits[0] == "Y") {
-            var trimmed = "";
-            for (var idx = 1; idx < digits.length(); idx = idx + 1) {
+            var trimmed as String = "";
+            for (var idx as Number = 1; idx < digits.length(); idx = idx + 1) {
                 trimmed = trimmed + digits[idx];
             }
             digits = trimmed;
@@ -138,7 +143,7 @@ class RugbyTimerCards {
             return 0;
         }
         try {
-            return digits.toLong();
+            return digits.toLong() as Number;
         } catch (ex) {
             System.println("Error parsing yellow card label number: " + ex.getErrorMessage());
             return 0;
@@ -151,7 +156,7 @@ class RugbyTimerCards {
      * @param isHome A boolean indicating if the card is for the home team
      * @return The new card ID
      */
-    static function allocateYellowCardId(model, isHome) {
+    static function allocateYellowCardId(model as RugbyGameModel, isHome as Boolean) as Number {
         if (isHome) {
             model.yellowHomeLabelCounter = model.yellowHomeLabelCounter + 1;
             return model.yellowHomeLabelCounter;
@@ -166,7 +171,7 @@ class RugbyTimerCards {
      * @param isHome A boolean indicating if the card is for the home team
      * @param cardId The card ID
      */
-    static function ensureYellowLabelCounter(model, isHome, cardId) {
+    static function ensureYellowLabelCounter(model as RugbyGameModel, isHome as Boolean, cardId as Number or Null) as Void {
         if (cardId == null) {
             return;
         }
@@ -186,13 +191,13 @@ class RugbyTimerCards {
      * Clears all card timers.
      * @param model The game model
      */
-    static function clearCardTimers(model) {
-        model.yellowHomeTimes = [];
-        model.yellowAwayTimes = [];
+    static function clearCardTimers(model as RugbyGameModel) as Void {
+        model.yellowHomeTimes = [] as Array<Dictionary>;
+        model.yellowAwayTimes = [] as Array<Dictionary>;
         model.yellowHomeLabelCounter = 0;
         model.yellowAwayLabelCounter = 0;
-        model.redHome = 0;
-        model.redAway = 0;
+        model.redHome = 0.0f;
+        model.redAway = 0.0f;
         model.redHomePermanent = false;
         model.redAwayPermanent = false;
         model.yellowHomeTotal = 0;
