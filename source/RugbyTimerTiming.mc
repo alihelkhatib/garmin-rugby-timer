@@ -1,7 +1,6 @@
 using Toybox.Attention;
 using Toybox.System;
 using Toybox.WatchUi;
-using Toybox.Lang;
 
 /**
  * A helper class for handling game timing.
@@ -13,7 +12,7 @@ class RugbyTimerTiming {
      */
     static function updateGame(model as RugbyGameModel) as Void {
         try {
-            var newGameTime = System.getTimer();
+            const newGameTime as Number = System.getTimer();
 
             // If the game hasn't started, just update lastUpdate and return.
             if (model.gameStartTime == null) {
@@ -22,7 +21,7 @@ class RugbyTimerTiming {
             }
 
             // Calculate total elapsed time from the beginning of the game.
-            var totalElapsedTimeSeconds = (newGameTime - model.gameStartTime) / 1000.0f;
+            const totalElapsedTimeSeconds as Float = (newGameTime - model.gameStartTime) / 1000.0f;
             
             // Update gameTime based on total elapsed time.
             model.gameTime = totalElapsedTimeSeconds;
@@ -37,12 +36,8 @@ class RugbyTimerTiming {
 
             if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
                 // Calculate time elapsed since this special countdown started.
-                if (model.countdownStartedAt != null) {
-                    var timeSinceCountdownStartSeconds = (newGameTime - (model.countdownStartedAt as Number)) / 1000.0f;
-                    model.countdownSeconds = model.countdownInitialValue - timeSinceCountdownStartSeconds;
-                } else {
-                    model.countdownSeconds = model.countdownInitialValue;
-                }
+                const timeSinceCountdownStartSeconds as Float = (newGameTime - (model.countdownStartedAt as Number)) / 1000.0f;
+                model.countdownSeconds = (model.countdownInitialValue as Float) - timeSinceCountdownStartSeconds;
 
                 if (model.countdownSeconds <= 0) {
                     model.countdownSeconds = 0.0f;
@@ -66,16 +61,13 @@ class RugbyTimerTiming {
             // For yellow and red cards, we still use delta for incremental updates.
             // A more robust solution would be to store start times for each individual card.
             // For now, calculate delta based on lastUpdate.
-            var delta = 0.0f;
-            if (model.lastUpdate != null) {
-                delta = (newGameTime - (model.lastUpdate as Number)) / 1000.0f;
-                if (delta < 0) {
-                    delta = 0.0f;
-                }
+            const delta as Float = (newGameTime - (model.lastUpdate as Number)) / 1000.0f;
+            if (delta < 0) {
+                delta = 0.0f;
             }
 
-            model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta) as Lang.Array;
-            model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta) as Lang.Array;
+            model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta) as Array<Dictionary>;
+            model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta) as Array<Dictionary>;
             if (!model.redHomePermanent && model.redHome > 0) { model.redHome = model.redHome - delta; if (model.redHome < 0) { model.redHome = 0.0f; } }
             if (!model.redAwayPermanent && model.redAway > 0) { model.redAway = model.redAway - delta; if (model.redAway < 0) { model.redAway = 0.0f; } }
 
@@ -104,12 +96,12 @@ class RugbyTimerTiming {
      * @param seconds The time in seconds
      * @return The formatted time string
      */
-    static function formatTime(seconds as Lang.Number) as String {
+    static function formatTime(seconds as Number) as String {
         if (seconds < 0) {
             seconds = 0;
         }
-        var mins = seconds.toLong() / 60;
-        var secs = seconds.toLong() % 60;
+        var mins = (seconds.toLong() / 60) as Number;
+        var secs = (seconds.toLong() % 60) as Number;
         return mins.format("%02d") + ":" + secs.format("%02d");
     }
 
@@ -120,7 +112,7 @@ class RugbyTimerTiming {
         if (Attention has :vibrate) {
             var vibeProfiles = [
                 new Attention.VibeProfile(50, 500)
-            ] as Lang.Array;
+            ] as Array<Attention.VibeProfile>;
             Attention.vibrate(vibeProfiles);
         }
     }
@@ -132,7 +124,7 @@ class RugbyTimerTiming {
         if (Attention has :vibrate) {
             var vibeProfiles = [
                 new Attention.VibeProfile(40, 400)
-            ] as Lang.Array;
+            ] as Array<Attention.VibeProfile>;
             Attention.vibrate(vibeProfiles);
         }
     }
@@ -144,7 +136,7 @@ class RugbyTimerTiming {
         if (Attention has :vibrate) {
             var vibeProfiles = [
                 new Attention.VibeProfile(60, 300)
-            ] as Lang.Array;
+            ] as Array<Attention.VibeProfile>;
             Attention.vibrate(vibeProfiles);
         }
     }
