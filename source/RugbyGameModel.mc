@@ -719,7 +719,7 @@ class RugbyGameModel {
                     gpsTrack.remove(0);
                 }
             } catch (ex) {
-                // ignore conversion errors
+                System.println("Error converting GPS position: " + ex.getErrorMessage());
             }
         }
     }
