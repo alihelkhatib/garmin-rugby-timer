@@ -1,6 +1,5 @@
 using Toybox.Graphics;
 using Toybox.Lang;
-using Rez.Strings;
 
 /**
  * A helper class for rendering the UI elements.
@@ -13,22 +12,39 @@ class RugbyTimerRenderer {
      * @param width The width of the screen
      * @return A dictionary of fonts
      */
-    static function chooseFonts(width as Lang.Number) as Lang.Dictionary {
+    static function chooseFonts(width as Number) as Dictionary {
         // Use compact fonts for smaller screens and a slightly larger tries font on wide displays.
-        var scoreFont = Graphics.FONT_NUMBER_MEDIUM;
-        var triesFont = Graphics.FONT_XTINY;
-        var halfFont = Graphics.FONT_XTINY;
-        var timerFont = Graphics.FONT_SYSTEM_TINY;
-        var countdownFont = Graphics.FONT_NUMBER_HOT;
-        var stateFont = Graphics.FONT_SMALL;
-        var hintFont = Graphics.FONT_XTINY;
-
+        var scoreFont as FontResource;
+        var triesFont as FontResource;
+        var halfFont as FontResource;
+        var timerFont as FontResource;
+        var countdownFont as FontResource;
+        var stateFont as FontResource;
+        var hintFont as FontResource;
         if (width <= 240) {
+            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
+            halfFont = Graphics.FONT_XTINY;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
+            stateFont = Graphics.FONT_SMALL;
+            hintFont = Graphics.FONT_XTINY;
         } else if (width <= 260) {
+            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
+            halfFont = Graphics.FONT_XTINY;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
+            stateFont = Graphics.FONT_SMALL;
+            hintFont = Graphics.FONT_XTINY;
         } else {
+            scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_SMALL;
+            halfFont = Graphics.FONT_XTINY;
+            timerFont = Graphics.FONT_SYSTEM_TINY;
+            countdownFont = Graphics.FONT_NUMBER_HOT;
+            stateFont = Graphics.FONT_SMALL;
+            hintFont = Graphics.FONT_XTINY;
         }
         return {
             :scoreFont => scoreFont,
@@ -38,7 +54,7 @@ class RugbyTimerRenderer {
             :countdownFont => countdownFont,
             :stateFont => stateFont,
             :hintFont => hintFont
-        };
+        } as Dictionary;
     }
 
     /**
@@ -47,16 +63,16 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return A dictionary of layout values
      */
-    static function calculateLayout(height as Lang.Number) as Lang.Dictionary {
+    static function calculateLayout(height as Number) as Dictionary {
         // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
         // and the state/hint section so each renders consistently across devices.
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var gameTimerY = halfY * 0.5;
-        var triesY = halfY + height * 0.06;
-        var cardsY = height * 0.37;
-        var stateBaseY = height * 0.82;
-        var hintBaseY = height * 0.92;
+        var scoreY as Float = height * 0.10;
+        var halfY as Float = height * 0.18;
+        var gameTimerY as Float = halfY * 0.5;
+        var triesY as Float = halfY + height * 0.06;
+        var cardsY as Float = height * 0.37;
+        var stateBaseY as Float = height * 0.82;
+        var hintBaseY as Float = height * 0.92;
         return {
             :scoreY => scoreY,
             :halfY => halfY,
@@ -65,7 +81,7 @@ class RugbyTimerRenderer {
             :cardsY => cardsY,
             :stateBaseY => stateBaseY,
             :hintBaseY => hintBaseY
-        } as Lang.Dictionary;
+        } as Dictionary;
     }
 
     /**
@@ -76,7 +92,7 @@ class RugbyTimerRenderer {
      * @param scoreFont The font to use for the scores
      * @param scoreY The Y position of the scores
      */
-    static function renderScores(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, scoreFont as Graphics.FontType, scoreY as Lang.Number) as Void {
+    static function renderScores(dc as Graphics.Dc, model as RugbyGameModel, width as Number, scoreFont as FontResource, scoreY as Number) as Void {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
@@ -90,8 +106,8 @@ class RugbyTimerRenderer {
      * @param timerFont The font to use for the timer
      * @param gameTimerY The Y position of the timer
      */
-    static function renderGameTimer(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, timerFont as Graphics.FontType, gameTimerY as Lang.Number) as Void {
-        var gameStr = RugbyTimerTiming.formatTime(model.gameTime) as Lang.String;
+    static function renderGameTimer(dc as Graphics.Dc, model as RugbyGameModel, width as Number, timerFont as FontResource, gameTimerY as Number) as Void {
+        var gameStr = RugbyTimerTiming.formatTime(model.gameTime) as String;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -107,10 +123,10 @@ class RugbyTimerRenderer {
      * @param halfY The Y position of the half number
      * @param triesY The Y position of the tries
      */
-    static function renderHalfAndTries(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, halfFont as Graphics.FontType, triesFont as Graphics.FontType, halfY as Lang.Number, triesY as Lang.Number) as Void {
-        var halfStr = Rez.Strings.HalfPrefix + model.halfNumber.toString() as Lang.String;
+    static function renderHalfAndTries(dc as Graphics.Dc, model as RugbyGameModel, width as Number, halfFont as FontResource, triesFont as FontResource, halfY as Number, triesY as Number) as Void {
+        var halfStr = Rez.Strings.HalfPrefix + model.halfNumber.toString() as String;
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        var triesText = model.homeTries.toString() + Rez.Strings.TrySeparator + model.awayTries.toString() + "T" as Lang.String;
+        var triesText = model.homeTries.toString() + Rez.Strings.TrySeparator + model.awayTries.toString() + "T" as String;
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -122,7 +138,7 @@ class RugbyTimerRenderer {
      * @param halfFont The font to use for the lock indicator
      * @param scoreY The Y position of the lock indicator
      */
-    static function renderLockIndicator(dc as Graphics.Dc, view as RugbyTimerView, width as Lang.Number, halfFont as Graphics.FontType, scoreY as Lang.Number) as Void {
+    static function renderLockIndicator(dc as Graphics.Dc, view as RugbyTimerView, width as Number, halfFont as FontResource, scoreY as Number) as Void {
         dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, Rez.Strings.LockIndicator, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -135,27 +151,27 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return A dictionary containing information about the rendered cards
      */
-    static function renderCardTimers(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, cardsY as Lang.Number, height as Lang.Number) as Lang.Dictionary {
+    static function renderCardTimers(dc as Graphics.Dc, model as RugbyGameModel, width as Number, cardsY as Number, height as Number) as Dictionary {
         // Only render the first two yellows per team plus any active red timers so the primary layout
         // stays tidy while extra timers still count in the background.
-        var visibleYellowHome as Lang.Number = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
-        var visibleYellowAway as Lang.Number = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
-        var homeCardRows as Lang.Number = visibleYellowHome + ((model.redHome > 0 || model.redHomePermanent) ? 1 : 0);
-        var awayCardRows as Lang.Number = visibleYellowAway + ((model.redAway > 0 || model.redAwayPermanent) ? 1 : 0);
-        var maxCardRows as Lang.Number = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
-        var lineStep as Lang.Float = height * 0.1;
+        var visibleYellowHome as Number = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
+        var visibleYellowAway as Number = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
+        var homeCardRows as Number = visibleYellowHome + ((model.redHome > 0 || model.redHomePermanent) ? 1 : 0);
+        var awayCardRows as Number = visibleYellowAway + ((model.redAway > 0 || model.redAwayPermanent) ? 1 : 0);
+        var maxCardRows as Number = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
+        var lineStep as Float = height * 0.1;
         if (maxCardRows > 0) {
-            var homeLine as Lang.Number = 0;
-            var awayLine as Lang.Number = 0;
-            var cardFont as Graphics.FontType = Graphics.FONT_MEDIUM;
-            var homeYellowDisplayed as Lang.Number = 0;
-            for (var i as Lang.Number = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
+            var homeLine as Number = 0;
+            var awayLine as Number = 0;
+            var cardFont as FontResource = Graphics.FONT_MEDIUM;
+            var homeYellowDisplayed as Number = 0;
+            for (var i as Number = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
                 var entry = model.yellowHomeTimes[i] as Lang.Dictionary or Null;
                 if (entry == null) {
                     homeLine += 1;
                 } else {
-                    var y = entry["remaining"] as Lang.Float;
-                    var label = entry["label"] as Lang.String or Null;
+                    var y = entry["remaining"] as Float;
+                    var label = entry["label"] as String or Null;
                     if (label == null) {
                         label = "Y" + (homeYellowDisplayed + 1).toString();
                     }
@@ -165,14 +181,14 @@ class RugbyTimerRenderer {
                 }
                 homeLine += 1;
             }
-            var awayYellowDisplayed as Lang.Number = 0;
-            for (var i as Lang.Number = 0; i < model.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
+            var awayYellowDisplayed as Number = 0;
+            for (var i as Number = 0; i < model.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
                 var entry = model.yellowAwayTimes[i] as Lang.Dictionary or Null;
                 if (entry == null) {
                     awayLine += 1;
                 } else {
-                    var y = entry["remaining"] as Lang.Float;
-                    var label = entry["label"] as Lang.String or Null;
+                    var y = entry["remaining"] as Float;
+                    var label = entry["label"] as String or Null;
                     if (label == null) {
                         label = "Y" + (awayYellowDisplayed + 1).toString();
                     }
@@ -194,7 +210,7 @@ class RugbyTimerRenderer {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
-        return {:rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY} as Lang.Dictionary;
+        return {:rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY} as Dictionary;
     }
 
     /**
@@ -204,17 +220,17 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return The Y position of the countdown timer
      */
-    static function calculateCountdownPosition(layout as Lang.Dictionary, cardInfo as Lang.Dictionary, height as Lang.Number) as Lang.Number {
+    static function calculateCountdownPosition(layout as Dictionary, cardInfo as Dictionary, height as Number) as Number {
         // Place the countdown timer below the card stack while enforcing a ceiling for the state block.
         // countdownCandidate is the naive position just below the cards, and countdownLimit ensures the
         // state/hint text has room above the bottom edge. countdownMin keeps the countdown above the
         // half/tries indicators so it never overlaps the score area.
-        var cardStackBottom as Lang.Float = cardInfo[:cardsY] + (cardInfo[:rows] * cardInfo[:lineStep]);
-        var countdownCandidate as Lang.Float = cardStackBottom + height * 0.04;
-        var countdownLimit as Lang.Float = (layout[:stateBaseY] as Lang.Number) - height * 0.18;
-        var countdownMin as Lang.Float = (layout[:triesY] as Lang.Number) + height * 0.05;
-        var candidateTimerY as Lang.Float = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
-        var countdownY as Lang.Number = (candidateTimerY > countdownMin) ? candidateTimerY.toNumber() : countdownMin.toNumber();
+        var cardStackBottom as Float = cardInfo[:cardsY] + (cardInfo[:rows] * cardInfo[:lineStep]);
+        var countdownCandidate as Float = cardStackBottom + height * 0.04;
+        var countdownLimit as Float = (layout[:stateBaseY] as Number) - height * 0.18;
+        var countdownMin as Float = (layout[:triesY] as Number) + height * 0.05;
+        var candidateTimerY as Float = (countdownCandidate < countdownLimit) ? countdownCandidate : countdownLimit;
+        var countdownY as Number = (candidateTimerY > countdownMin) ? candidateTimerY : countdownMin;
         return countdownY;
     }
 
@@ -225,9 +241,9 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return The Y position of the state text
      */
-    static function calculateStateY(countdownY as Lang.Number, layout as Lang.Dictionary, height as Lang.Number) as Lang.Number {
+    static function calculateStateY(countdownY as Number, layout as Dictionary, height as Number) as Number {
         // Anchor the state text slightly below the countdown timer, unless the reserved base position is lower.
-        return (countdownY + height * 0.09 > (layout[:stateBaseY] as Lang.Number)) ? (countdownY + height * 0.09).toNumber() : (layout[:stateBaseY] as Lang.Number);
+        return (countdownY + height * 0.09 > (layout[:stateBaseY] as Number)) ? (countdownY + height * 0.09).toNumber() : (layout[:stateBaseY] as Number);
     }
 
     /**
@@ -237,7 +253,7 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return The Y position of the hint text
      */
-    static function calculateHintY(stateY as Lang.Number, hintBaseY as Lang.Number, height as Lang.Number) as Lang.Number {
+    static function calculateHintY(stateY as Number, hintBaseY as Number, height as Number) as Number {
         // Keep the hint block beneath the state text or at the bottom hint base, whichever sits lower.
         return (stateY + height * 0.08 > hintBaseY) ? (stateY + height * 0.08).toNumber() : hintBaseY;
     }
@@ -250,10 +266,10 @@ class RugbyTimerRenderer {
      * @param countdownFont The font to use for the countdown timer
      * @param countdownY The Y position of the countdown timer
      */
-    static function renderCountdown(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, countdownFont as Graphics.FontType, countdownY as Lang.Number) as Void {
+    static function renderCountdown(dc as Graphics.Dc, model as RugbyGameModel, width as Number, countdownFont as FontResource, countdownY as Number) as Void {
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var countdownStr = RugbyTimerTiming.formatTime(model.countdownRemaining) as Lang.String;
+        var countdownStr = RugbyTimerTiming.formatTime(model.countdownRemaining) as String;
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
@@ -267,9 +283,9 @@ class RugbyTimerRenderer {
      * @param stateY The Y position of the state text
      * @param height The height of the screen
      */
-    static function renderStateText(dc as Graphics.Dc, model as RugbyGameModel, width as Lang.Number, stateFont as Graphics.FontType, stateY as Lang.Number, height as Lang.Number) as Void {
+    static function renderStateText(dc as Graphics.Dc, model as RugbyGameModel, width as Number, stateFont as FontResource, stateY as Number, height as Number) as Void {
         // Each special state adopts a red accent, while the idle/paused text stays white for clarity.
-        var stateColor as Lang.Number = Graphics.COLOR_WHITE;
+        var stateColor as ColorValue = Graphics.COLOR_WHITE;
         if (model.gameState == STATE_CONVERSION || model.gameState == STATE_KICKOFF || model.gameState == STATE_PENALTY) {
             stateColor = Graphics.COLOR_RED;
         }
