@@ -8,26 +8,26 @@ const EVENT_LOG_STORAGE_KEY = "eventLogExport";
 class RugbyTimerEventLog {
 
     static function buildEventLogLines(model as RugbyGameModel) as Array<String> {
-        var lines = [] as Array<String>;
+        var lines = [];
         if (model.eventLogEntries == null) {
             return lines;
         }
-        for (var i as Number = 0; i < model.eventLogEntries.size(); i = i + 1) {
+        for (var i = 0; i < model.eventLogEntries.size(); i = i + 1) {
             var entry = model.eventLogEntries[i] as Lang.Dictionary or Null;
             if (entry == null) {
                 continue;
             }
-            var time = entry[:time] as String or Null;
-            var desc = entry[:desc] as String or Null;
+            var time = entry[:time];
+            var desc = entry[:desc];
             lines.add((time != null ? time : "--:--") + " – " + (desc != null ? desc : ""));
         }
         return lines;
     }
 
     static function buildEventLogText(model as RugbyGameModel) as String {
-        var lines = RugbyTimerEventLog.buildEventLogLines(model) as Array<String>;
-        var text as String = "";
-        for (var i as Number = 0; i < lines.size(); i = i + 1) {
+        var lines = RugbyTimerEventLog.buildEventLogLines(model);
+        var text = "";
+        for (var i = 0; i < lines.size(); i = i + 1) {
             if (i > 0) { text = text + "\n"; }
             text = text + lines[i];
         }
@@ -39,17 +39,17 @@ class RugbyTimerEventLog {
             return;
         }
         if (model.eventLogEntries == null) {
-            model.eventLogEntries = [] as Array<Dictionary>;
+            model.eventLogEntries = [];
         }
         var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
-        model.eventLogEntries.add({:time => timestamp, :desc => description} as Dictionary);
+        model.eventLogEntries.add({:time => timestamp, :desc => description});
         if (model.eventLogEntries.size() > EVENT_LOG_LIMIT) {
             model.eventLogEntries.remove(0);
         }
     }
 
     static function exportEventLog(model as RugbyGameModel) as Void {
-        var text = RugbyTimerEventLog.buildEventLogText(model) as String;
+        var text = RugbyTimerEventLog.buildEventLogText(model);
         Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
     }
 
