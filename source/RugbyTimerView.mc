@@ -13,12 +13,12 @@ using Rez.Strings;
  */
 class RugbyTimerView extends WatchUi.View {
     // The game model
-    var model;
+    var model as RugbyGameModel;
     
     // Cached font information
-    var mFonts;
+    var cachedFonts as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
     // Cached layout information
-    var mLayout;
+    var cachedLayout as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
 
     // A flag to ensure the game type prompt is shown only once
     var promptedGameType;
@@ -63,8 +63,8 @@ class RugbyTimerView extends WatchUi.View {
     function onLayout(dc) {
         setLayout(Rez.Layouts.MainLayout(dc));
         // Calculate and cache fonts and layout once
-        mFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
-        mLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
+        cachedFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
+        cachedLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
     }
 
     /**
@@ -108,8 +108,8 @@ class RugbyTimerView extends WatchUi.View {
         var height = dc.getHeight();
 
         // Use cached fonts and layout
-        var fonts = mFonts;
-        var layout = mLayout;
+        var fonts = cachedFonts;
+        var layout = cachedLayout;
 
         RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
         RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
@@ -199,7 +199,7 @@ class RugbyTimerView extends WatchUi.View {
         if (isLocked) {
             return;
         }
-        WatchUi.pushView(new CardTeamMenu(), new CardTypeDelegate(model), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new CardTeamMenu(), new CardTeamDelegate(model as RugbyGameModel), WatchUi.SLIDE_UP);
     }
 
     /**
