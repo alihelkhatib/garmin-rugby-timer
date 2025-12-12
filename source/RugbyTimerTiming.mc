@@ -26,6 +26,9 @@ class RugbyTimerTiming {
             // Update gameTime based on total elapsed time.
             model.gameTime = totalElapsedTimeSeconds;
 
+            // Keep the previous countdown value for syncing cascade timers.
+            var previousCountdownRemaining = model.countdownRemaining;
+
             // Update countdownRemaining based on total elapsed game time.
             model.countdownRemaining = model.countdownTimer - totalElapsedTimeSeconds;
             if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
@@ -61,10 +64,11 @@ class RugbyTimerTiming {
             // For yellow and red cards, we still use delta for incremental updates.
             // A more robust solution would be to store start times for each individual card.
             // For now, calculate delta based on lastUpdate.
-            var delta = (newGameTime - model.lastUpdate) / 1000.0f;
-            if (delta < 0) {
-                delta = 0;
+            var countdownDelta = previousCountdownRemaining - model.countdownRemaining;
+            if (countdownDelta < 0) {
+                countdownDelta = 0;
             }
+            var delta = countdownDelta;
 
             model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, delta);
             model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, delta);
