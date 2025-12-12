@@ -1,4 +1,5 @@
 using Toybox.Application.Storage;
+using Toybox.Application;
 using Toybox.Lang;
 using Toybox.WatchUi;
 
@@ -7,7 +8,7 @@ const EVENT_LOG_STORAGE_KEY = "eventLogExport";
 
 class RugbyTimerEventLog {
 
-    static function buildEventLogLines(model as RugbyGameModel) as Array<String> {
+    static function buildEventLogLines(model as RugbyGameModel) as Lang.Array {
         var lines = [];
         if (model.eventLogEntries == null) {
             return lines;
@@ -24,7 +25,7 @@ class RugbyTimerEventLog {
         return lines;
     }
 
-    static function buildEventLogText(model as RugbyGameModel) as String {
+    static function buildEventLogText(model as RugbyGameModel) as Lang.String {
         var lines = RugbyTimerEventLog.buildEventLogLines(model);
         var text = "";
         for (var i = 0; i < lines.size(); i = i + 1) {
@@ -34,7 +35,7 @@ class RugbyTimerEventLog {
         return text;
     }
 
-    static function appendEntry(model as RugbyGameModel, description as String or Null) as Void {
+    static function appendEntry(model as RugbyGameModel, description as Lang.String or Null) as Void {
         if (description == null) {
             return;
         }
