@@ -140,6 +140,7 @@ class RugbyTimerCards {
         try {
             return digits.toLong();
         } catch (ex) {
+            System.println("Error parsing yellow card label number: " + ex.getErrorMessage());
             return 0;
         }
     }
