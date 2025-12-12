@@ -4,4 +4,19 @@
     <string id="Hint_Select_Pause">SELECT: Pause</string>
     <string id="Hint_Select_Resume">SELECT: Resume</string>
     <string id="Hint_Locked">LOCKED</string>
+
+    <string id="LockIndicator">L</string>
+    <string id="HalfPrefix">Half </string>
+    <string id="TrySeparator">T / </string>
+    <string id="State_Paused">PAUSED</string>
+    <string id="State_Conversion">CONVERSION</string>
+    <string id="State_PenaltyKick">PENALTY KICK</string>
+    <string id="State_Kickoff">KICKOFF</string>
+    <string id="State_HalfTime">HALF TIME</string>
+    <string id="State_GameEnded">GAME ENDED</string>
+    <string id="State_ReadyToStart">Ready to start</string>
+    <string id="Overlay_Countdown">COUNTDOWN</string>
+    <string id="Overlay_Hint_Conversion">UP: Success DOWN: Miss</string>
+    <string id="Overlay_Hint_Kickoff">UP: Resume DOWN: Cancel</string>
+    <string id="Overlay_Hint_SelectBack">SELECT: Back</string>
 </strings>

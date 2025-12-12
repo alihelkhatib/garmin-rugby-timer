@@ -1,6 +1,7 @@
 using Toybox.Graphics;
 using Toybox.System;
 using Toybox.WatchUi;
+using Rez.Strings;
 
 /**
  * A helper class for rendering the special timer overlay.
@@ -24,7 +25,7 @@ class RugbyTimerOverlay {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, "COUNTDOWN", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 2, height * 0.04, Graphics.FONT_XTINY, Rez.Strings.Overlay_Countdown, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width / 2, height * 0.12, Graphics.FONT_NUMBER_MEDIUM, countdownMain, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(RugbyTimerOverlay.getSpecialStateColor(model), Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
@@ -84,13 +85,13 @@ class RugbyTimerOverlay {
      */
     static function getSpecialOverlayHint(model) {
         if (model.gameState == STATE_CONVERSION) {
-            return "UP: Success  DOWN: Miss";
+            return Rez.Strings.Overlay_Hint_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
-            return "UP: Success  DOWN: Miss";
+            return Rez.Strings.Overlay_Hint_Conversion; // Same hint for penalty kick
         } else if (model.gameState == STATE_KICKOFF) {
-            return "UP: Resume  DOWN: Cancel";
+            return Rez.Strings.Overlay_Hint_Kickoff;
         }
-        return "SELECT: Back";
+        return Rez.Strings.Overlay_Hint_SelectBack;
     }
 
     /**
@@ -100,11 +101,11 @@ class RugbyTimerOverlay {
      */
     static function getSpecialStateLabel(model) {
         if (model.gameState == STATE_CONVERSION) {
-            return "CONVERSION";
+            return Rez.Strings.State_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
-            return "PENALTY KICK";
+            return Rez.Strings.State_PenaltyKick;
         } else if (model.gameState == STATE_KICKOFF) {
-            return "KICKOFF";
+            return Rez.Strings.State_Kickoff;
         }
         return "";
     }
