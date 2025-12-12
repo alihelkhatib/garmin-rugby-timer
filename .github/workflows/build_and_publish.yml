@@ -15,7 +15,7 @@ jobs:
     name: Build PRG
     runs-on: windows-latest
     env:
-      CONNECTIQ_SDK_ROOT: ${{ runner.temp }}\\connectiq-sdk
+      CONNECTIQ_SDK_ROOT: ${{ github.workspace }}\\.connectiq-sdk
     outputs:
       built-prg: ${{ steps.build.outputs.prg-path }}
     steps:
