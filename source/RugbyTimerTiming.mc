@@ -76,7 +76,7 @@ class RugbyTimerTiming {
             }
 
         } catch (ex) {
-            // Silently handle errors to prevent crash
+            System.println("Error in RugbyTimerTiming.updateGame: " + ex.getErrorMessage());
         }
     }
 
