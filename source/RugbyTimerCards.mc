@@ -1,4 +1,5 @@
 using Toybox.Lang;
+using Toybox.System;
 
 /**
  * A helper class for managing yellow and red card timers.
