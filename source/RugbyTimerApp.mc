@@ -2,7 +2,6 @@ using Toybox.Application;
 using Toybox.WatchUi;
 using Toybox.Activity;
 using Toybox.Position;
-using Toybox.Lang;
 
 /**
  * The main application class for the Rugby Timer.
@@ -28,7 +27,7 @@ class RugbyTimerApp extends Application.AppBase {
      * This method is called when the application is started.
      * @param state The application state
      */
-    function onStart(state as Lang.Dictionary or Null) as Void {
+    function onStart(state as Dictionary or Null) as Void {
         Position.enableLocationEvents(Position.LOCATION_CONTINUOUS, method(:onPosition) as Method(info as Position.Info) as Void);
     }
 
@@ -36,7 +35,7 @@ class RugbyTimerApp extends Application.AppBase {
      * This method is called when the application is stopped.
      * @param state The application state
      */
-    function onStop(state as Lang.Dictionary or Null) as Void {
+    function onStop(state as Dictionary or Null) as Void {
         Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition) as Method(info as Position.Info) as Void);
         if (model != null) {
             model.stopRecording();
@@ -47,7 +46,7 @@ class RugbyTimerApp extends Application.AppBase {
      * This method returns the initial view and delegate of the application.
      * @return An array containing the view and delegate
      */
-    function getInitialView() as Lang.Array {
+    function getInitialView() as Array<Any> {
         model = new RugbyGameModel();
         rugbyView = new RugbyTimerView(model);
         rugbyDelegate = new RugbyTimerDelegate(model);
@@ -68,7 +67,7 @@ class RugbyTimerApp extends Application.AppBase {
      * This method returns the settings view and delegate.
      * @return An array containing the settings view and delegate
      */
-    function getSettingsView() as Lang.Array {
+    function getSettingsView() as Array<Any> {
         return [new RugbySettingsMenu(), new RugbySettingsMenuDelegate()];
     }
 }
