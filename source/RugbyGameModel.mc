@@ -106,6 +106,10 @@ class RugbyGameModel {
     var redHomeTotal;
     // The total number of red cards for the away team
     var redAwayTotal;
+    // The timestamp when the special timer (conversion, penalty) started
+    var countdownStartedAt;
+    // The initial value of the special timer when it started
+    var countdownInitialValue;
     // A flag to ensure the special timer alert is triggered only once
     var specialAlertTriggered;
     
@@ -205,6 +209,8 @@ class RugbyGameModel {
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
         specialAlertTriggered = false;
+        countdownStartedAt = null;
+        countdownInitialValue = 0;
         
         distance = 0.0;
         speed = 0.0;
