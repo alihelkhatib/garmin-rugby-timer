@@ -4,6 +4,7 @@ using Toybox.Timer;
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Application.Storage;
+using Rez.Strings;
 
 /**
  * Represents the main view of the rugby timer application.
@@ -138,14 +139,14 @@ class RugbyTimerView extends WatchUi.View {
     function renderHint(dc, width, hintFont, hintY) {
         var hint = "";
         if (model.gameState == STATE_IDLE) {
-            hint = "SELECT: Start";
+            hint = Rez.Strings.Hint_Select_Start;
         } else if (model.gameState == STATE_PLAYING) {
-            hint = "SELECT: Pause";
+            hint = Rez.Strings.Hint_Select_Pause;
         } else if (model.gameState == STATE_PAUSED) {
-            hint = "SELECT: Resume";
+            hint = Rez.Strings.Hint_Select_Resume;
         }
         if (isLocked) {
-            hint = "LOCKED";
+            hint = Rez.Strings.Hint_Locked;
         }
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
