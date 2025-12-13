@@ -106,6 +106,10 @@ class RugbyGameModel {
     var redHomeTotal;
     // The total number of red cards for the away team
     var redAwayTotal;
+    // The total number of penalties for the home team
+    var homePenalties;
+    // The total number of penalties for the away team
+    var awayPenalties;
     // The timestamp when the special timer (conversion, penalty) started
     var conversionStartTime;
     // The timestamp when the penalty timer started
@@ -196,6 +200,8 @@ class RugbyGameModel {
         yellowAwayTotal = 0;
         redHomeTotal = 0;
         redAwayTotal = 0;
+        homePenalties = 0;
+        awayPenalties = 0;
         if (conversionTime7s == null) { conversionTime7s = CONVERSION_TIME_7S; }
         if (conversionTime15s == null) { conversionTime15s = CONVERSION_TIME_15S; }
         if (penaltyKickTime == null) { penaltyKickTime = PENALTY_KICK_TIME; }
@@ -261,6 +267,8 @@ class RugbyGameModel {
         lastUpdate = null;
         redHome = null;
         redAway = null;
+        homePenalties = 0;
+        awayPenalties = 0;
         lastEvents = [];
         eventLogEntries = [];
         RugbyTimerCards.clearCardTimers(self);
@@ -494,8 +502,10 @@ class RugbyGameModel {
     function recordPenalty(isHome) {
         if (isHome) {
             homeScore += 3;
+            homePenalties += 1;
         } else {
             awayScore += 3;
+            awayPenalties += 1;
         }
         
         lastEvents.add({:type => :penalty, :home => isHome});

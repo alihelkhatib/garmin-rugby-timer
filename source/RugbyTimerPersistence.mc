@@ -41,7 +41,9 @@ class RugbyTimerPersistence {
             "redAwayPermanent" => model.redAwayPermanent,
             "conversionStartTime" => model.conversionStartTime,
             "penaltyStartTime" => model.penaltyStartTime,
-            "kickoffStartTime" => model.kickoffStartTime
+            "kickoffStartTime" => model.kickoffStartTime,
+            "homePenalties" => model.homePenalties,
+            "awayPenalties" => model.awayPenalties
         };
         Storage.setValue("gameStateData", snapshot);
     }
@@ -130,6 +132,11 @@ class RugbyTimerPersistence {
                 if (model.redHomeTotal == null) { model.redHomeTotal = 0; }
                 model.redAwayTotal = data["redAwayTotal"];
                 if (model.redAwayTotal == null) { model.redAwayTotal = 0; }
+                
+                model.homePenalties = data["homePenalties"];
+                if (model.homePenalties == null) { model.homePenalties = 0; }
+                model.awayPenalties = data["awayPenalties"];
+                if (model.awayPenalties == null) { model.awayPenalties = 0; }
             } catch (ex) {
                 System.println("Error loading saved state: " + ex.getErrorMessage());
             }
