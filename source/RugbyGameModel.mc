@@ -539,6 +539,9 @@ class RugbyGameModel {
             yellowAwayTotal = yellowAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
+        if (gameState == STATE_PLAYING && usePenaltyTimer) {
+            startPenaltyCountdown();
+        }
     }
 
     /**
@@ -570,6 +573,9 @@ class RugbyGameModel {
             redAwayTotal = redAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
+        if (gameState == STATE_PLAYING && usePenaltyTimer) {
+            startPenaltyCountdown();
+        }
     }
     
     /**
