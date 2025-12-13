@@ -31,9 +31,6 @@ class RugbyTimerTiming {
             // Update gameTime based on total elapsed time.
             model.gameTime = totalElapsedTimeSeconds;
 
-            // Keep the previous countdown value for syncing cascade timers.
-            var previousCountdownRemaining = model.countdownRemaining;
-
             // Update countdownRemaining based on total elapsed game time.
             model.countdownRemaining = model.countdownTimer - totalElapsedTimeSeconds;
             if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }

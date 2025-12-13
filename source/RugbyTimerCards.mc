@@ -14,13 +14,13 @@ class RugbyTimerCards {
      * @param vibeTriggered A boolean indicating if the vibration has been triggered for this card
      * @return A dictionary representing the yellow card entry
      */
-    static function createYellowCardEntryFromStartTime(startTime, duration, label, cardId, vibeTriggered) {
+    static function createYellowCardEntryFromStartTime(startTime, duration, label, cardId) {
         return {
             "startTime" => startTime,
             "duration" => duration,
             "label" => label,
             "cardId" => cardId,
-            "vibeTriggered" => vibeTriggered
+            "vibeTriggered" => false
         };
     }
 
@@ -40,7 +40,6 @@ class RugbyTimerCards {
             }
             var startTime = entry["startTime"];
             var duration = entry["duration"];
-            var vibeTriggered = entry["vibeTriggered"];
             var label = entry["label"];
             var cardId = entry["cardId"];
 
@@ -56,12 +55,12 @@ class RugbyTimerCards {
             }
 
             // Vibrate logic remains
-            vibTriggered = vibTriggered == true;
-            if (!vibTriggered && remaining <= 10) {
-                vibTriggered = true;
+            entry["vibeTriggered"] = entry["vibeTriggered"] == true;
+            if (!entry["vibeTriggered"] && remaining <= 10) {
+                entry["vibeTriggered"] = true;
                 RugbyTimerTiming.triggerYellowTimerVibe();
             }
-            newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => vibTriggered });
+            newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => vibeTriggered });
         }
         return newList;
     }

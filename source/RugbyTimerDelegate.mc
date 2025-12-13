@@ -299,6 +299,7 @@ class ScoreTypeMenu extends WatchUi.Menu2 {
             addItem(new WatchUi.MenuItem("Try (5)", null, :score_try, null));
             addItem(new WatchUi.MenuItem("Conversion (2)", null, :score_conv, null));
             addItem(new WatchUi.MenuItem("Penalty (3)", null, :score_pen, null));
+            addItem(new WatchUi.MenuItem("Penalty Try (7)", null, :score_pen_try, null));
             addItem(new WatchUi.MenuItem("Drop Goal (3)", null, :score_drop, null));
         }
     }
@@ -333,6 +334,8 @@ class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
             model.recordConversion(isHome);
         } else if (item.getId() == :score_pen) {
             model.recordPenalty(isHome);
+        } else if (item.getId() == :score_pen_try) {
+            model.recordPenaltyTry(isHome);
         } else if (item.getId() == :score_drop) {
             model.recordDropGoal(isHome);
         } else if (item.getId() == :conv_made) {

@@ -336,8 +336,6 @@ class RugbyGameModel {
             countdownRemaining = countdownTimer;  // Reset countdown to configured time
             countdownSeconds = 0;
             thirtySecondAlerted = false;
-            countdownStartedAt = null;
-            countdownInitialValue = 0;
             startRecording();
             RugbyTimerPersistence.saveState(self);
         }
@@ -373,8 +371,6 @@ class RugbyGameModel {
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
-            countdownStartedAt = null; // Clear countdown start time when paused
-            countdownInitialValue = countdownSeconds; // Store remaining time as initial value
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -531,6 +527,17 @@ class RugbyGameModel {
         trimEvents();
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Drop Goal");
     }
+
+    function recordPenaltyTry(isHome) {
+        if (isHome) {
+            homeScore += 7;
+        } else {
+            awayScore += 7;
+        }
+        lastEvents.add({:type => :penalty_try, :home => isHome});
+        trimEvents();
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Penalty Try");
+    }
     
     /**
      * Add a yellow-card timer entry, tracking its label and vibration state.
@@ -568,7 +575,6 @@ class RugbyGameModel {
                 redAway = 0;
             }
         } else {
-            var duration = 1200; // 20 minutes
             if (isHome) {
                 redHome = System.getTimer(); // Store start time
                 redHomePermanent = false;
@@ -628,6 +634,14 @@ class RugbyGameModel {
                 if (homeScore < 0) { homeScore = 0; }
             } else {
                 awayScore = awayScore - 2;
+                if (awayScore < 0) { awayScore = 0; }
+            }
+        } else if (e[:type] == :penalty_try) {
+            if (isHome) {
+                homeScore = homeScore - 7;
+                if (homeScore < 0) { homeScore = 0; }
+            } else {
+                awayScore = awayScore - 7;
                 if (awayScore < 0) { awayScore = 0; }
             }
         } else if (e[:type] == :penalty || e[:type] == :drop) {
