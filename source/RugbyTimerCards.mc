@@ -60,7 +60,7 @@ class RugbyTimerCards {
                 entry["vibeTriggered"] = true;
                 RugbyTimerTiming.triggerYellowTimerVibe();
             }
-            newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => vibeTriggered });
+            newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => entry["vibeTriggered"] });
         }
         return newList;
     }
