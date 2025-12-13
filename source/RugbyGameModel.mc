@@ -107,9 +107,11 @@ class RugbyGameModel {
     // The total number of red cards for the away team
     var redAwayTotal;
     // The timestamp when the special timer (conversion, penalty) started
-    var countdownStartedAt;
-    // The initial value of the special timer when it started
-    var countdownInitialValue;
+    var conversionStartTime;
+    // The timestamp when the penalty timer started
+    var penaltyStartTime;
+    // The timestamp when the kickoff timer started
+    var kickoffStartTime;
     // A flag to ensure the special timer alert is triggered only once
     var specialAlertTriggered;
     
@@ -205,12 +207,13 @@ class RugbyGameModel {
         yellowAwayTimes = [];
         yellowHomeLabelCounter = 0;
         yellowAwayLabelCounter = 0;
-        redHome = 0; redAway = 0;
+        redHome = null; redAway = null;
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
         specialAlertTriggered = false;
-        countdownStartedAt = null;
-        countdownInitialValue = 0;
+        conversionStartTime = null;
+        penaltyStartTime = null;
+        kickoffStartTime = null;
         
         distance = 0.0;
         speed = 0.0;
@@ -256,6 +259,8 @@ class RugbyGameModel {
         countdownSeconds = 0;
         gameStartTime = null;
         lastUpdate = null;
+        redHome = null;
+        redAway = null;
         lastEvents = [];
         eventLogEntries = [];
         RugbyTimerCards.clearCardTimers(self);
@@ -378,8 +383,17 @@ class RugbyGameModel {
             }
             pausedState = null;
             lastUpdate = System.getTimer();
-            countdownStartedAt = System.getTimer(); // Set start time when resumed
-            countdownInitialValue = countdownSeconds; // Use current countdownSeconds as initial value
+            if (gameStartTime == null) {
+                gameStartTime = lastUpdate;
+            }
+            // Update individual special timer start times if coming out of a pause into a special state
+            if (gameState == STATE_CONVERSION) {
+                conversionStartTime = System.getTimer();
+            } else if (gameState == STATE_PENALTY) {
+                penaltyStartTime = System.getTimer();
+            } else if (gameState == STATE_KICKOFF) {
+                kickoffStartTime = System.getTimer();
+            }
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -516,7 +530,7 @@ class RugbyGameModel {
         var duration = is7s ? 120 : 600;
         var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
         var label = "Y" + cardId.toString();
-        var entry = { "remaining" => duration, "vibeTriggered" => false, "label" => label, "cardId" => cardId };
+        var entry = { "startTime" => System.getTimer(), "vibeTriggered" => false, "label" => label, "cardId" => cardId, "duration" => duration };
         if (isHome) {
             yellowHomeTimes.add(entry);
             yellowHomeTotal = yellowHomeTotal + 1;
@@ -543,10 +557,10 @@ class RugbyGameModel {
         } else {
             var duration = 1200; // 20 minutes
             if (isHome) {
-                redHome = duration;
+                redHome = System.getTimer(); // Store start time
                 redHomePermanent = false;
             } else {
-                redAway = duration;
+                redAway = System.getTimer(); // Store start time
                 redAwayPermanent = false;
             }
         }
@@ -642,8 +656,7 @@ class RugbyGameModel {
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
         countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
-        countdownStartedAt = System.getTimer();
-        countdownInitialValue = countdownSeconds;
+        conversionStartTime = System.getTimer();
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }
@@ -655,8 +668,7 @@ class RugbyGameModel {
         conversionTeam = null;
         gameState = STATE_KICKOFF;
         countdownSeconds = KICKOFF_TIME;
-        countdownStartedAt = System.getTimer();
-        countdownInitialValue = KICKOFF_TIME;
+        kickoffStartTime = System.getTimer();
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }
@@ -677,8 +689,7 @@ class RugbyGameModel {
     function startPenaltyCountdown() {
         gameState = STATE_PENALTY;
         countdownSeconds = penaltyKickTime;
-        countdownStartedAt = System.getTimer();
-        countdownInitialValue = penaltyKickTime;
+        penaltyStartTime = System.getTimer();
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
     }

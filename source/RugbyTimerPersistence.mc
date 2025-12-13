@@ -1,6 +1,5 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
-using Toybox.System;
 
 /**
  * A helper class for saving and loading the game state.
@@ -39,7 +38,10 @@ class RugbyTimerPersistence {
             "redHome" => model.redHome,
             "redAway" => model.redAway,
             "redHomePermanent" => model.redHomePermanent,
-            "redAwayPermanent" => model.redAwayPermanent
+            "redAwayPermanent" => model.redAwayPermanent,
+            "conversionStartTime" => model.conversionStartTime,
+            "penaltyStartTime" => model.penaltyStartTime,
+            "kickoffStartTime" => model.kickoffStartTime
         };
         Storage.setValue("gameStateData", snapshot);
     }
@@ -96,41 +98,30 @@ class RugbyTimerPersistence {
                 model.is7s = data["is7s"];
                 model.countdownTimer = data["countdownTimer"];
                 model.conversionTime7s = data["conversionTime7s"];
-                model.conversionTime15s = data["conversionTime1s"];
+                model.conversionTime15s = data["conversionTime15s"];
                 model.penaltyKickTime = data["penaltyKickTime"];
                 model.useConversionTimer = data["useConversionTimer"];
                 model.usePenaltyTimer = data["usePenaltyTimer"];
                 model.conversionTeam = data["conversionTeam"];
-                var yHomeArr = data["yellowHomeTimes"];
-                if (yHomeArr != null) {
-                    model.yellowHomeTimes = RugbyTimerCards.normalizeYellowTimers(model, yHomeArr, true);
-                } else {
-                    model.yellowHomeTimes = [];
-                }
-                model.yellowHomeLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowHomeTimes);
-                var savedHomeLabelCounter = data["yellowHomeLabelCounter"];
-                if (savedHomeLabelCounter != null && savedHomeLabelCounter > model.yellowHomeLabelCounter) {
-                    model.yellowHomeLabelCounter = savedHomeLabelCounter;
-                }
-                var yAwayArr = data["yellowAwayTimes"];
-                if (yAwayArr != null) {
-                    model.yellowAwayTimes = RugbyTimerCards.normalizeYellowTimers(model, yAwayArr, false);
-                } else {
-                    model.yellowAwayTimes = [];
-                }
-                model.yellowAwayLabelCounter = RugbyTimerCards.computeYellowLabelCounter(model.yellowAwayTimes);
-                var savedAwayLabelCounter = data["yellowAwayLabelCounter"];
-                if (savedAwayLabelCounter != null && savedAwayLabelCounter > model.yellowAwayLabelCounter) {
-                    model.yellowAwayLabelCounter = savedAwayLabelCounter;
-                }
+                
+                // Load yellow cards (full entries now)
+                model.yellowHomeTimes = data["yellowHomeTimes"];
+                if (model.yellowHomeTimes == null) { model.yellowHomeTimes = []; }
+                model.yellowAwayTimes = data["yellowAwayTimes"];
+                if (model.yellowAwayTimes == null) { model.yellowAwayTimes = []; }
+                
+                model.yellowHomeLabelCounter = data["yellowHomeLabelCounter"];
+                if (model.yellowHomeLabelCounter == null) { model.yellowHomeLabelCounter = 0; }
+                model.yellowAwayLabelCounter = data["yellowAwayLabelCounter"];
+                if (model.yellowAwayLabelCounter == null) { model.yellowAwayLabelCounter = 0; }
+                
                 model.redHome = data["redHome"];
-                if (model.redHome == null) { model.redHome = 0; }
                 model.redAway = data["redAway"];
-                if (model.redAway == null) { model.redAway = 0; }
                 model.redHomePermanent = data["redHomePermanent"];
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
                 model.redAwayPermanent = data["redAwayPermanent"];
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
+
                 model.yellowHomeTotal = data["yellowHomeTotal"];
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
                 model.yellowAwayTotal = data["yellowAwayTotal"];

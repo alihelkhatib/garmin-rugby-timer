@@ -6,93 +6,67 @@ using Toybox.System;
  */
 class RugbyTimerCards {
     /**
+     * Creates a yellow card entry from a start time and other details.
+     * @param startTime The start time of the card
+     * @param duration The total duration of the card
+     * @param label The label for the card (e.g., "Y1")
+     * @param cardId The ID of the card
+     * @param vibeTriggered A boolean indicating if the vibration has been triggered for this card
+     * @return A dictionary representing the yellow card entry
+     */
+    static function createYellowCardEntryFromStartTime(startTime, duration, label, cardId, vibeTriggered) {
+        return {
+            "startTime" => startTime,
+            "duration" => duration,
+            "label" => label,
+            "cardId" => cardId,
+            "vibeTriggered" => vibeTriggered
+        };
+    }
+
+    /**
      * Updates the yellow card timers.
      * @param model The game model
      * @param list The list of yellow card timers
      * @param delta The time delta since the last update
      * @return The updated list of yellow card timers
      */
-    static function updateYellowTimers(model, list, delta) {
+    static function updateYellowTimers(model, list, newGameTime) {
         var newList = [];
         for (var i = 0; i < list.size(); i = i + 1) {
-            var rawEntry = list[i];
-            var entry = rawEntry as Lang.Dictionary;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
-            if (entry != null) {
-                remaining = entry["remaining"];
-                vibTriggered = entry["vibeTriggered"];
-                label = entry["label"];
-                cardId = entry["cardId"];
-            } else {
-                remaining = rawEntry;
-            }
-            if (remaining == null) {
+            var entry = list[i] as Lang.Dictionary;
+            if (entry == null) {
                 continue;
             }
-            remaining = remaining - delta;
+            var startTime = entry["startTime"];
+            var duration = entry["duration"];
+            var vibeTriggered = entry["vibeTriggered"];
+            var label = entry["label"];
+            var cardId = entry["cardId"];
+
+            if (startTime == null || duration == null) {
+                continue; // Skip invalid entries
+            }
+
+            var elapsedTime = (newGameTime - startTime) / 1000.0f;
+            var remaining = duration - elapsedTime;
+
             if (remaining <= 0) {
-                continue;
+                continue; // Card expired
             }
+
+            // Vibrate logic remains
             vibTriggered = vibTriggered == true;
             if (!vibTriggered && remaining <= 10) {
                 vibTriggered = true;
                 RugbyTimerTiming.triggerYellowTimerVibe();
             }
-            newList.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
+            newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => vibTriggered });
         }
         return newList;
     }
 
-    /**
-     * Normalizes the yellow card timers.
-     * This is used to ensure that the data structure is consistent after being loaded from storage.
-     * @param model The game model
-     * @param list The list of yellow card timers
-     * @param isHome A boolean indicating if the timers are for the home team
-     * @return The normalized list of yellow card timers
-     */
-    static function normalizeYellowTimers(model, list, isHome) {
-        var normalized = [];
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i];
-            if (entry == null) {
-                continue;
-            }
-            var dict = entry as Lang.Dictionary;
-            var remaining = null;
-            var vibTriggered = false;
-            var label = null;
-            var cardId = null;
-            if (dict != null) {
-                remaining = dict["remaining"];
-                vibTriggered = dict["vibeTriggered"];
-                label = dict["label"];
-                cardId = dict["cardId"];
-            } else {
-                remaining = entry;
-            }
-            if (remaining == null) {
-                continue;
-            }
-            vibTriggered = vibTriggered == true;
-            if (cardId == null && label != null) {
-                cardId = RugbyTimerCards.parseLabelNumber(label);
-            }
-            if (label == null && cardId != null) {
-                label = "Y" + cardId.toString();
-            }
-            if ((label == null || cardId == null)) {
-                cardId = RugbyTimerCards.allocateYellowCardId(model, isHome);
-                label = "Y" + cardId.toString();
-            }
-            RugbyTimerCards.ensureYellowLabelCounter(model, isHome, cardId);
-            normalized.add({ "remaining" => remaining, "vibeTriggered" => vibTriggered, "label" => label, "cardId" => cardId });
-        }
-        return normalized;
-    }
+
 
     /**
      * Computes the highest yellow card label number in a list.
@@ -106,13 +80,9 @@ class RugbyTimerCards {
             if (entry == null) {
                 continue;
             }
-            var label = entry["label"];
-            if (label == null) {
-                continue;
-            }
-            var labelNumber = RugbyTimerCards.parseLabelNumber(label);
-            if (labelNumber > maxLabel) {
-                maxLabel = labelNumber;
+            var cardId = entry["cardId"];
+            if (cardId != null && cardId > maxLabel) {
+                maxLabel = cardId;
             }
         }
         return maxLabel;
@@ -162,28 +132,6 @@ class RugbyTimerCards {
     }
 
     /**
-     * Ensures that the yellow card label counter is up to date.
-     * @param model The game model
-     * @param isHome A boolean indicating if the card is for the home team
-     * @param cardId The card ID
-     */
-    static function ensureYellowLabelCounter(model, isHome, cardId) {
-        if (cardId == null) {
-            return;
-        }
-        if (isHome) {
-            if (cardId > model.yellowHomeLabelCounter) {
-                model.yellowHomeLabelCounter = cardId;
-            }
-        }
-        else {
-            if (cardId > model.yellowAwayLabelCounter) {
-                model.yellowAwayLabelCounter = cardId;
-            }
-        }
-    }
-
-    /**
      * Clears all card timers.
      * @param model The game model
      */
@@ -192,8 +140,8 @@ class RugbyTimerCards {
         model.yellowAwayTimes = [];
         model.yellowHomeLabelCounter = 0;
         model.yellowAwayLabelCounter = 0;
-        model.redHome = 0;
-        model.redAway = 0;
+        model.redHome = null;
+        model.redAway = null;
         model.redHomePermanent = false;
         model.redAwayPermanent = false;
         model.yellowHomeTotal = 0;
