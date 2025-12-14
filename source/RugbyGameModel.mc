@@ -616,7 +616,7 @@ class RugbyGameModel {
         if (lastEvents.size() == 0) {
             return false;
         }
-        var e = lastEvents.remove(lastEvents.size() - 1) as Lang.Dictionary;
+        var e = lastEvents.remove(lastEvents.size() - 1) as Dictionary;
         var isHome = e[:home];
         if (e[:type] == :try) {
             if (isHome) {
@@ -772,7 +772,7 @@ class RugbyGameModel {
         // Collect GPS points for simple breadcrumb trail
         if (info has :position && info.position != null) {
             try {
-                var loc = info.position.toDegrees() as Array<Float>;
+                var loc = info.position.toDegrees() as Array;
                 gpsTrack.add({:lat => loc[0], :lon => loc[1]});
                 if (gpsTrack.size() > MAX_TRACK_POINTS) {
                     gpsTrack.remove(0);
