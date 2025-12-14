@@ -207,7 +207,7 @@ class RugbyGameModel {
         if (conversionTime15s == null) { conversionTime15s = CONVERSION_TIME_15S; }
         if (penaltyKickTime == null) { penaltyKickTime = PENALTY_KICK_TIME; }
         if (useConversionTimer == null) { useConversionTimer = true; }
-        if (usePenaltyTimer == null) { usePenaltyTimer = true; }
+        if (usePenaltyTimer == null) { usePenaltyTimer = false; }
         conversionTeam = null;
         pausedState = null;
         yellowHomeTimes = [];

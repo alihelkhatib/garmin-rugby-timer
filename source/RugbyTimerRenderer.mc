@@ -1,5 +1,6 @@
 using Toybox.Graphics;
 using Toybox.Lang;
+using Toybox.System;
 
 /**
  * A helper class for rendering the UI elements.
@@ -154,66 +155,93 @@ class RugbyTimerRenderer {
     static function renderCardTimers(dc, model, width, cardsY, height) {
         // Only render the first two yellows per team plus any active red timers so the primary layout
         // stays tidy while extra timers still count in the background.
+        if (model.yellowHomeTimes == null) { model.yellowHomeTimes = []; }
+        if (model.yellowAwayTimes == null) { model.yellowAwayTimes = []; }
         var visibleYellowHome = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
         var visibleYellowAway = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
-        var homeCardRows = visibleYellowHome + ((model.redHome > 0 || model.redHomePermanent) ? 1 : 0);
-        var awayCardRows = visibleYellowAway + ((model.redAway > 0 || model.redAwayPermanent) ? 1 : 0);
+        var redHomeActive = (model.redHome != null && model.redHome > 0) || model.redHomePermanent;
+        var redAwayActive = (model.redAway != null && model.redAway > 0) || model.redAwayPermanent;
+        var homeCardRows = visibleYellowHome + (redHomeActive ? 1 : 0);
+        var awayCardRows = visibleYellowAway + (redAwayActive ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
         var lineStep = height * 0.1;
         if (maxCardRows > 0) {
             var homeLine = 0;
             var awayLine = 0;
             var cardFont = Graphics.FONT_MEDIUM;
+            var cardFontRed = Graphics.FONT_SMALL;
             var homeYellowDisplayed = 0;
             for (var i = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
                 var entry = model.yellowHomeTimes[i] as Lang.Dictionary;
-                    var y;
-                    if (entry.hasKey("remaining")) {
-                        y = entry["remaining"] as Lang.Number;
-                    } else {
-                        y = null;
-                    }
-                    var label = entry["label"];
-                    if (label == null) {
-                        label = "Y" + (homeYellowDisplayed + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + ((y != null) ? model.formatShortTime(y) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
-                    homeYellowDisplayed += 1;
+                if (entry == null) {
+                    homeLine += 1;
+                    continue;
                 }
+                var y = entry["remaining"];
+                if (y == null && entry["startTime"] != null && entry["duration"] != null) {
+                    y = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
+                }
+                if (!(y instanceof Lang.Number)) { y = 0; }
+                if (y < 0) { y = 0; }
+                var label = entry["label"];
+                if (label == null) {
+                    label = "Y" + (homeYellowDisplayed + 1).toString();
+                }
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + model.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                homeYellowDisplayed += 1;
                 homeLine += 1;
             }
             var awayYellowDisplayed = 0;
             for (var i = 0; i < model.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
                 var entry = model.yellowAwayTimes[i] as Lang.Dictionary;
-                var entry = model.yellowAwayTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     awayLine += 1;
-                } else {
-                    var y;
-                    if (entry.hasKey("remaining")) {
-                        y = entry["remaining"] as Lang.Number;
-                    } else {
-                        y = null;
-                    }
-                    var label = entry["label"];
-                    if (label == null) {
-                        label = "Y" + (awayYellowDisplayed + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + ((y != null) ? model.formatShortTime(y) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
-                    awayYellowDisplayed += 1;
+                    continue;
                 }
+                var y2 = entry["remaining"];
+                if (y2 == null && entry["startTime"] != null && entry["duration"] != null) {
+                    y2 = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
+                }
+                if (!(y2 instanceof Lang.Number)) { y2 = 0; }
+                if (y2 < 0) { y2 = 0; }
+                var label2 = entry["label"];
+                if (label2 == null) {
+                    label2 = "Y" + (awayYellowDisplayed + 1).toString();
+                }
+                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label2 + ":" + model.formatShortTime(y2), Graphics.TEXT_JUSTIFY_CENTER);
+                awayYellowDisplayed += 1;
                 awayLine += 1;
             }
-            if (model.redHome > 0 || model.redHomePermanent) {
+            if (redHomeActive) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, model.redHomePermanent ? "R:PERM" : "R:" + ((model.redHome != null) ? model.formatShortTime(model.redHome) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
+                var redText;
+                if (model.redHomePermanent) {
+                    redText = "R:PERM";
+                } else if (model.redHome != null) {
+                    var redRemaining = 1200 - ((System.getTimer() - model.redHome) / 1000.0f);
+                    if (redRemaining < 0) { redRemaining = 0; }
+                    redText = "R:" + model.formatShortTime(redRemaining);
+                } else {
+                    redText = "R:--";
+                }
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFontRed, redText, Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
             }
-            if (model.redAway > 0 || model.redAwayPermanent) {
+            if (redAwayActive) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, model.redAwayPermanent ? "R:PERM" : "R:" + ((model.redAway != null) ? model.formatShortTime(model.redAway) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
+                var redAwayText;
+                if (model.redAwayPermanent) {
+                    redAwayText = "R:PERM";
+                } else if (model.redAway != null) {
+                    var redAwayRemaining = 1200 - ((System.getTimer() - model.redAway) / 1000.0f);
+                    if (redAwayRemaining < 0) { redAwayRemaining = 0; }
+                    redAwayText = "R:" + model.formatShortTime(redAwayRemaining);
+                } else {
+                    redAwayText = "R:--";
+                }
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFontRed, redAwayText, Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);

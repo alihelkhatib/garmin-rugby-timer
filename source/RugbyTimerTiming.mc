@@ -12,98 +12,82 @@ class RugbyTimerTiming {
      */
     static function updateGame(model) {
         try {
-            var newGameTime = System.getTimer();
+            var now = System.getTimer();
 
-            if (model.gameState == STATE_PAUSED) {
-                model.lastUpdate = newGameTime; // Still update lastUpdate to avoid huge jumps on resume
-                return;
-            }
-
-            // If the game hasn't started, just update lastUpdate and return.
             if (model.gameStartTime == null) {
-                model.lastUpdate = newGameTime;
+                model.lastUpdate = now;
                 return;
             }
 
-            // Calculate total elapsed time from the beginning of the game.
-            var totalElapsedTimeSeconds = (newGameTime - model.gameStartTime) / 1000.0f;
-            
-            // Update gameTime based on total elapsed time.
-            model.gameTime = totalElapsedTimeSeconds;
-
-            // Update countdownRemaining based on total elapsed game time.
-            model.countdownRemaining = model.countdownTimer - totalElapsedTimeSeconds;
-            if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
-            if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
-                model.thirtySecondAlerted = true;
-                RugbyTimerTiming.triggerThirtySecondVibe();
+            if (model.lastUpdate == null) {
+                model.lastUpdate = now;
+                return;
             }
 
-            if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
-                var initialDuration;
-                var startTime;
+            // Always derive gameTime from absolute start so it never stops during pauses.
+            model.gameTime = (now - model.gameStartTime) / 1000.0f;
 
-                if (model.gameState == STATE_CONVERSION) {
-                    initialDuration = model.is7s ? model.conversionTime7s : model.conversionTime15s;
-                    startTime = model.conversionStartTime;
-                } else if (model.gameState == STATE_PENALTY) {
-                    initialDuration = model.penaltyKickTime;
-                    startTime = model.penaltyStartTime;
-                } else { // STATE_KICKOFF
-                    initialDuration = model.KICKOFF_TIME;
-                    startTime = model.kickoffStartTime;
-                }
+            var deltaSeconds = (now - model.lastUpdate) / 1000.0f;
+            if (deltaSeconds < 0) { deltaSeconds = 0; }
 
-                if (startTime != null) {
-                    var timeSinceCountdownStartSeconds = (newGameTime - startTime) / 1000.0f;
-                    model.countdownSeconds = initialDuration - timeSinceCountdownStartSeconds;
-                } else {
-                    model.countdownSeconds = initialDuration; // Set to initial duration if timer hasn't explicitly started
+            var timersPaused = (model.gameState == STATE_PAUSED);
+
+            // Countdown only ticks during active states
+            if (!timersPaused && (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF)) {
+                model.countdownRemaining = model.countdownRemaining - deltaSeconds;
+                if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
+                if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
+                    model.thirtySecondAlerted = true;
+                    RugbyTimerTiming.triggerThirtySecondVibe();
                 }
+            }
+
+            // Special timers tick only when active and not paused
+            if (!timersPaused && (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF)) {
+                model.countdownSeconds = model.countdownSeconds - deltaSeconds;
+                if (model.countdownSeconds < 0) { model.countdownSeconds = 0; }
 
                 if (model.countdownSeconds <= 0) {
                     model.countdownSeconds = 0;
-                    // Reset start times for next special timer
                     model.conversionStartTime = null;
                     model.penaltyStartTime = null;
                     model.kickoffStartTime = null;
 
                     if (model.gameState == STATE_CONVERSION) {
                         model.startKickoffCountdown();
-                    } else if (model.gameState == STATE_PENALTY) {
-                        model.resumePlay();
                     } else {
                         model.resumePlay();
                     }
-                }
-                if (model.countdownSeconds <= 15 && model.countdownSeconds > 0 && !model.specialAlertTriggered) {
+                } else if (model.countdownSeconds <= 15 && !model.specialAlertTriggered) {
                     model.specialAlertTriggered = true;
                     RugbyTimerTiming.triggerSpecialTimerVibe();
                 }
             }
             
-            model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, newGameTime);
-            model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, newGameTime);
+            if (!timersPaused) {
+                model.yellowHomeTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, now);
+                model.yellowAwayTimes = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, now);
 
-            // Red card timers
-            if (!model.redHomePermanent && model.redHome != null) {
-                var redHomeDuration = 1200; // 20 minutes for 15s matches
-                var redHomeElapsedTime = (newGameTime - model.redHome) / 1000.0f;
-                var redHomeRemaining = redHomeDuration - redHomeElapsedTime;
-                if (redHomeRemaining < 0) {
-                    model.redHome = null; // Card expired
+                // Red card timers
+                if (!model.redHomePermanent && model.redHome != null) {
+                    var redHomeDuration = 1200; // 20 minutes for 15s matches
+                    var redHomeElapsedTime = (now - model.redHome) / 1000.0f;
+                    var redHomeRemaining = redHomeDuration - redHomeElapsedTime;
+                    if (redHomeRemaining < 0) {
+                        model.redHome = null; // Card expired
+                    }
+                }
+                if (!model.redAwayPermanent && model.redAway != null) {
+                    var redAwayDuration = 1200; // 20 minutes for 15s matches
+                    var redAwayElapsedTime = (now - model.redAway) / 1000.0f;
+                    var redAwayRemaining = redAwayDuration - redAwayElapsedTime;
+                    if (redAwayRemaining < 0) {
+                        model.redAway = null; // Card expired
+                    }
                 }
             }
-            if (!model.redAwayPermanent && model.redAway != null) {
-                var redAwayDuration = 1200; // 20 minutes for 15s matches
-                var redAwayElapsedTime = (newGameTime - model.redAway) / 1000.0f;
-                var redAwayRemaining = redAwayDuration - redAwayElapsedTime;
-                if (redAwayRemaining < 0) {
-                    model.redAway = null; // Card expired
-                }
-            }
 
-            if (model.countdownRemaining <= 0) {
+            if (!timersPaused && model.countdownRemaining <= 0) {
                 model.countdownRemaining = 0;
                 if (model.halfNumber == 1) {
                     model.enterHalfTime();
@@ -112,10 +96,10 @@ class RugbyTimerTiming {
                 }
             }
 
-            model.lastUpdate = newGameTime;
-            if (model.lastPersistTime == 0 || newGameTime - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
+            model.lastUpdate = now;
+            if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
                 RugbyTimerPersistence.saveState(model);
-                model.lastPersistTime = newGameTime;
+                model.lastPersistTime = now;
             }
 
         } catch (ex) {
