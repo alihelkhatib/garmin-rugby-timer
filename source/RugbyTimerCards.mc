@@ -38,20 +38,20 @@ class RugbyTimerCards {
             if (entry == null) {
                 continue;
             }
-            var startTime = entry["startTime"];
-            var duration = entry["duration"];
-            var label = entry["label"];
-            var cardId = entry["cardId"];
+            var startTime = entry["startTime"] as Lang.Number;
+            var duration = entry["duration"] as Lang.Number;
+            var label = entry["label"] as Lang.String;
+            var cardId = entry["cardId"] as Lang.Number;
 
             if (startTime == null || duration == null) {
-                continue; // Skip invalid entries
+                continue;
             }
 
             var elapsedTime = (newGameTime - startTime) / 1000.0f;
             var remaining = duration - elapsedTime;
 
             if (remaining <= 0) {
-                continue; // Card expired
+                continue;
             }
 
             // Vibrate logic remains
@@ -79,7 +79,7 @@ class RugbyTimerCards {
             if (entry == null) {
                 continue;
             }
-            var cardId = entry["cardId"];
+            var cardId = entry["cardId"] as Lang.Number;
             if (cardId != null && cardId > maxLabel) {
                 maxLabel = cardId;
             }
@@ -96,7 +96,7 @@ class RugbyTimerCards {
         if (label == null) {
             return 0;
         }
-        var digits = label;
+        var digits = label as Lang.String;
         if (digits.length() > 0 && digits[0] == "Y") {
             var trimmed = "";
             for (var idx = 1; idx < digits.length(); idx = idx + 1) {

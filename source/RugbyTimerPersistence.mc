@@ -138,7 +138,7 @@ class RugbyTimerPersistence {
                 model.awayPenalties = data["awayPenalties"];
                 if (model.awayPenalties == null) { model.awayPenalties = 0; }
             } catch (ex) {
-                System.println("Error loading saved state: " + ex.getErrorMessage());
+                Toybox.System.println("Error loading saved state: " + ex.getErrorMessage());
             }
         }
         if (model.yellowHomeTimes == null) {

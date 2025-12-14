@@ -170,7 +170,7 @@ class RugbyTimerRenderer {
                 if (entry == null) {
                     homeLine += 1;
                 } else {
-                    var y = entry["remaining"];
+                    var y = entry["remaining"] as Lang.Number;
                     var label = entry["label"];
                     if (label == null) {
                         label = "Y" + (homeYellowDisplayed + 1).toString();
@@ -187,7 +187,7 @@ class RugbyTimerRenderer {
                 if (entry == null) {
                     awayLine += 1;
                 } else {
-                    var y = entry["remaining"];
+                    var y = entry["remaining"] as Lang.Number;
                     var label = entry["label"];
                     if (label == null) {
                         label = "Y" + (awayYellowDisplayed + 1).toString();
@@ -294,13 +294,16 @@ class RugbyTimerRenderer {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_CONVERSION) {
             dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            var countdownStr = (model.countdownSeconds != null) ? (model.countdownSeconds as Lang.Number).toLong().toString() : "--";
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_PENALTY) {
             dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            var countdownStr = (model.countdownSeconds != null) ? (model.countdownSeconds as Lang.Number).toLong().toString() : "--";
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_KICKOFF) {
             dc.drawText(width / 2, stateY, stateFont, "KICKOFF", Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, model.countdownSeconds.toLong().toString() + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            var countdownStr = (model.countdownSeconds != null) ? (model.countdownSeconds as Lang.Number).toLong().toString() : "--";
+            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_HALFTIME) {
             dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_ENDED) {

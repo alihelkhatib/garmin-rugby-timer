@@ -17,8 +17,8 @@ class RugbyTimerEventLog {
             if (entry == null) {
                 continue;
             }
-            var time = entry[:time];
-            var desc = entry[:desc];
+            var time = entry[:time] as Lang.String;
+            var desc = entry[:desc] as Lang.String;
             lines.add((time != null ? time : "--:--") + " – " + (desc != null ? desc : ""));
         }
         return lines;
@@ -29,7 +29,7 @@ class RugbyTimerEventLog {
         var text = "";
         for (var i = 0; i < lines.size(); i = i + 1) {
             if (i > 0) { text = text + "\n"; }
-            text = text + lines[i];
+            text = text + (lines[i] as Lang.String);
         }
         return text;
     }
