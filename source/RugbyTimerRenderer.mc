@@ -166,6 +166,7 @@ class RugbyTimerRenderer {
             var cardFont = Graphics.FONT_MEDIUM;
             var homeYellowDisplayed = 0;
             for (var i = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
+                var entry = model.yellowHomeTimes[i] as Lang.Dictionary;
                     var y;
                     if (entry.hasKey("remaining")) {
                         y = entry["remaining"] as Lang.Number;
@@ -184,6 +185,7 @@ class RugbyTimerRenderer {
             }
             var awayYellowDisplayed = 0;
             for (var i = 0; i < model.yellowAwayTimes.size() && awayYellowDisplayed < 2; i = i + 1) {
+                var entry = model.yellowAwayTimes[i] as Lang.Dictionary;
                 var entry = model.yellowAwayTimes[i] as Lang.Dictionary;
                 if (entry == null) {
                     awayLine += 1;
