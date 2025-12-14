@@ -166,11 +166,12 @@ class RugbyTimerRenderer {
             var cardFont = Graphics.FONT_MEDIUM;
             var homeYellowDisplayed = 0;
             for (var i = 0; i < model.yellowHomeTimes.size() && homeYellowDisplayed < 2; i = i + 1) {
-                var entry = model.yellowHomeTimes[i] as Lang.Dictionary;
-                if (entry == null) {
-                    homeLine += 1;
-                } else {
-                    var y = entry["remaining"] as Lang.Number;
+                    var y;
+                    if (entry.hasKey("remaining")) {
+                        y = entry["remaining"] as Lang.Number;
+                    } else {
+                        y = null;
+                    }
                     var label = entry["label"];
                     if (label == null) {
                         label = "Y" + (homeYellowDisplayed + 1).toString();
@@ -187,7 +188,12 @@ class RugbyTimerRenderer {
                 if (entry == null) {
                     awayLine += 1;
                 } else {
-                    var y = entry["remaining"] as Lang.Number;
+                    var y;
+                    if (entry.hasKey("remaining")) {
+                        y = entry["remaining"] as Lang.Number;
+                    } else {
+                        y = null;
+                    }
                     var label = entry["label"];
                     if (label == null) {
                         label = "Y" + (awayYellowDisplayed + 1).toString();
