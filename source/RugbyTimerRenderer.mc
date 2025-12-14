@@ -1,6 +1,7 @@
 using Toybox.Graphics;
 using Toybox.Lang;
 using Toybox.System;
+using Toybox.WatchUi;
 using Rez.Drawables;
 
 /**
@@ -146,7 +147,10 @@ class RugbyTimerRenderer {
         var iconMarginX = width * 0.08;
         var iconY = scoreY - height * 0.05;
         if (iconY < 0) { iconY = 0; }
-        dc.drawBitmap(width - iconMarginX, iconY, Rez.Drawables.LockIcon);
+        var lockIcon = WatchUi.loadResource(Rez.Drawables.LockIcon) as WatchUi.BitmapResource;
+        if (lockIcon != null) {
+            dc.drawBitmap(width - iconMarginX, iconY, lockIcon);
+        }
     }
 
     /**
@@ -161,11 +165,14 @@ class RugbyTimerRenderer {
         var iconMarginX = width * 0.08;
         var y = iconY;
         if (y < 0) { y = 0; }
-        var icon = Rez.Drawables.PlayIcon;
+        var iconId = Rez.Drawables.PlayIcon;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_IDLE) {
-            icon = Rez.Drawables.PauseIcon;
+            iconId = Rez.Drawables.PauseIcon;
         }
-        dc.drawBitmap(iconMarginX, y, icon);
+        var icon = WatchUi.loadResource(iconId) as WatchUi.BitmapResource;
+        if (icon != null) {
+            dc.drawBitmap(iconMarginX, y, icon);
+        }
     }
 
     /**

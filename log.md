@@ -8,6 +8,7 @@
 
 - Added small play/pause/lock icons to `resources/drawables/` and wired them into the renderer so watch faces show the current state (play vs paused/idle) plus a lock badge above the scores.
 - Documented the new icon anchoring math (`iconY` and top insets) in `project_technical_document.md` to keep layout notes current.
+- Loaded the new icons via `WatchUi.loadResource` to avoid the `WatchUi.BitmapResource` type error, keeping draws safe on all devices.
 - Built via `java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true -jar C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeybrains.jar -o bin\rugbytimer.prg -f C:\Users\aliel\Projects\rugby-timer\monkey.jungle -y C:\Users\aliel\Projects\rugby-timer\developer_key -d fenix6_sim -w` (warnings about container access and unreachable statements remain in renderer/cards/event log but the build succeeds).
 ## [2025-12-12] Render/timing syntax & icon fix
 
