@@ -1,6 +1,7 @@
 using Toybox.Graphics;
 using Toybox.Lang;
 using Toybox.System;
+using Rez.Drawables;
 
 /**
  * A helper class for rendering the UI elements.
@@ -74,6 +75,7 @@ class RugbyTimerRenderer {
         var cardsY = height * 0.37;
         var stateBaseY = height * 0.82;
         var hintBaseY = height * 0.92;
+        var iconY = height * 0.04;
         return {
             :scoreY => scoreY,
             :halfY => halfY,
@@ -81,7 +83,8 @@ class RugbyTimerRenderer {
             :triesY => triesY,
             :cardsY => cardsY,
             :stateBaseY => stateBaseY,
-            :hintBaseY => hintBaseY
+            :hintBaseY => hintBaseY,
+            :iconY => iconY
         };
     }
 
@@ -139,8 +142,30 @@ class RugbyTimerRenderer {
      * @param halfFont The font to use for the lock indicator
      * @param scoreY The Y position of the lock indicator
      */
-    static function renderLockIndicator(dc, view, width, halfFont, scoreY) {
-        dc.drawText(width - (width * 0.1).toLong(), scoreY, halfFont, "L", Graphics.TEXT_JUSTIFY_CENTER);
+    static function renderLockIndicator(dc, width, height, scoreY) {
+        var iconMarginX = width * 0.08;
+        var iconY = scoreY - height * 0.05;
+        if (iconY < 0) { iconY = 0; }
+        dc.drawBitmap(width - iconMarginX, iconY, Rez.Drawables.LockIcon);
+    }
+
+    /**
+     * Renders the play/pause indicator.
+     * @param dc The device context
+     * @param model The game model
+     * @param width The width of the screen
+     * @param height The height of the screen
+     * @param iconY The Y position of the icon
+     */
+    static function renderPlayPauseIndicator(dc, model, width, height, iconY) {
+        var iconMarginX = width * 0.08;
+        var y = iconY;
+        if (y < 0) { y = 0; }
+        var icon = Rez.Drawables.PlayIcon;
+        if (model.gameState == STATE_PAUSED || model.gameState == STATE_IDLE) {
+            icon = Rez.Drawables.PauseIcon;
+        }
+        dc.drawBitmap(iconMarginX, y, icon);
     }
 
     /**

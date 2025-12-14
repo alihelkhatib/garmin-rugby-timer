@@ -114,8 +114,9 @@ class RugbyTimerView extends WatchUi.View {
         RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
         RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
         RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
+        RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout[:iconY]);
         if (isLocked) {
-            RugbyTimerRenderer.renderLockIndicator(dc, self, width, fonts[:halfFont], layout[:scoreY]);
+            RugbyTimerRenderer.renderLockIndicator(dc, width, height, layout[:scoreY]);
         }
 
         var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);

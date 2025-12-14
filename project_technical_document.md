@@ -22,6 +22,7 @@
 - `stateY` and `hintY` define where the “Half #” text, tries indicator, and hint text reside. The renderer shifts these downward whenever the countdown climbs into the card stack zone so the timers and card displays never overlap.
 - Card timers start at `cardsY` and push down incrementally; the renderer adds vertical padding between each card and between colors so stacked timers remain legible even when extras remain hidden (tracked internally).
 - The overlay keeps the main countdown visible near the top and the special timer centered, preventing the red conversion text from touching the scoreboard.
+- A small play/pause icon anchors near the top-left (`iconY = height * 0.04` with an ~8% horizontal inset), reflecting the current game state, and a lock icon sits near the top-right above the scores when the UI is locked.
 
 ## Key Behaviors
 - Game states: readiness prompt (choosing 7s/15s), countdown sharing (minutes/seconds), conversion/penalty/kickoff overlays, halftime, and finished.

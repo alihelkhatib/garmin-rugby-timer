@@ -1,3 +1,6 @@
 <drawables xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <bitmap id="LauncherIcon" filename="icon.jpg" dithering="none" />
+    <bitmap id="PlayIcon" filename="icon_play.png" dithering="none" />
+    <bitmap id="PauseIcon" filename="icon_pause.png" dithering="none" />
+    <bitmap id="LockIcon" filename="icon_lock.png" dithering="none" />
 </drawables>

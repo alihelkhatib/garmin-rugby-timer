@@ -4,6 +4,11 @@
 - Rewrote `README.md` with the latest workflow/feature summary and trimmed `AGENTS.md` to the requested 200‑400 words with sections for architecture, commands, testing, and the “one commit per change” rule; added a release workflow note to `project_technical_document.md`.
 - Ran the signed build via `java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true -jar C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeybrains.jar -o bin\rugbytimer.prg -f monkey.jungle -y developer_key -d fenix6_sim -w` so the PRG updates (warnings about container access detection remain but the build succeeds).
 
+## [2025-12-14] Watch status icons and renderer/layout sync
+
+- Added small play/pause/lock icons to `resources/drawables/` and wired them into the renderer so watch faces show the current state (play vs paused/idle) plus a lock badge above the scores.
+- Documented the new icon anchoring math (`iconY` and top insets) in `project_technical_document.md` to keep layout notes current.
+- Built via `java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true -jar C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeybrains.jar -o bin\rugbytimer.prg -f C:\Users\aliel\Projects\rugby-timer\monkey.jungle -y C:\Users\aliel\Projects\rugby-timer\developer_key -d fenix6_sim -w` (warnings about container access and unreachable statements remain in renderer/cards/event log but the build succeeds).
 ## [2025-12-12] Render/timing syntax & icon fix
 
 - Removed the invalid local-type annotations and constructor return types so the renderer/timing modules now follow Monkey C's inferred typing rules and compile correctly.
@@ -1537,3 +1542,4 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
+
