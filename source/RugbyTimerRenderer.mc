@@ -176,7 +176,7 @@ class RugbyTimerRenderer {
                         label = "Y" + (homeYellowDisplayed + 1).toString();
                     }
                     dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + model.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, label + ":" + ((y != null) ? model.formatShortTime(y) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
                     homeYellowDisplayed += 1;
                 }
                 homeLine += 1;
@@ -193,7 +193,7 @@ class RugbyTimerRenderer {
                         label = "Y" + (awayYellowDisplayed + 1).toString();
                     }
                     dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + model.formatShortTime(y), Graphics.TEXT_JUSTIFY_CENTER);
+                    dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, label + ":" + ((y != null) ? model.formatShortTime(y) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
                     awayYellowDisplayed += 1;
                 }
                 awayLine += 1;

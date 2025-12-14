@@ -564,7 +564,7 @@ class EventLogMenu extends WatchUi.Menu2 {
      * Initializes the menu.
      * @param entries The event log entries
      */
-    function initialize(entries as Array) {
+    function initialize(entries as Lang.Array) {
         Menu2.initialize({:title=>"Event Log"});
         var itemsAdded = 0;
         if (entries != null && entries.size() > 0) {
