@@ -206,12 +206,12 @@ class RugbyTimerRenderer {
             }
             if (model.redHome > 0 || model.redHomePermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, model.redHomePermanent ? "R:PERM" : "R:" + model.formatShortTime(model.redHome), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFont, model.redHomePermanent ? "R:PERM" : "R:" + ((model.redHome != null) ? model.formatShortTime(model.redHome) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
             }
             if (model.redAway > 0 || model.redAwayPermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, model.redAwayPermanent ? "R:PERM" : "R:" + model.formatShortTime(model.redAway), Graphics.TEXT_JUSTIFY_CENTER);
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFont, model.redAwayPermanent ? "R:PERM" : "R:" + ((model.redAway != null) ? model.formatShortTime(model.redAway) : "--:--"), Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
