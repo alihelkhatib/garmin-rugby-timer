@@ -61,6 +61,8 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         addItem(new WatchUi.MenuItem("Dim Theme", dimMode ? "On" : "Off", :dim_mode, null));
         
         addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
+        // US3: clear the session log and reset match counter to 1
+        addItem(new WatchUi.MenuItem("Clear Session", null, :clear_session, null));
     }
     
     /**
@@ -175,6 +177,10 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
                 }
                 app.model.resetGame();
             }
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (item.getId() == :clear_session) {
+            // US3: wipe session log and reset match counter (FR-009)
+            RugbyTimerPersistence.clearSession();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         }
     }

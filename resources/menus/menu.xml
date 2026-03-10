@@ -8,4 +8,5 @@
     <menu-item id="undo_last" label="Undo Last Score" />
     <menu-item id="adjust_score" label="Adjust Score" />
     <menu-item id="toggle_lock" label="Toggle Lock" />
+    <menu-item id="view_session_log" label="Session Log" />
 </menu>

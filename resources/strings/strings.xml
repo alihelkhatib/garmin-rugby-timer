@@ -19,4 +19,12 @@
     <string id="Overlay_Hint_Conversion">UP: Success DOWN: Miss</string>
     <string id="Overlay_Hint_Kickoff">UP: Resume DOWN: Cancel</string>
     <string id="Overlay_Hint_SelectBack">SELECT: Back</string>
+
+    <!-- 018: Multi-Match Session -->
+    <string id="EndGame_NextMatch">Next Match</string>
+    <string id="EndGame_SessionLog">Session Log</string>
+    <string id="EndGame_Reset">Reset</string>
+    <string id="EndGame_Exit">Exit</string>
+    <string id="Session_NoMatches">No matches yet</string>
+    <string id="Settings_ClearSession">Clear Session</string>
 </strings>

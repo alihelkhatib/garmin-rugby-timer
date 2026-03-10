@@ -3,6 +3,7 @@ using Toybox.System;
 using Toybox.Lang;
 using Toybox.Graphics;
 using Toybox.Application.Storage;
+using Toybox.Time;
 
 /**
  * The main delegate for the application.
@@ -48,6 +49,9 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             model.resumeClock();
         } else if (model.gameState == STATE_HALFTIME) {
             model.startSecondHalf();
+        } else if (model.gameState == STATE_ENDED) {
+            // US1: present the post-match options menu automatically on SELECT
+            WatchUi.pushView(new EndGameMenu(), new EndGameDelegate(model), WatchUi.SLIDE_UP);
         }
         return true;
     }
@@ -176,6 +180,10 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             return;
         } else if (item.getId() == :toggle_lock) {
             view.toggleLock();
+        } else if (item.getId() == :view_session_log) {
+            // US2: open session log from the main menu (push on top; back returns to menu)
+            WatchUi.pushView(new SessionLogMenu(), new SessionLogDelegate(), WatchUi.SLIDE_UP);
+            return;
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
@@ -659,6 +667,114 @@ class EventLogDelegate extends WatchUi.Menu2InputDelegate {
     /**
      * This method is called when the back button is pressed.
      */
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+// =============================================================================
+// 018: Multi-Match Session — EndGame, SessionLog UI
+// =============================================================================
+
+/**
+ * US1: Menu shown immediately after a game ends.
+ * Gives the referee four options: start the next match, view the session log,
+ * reset without logging, or exit the application.
+ */
+class EndGameMenu extends WatchUi.Menu2 {
+    function initialize() {
+        Menu2.initialize({:title=>"Game Ended"});
+        addItem(new WatchUi.MenuItem("Next Match", null, :next_match, null));
+        addItem(new WatchUi.MenuItem("Session Log", null, :view_session_log, null));
+        addItem(new WatchUi.MenuItem("Reset", null, :reset, null));
+        addItem(new WatchUi.MenuItem("Exit", null, :exit, null));
+    }
+}
+
+/**
+ * US1: Delegate for EndGameMenu.
+ * :next_match — logs the current match result and resets to STATE_IDLE.
+ * :view_session_log — opens the scrollable session log (T013).
+ * :reset — hard-reset without logging.
+ * :exit — stops any recording and exits the app.
+ */
+class EndGameDelegate extends WatchUi.Menu2InputDelegate {
+    var model;
+
+    function initialize(m) {
+        Menu2InputDelegate.initialize();
+        model = m;
+    }
+
+    function onSelect(item) {
+        var id = item.getId();
+        if (id == :next_match) {
+            model.nextMatch();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (id == :view_session_log) {
+            // T013: navigate to session log from within the end-game flow
+            WatchUi.pushView(new SessionLogMenu(), new SessionLogDelegate(), WatchUi.SLIDE_UP);
+        } else if (id == :reset) {
+            model.resetGame();
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } else if (id == :exit) {
+            model.stopRecording();
+            System.exit();
+        }
+    }
+
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
+ * US2: Scrollable read-only list of all completed matches in the current session.
+ * Each entry shows "M{n} ({type}): {home} - {away}" with a HH:MM start-time subtitle.
+ * When the log is empty a single disabled placeholder item is shown.
+ */
+class SessionLogMenu extends WatchUi.Menu2 {
+    function initialize() {
+        Menu2.initialize({:title=>"Session Log"});
+        var log = RugbyTimerPersistence.loadSessionLog();
+        if (log.size() == 0) {
+            addItem(new WatchUi.MenuItem("No matches yet", null, :no_matches, null));
+        } else {
+            for (var i = 0; i < log.size(); i++) {
+                var entry = log[i];
+                var matchNum     = entry.get("matchNum");
+                var gameType     = entry.get("gameType");
+                var homeScore    = entry.get("homeScore");
+                var awayScore    = entry.get("awayScore");
+                var startTimeSec = entry.get("startTimeSec");
+
+                // Label: "M1 (7s): 14 - 7"
+                var label = "M" + matchNum + " (" + gameType + "): " + homeScore + " - " + awayScore;
+
+                // Subtitle: local start time as "HH:MM"
+                var subLabel = "--:--";
+                if (startTimeSec != null) {
+                    var cal = Time.Gregorian.info(new Time.Moment(startTimeSec), Time.FORMAT_SHORT);
+                    subLabel = cal.hour.format("%02d") + ":" + cal.min.format("%02d");
+                }
+                addItem(new WatchUi.MenuItem(label, subLabel, :match_entry, null));
+            }
+        }
+    }
+}
+
+/**
+ * US2: Delegate for SessionLogMenu — read-only; back pops the view.
+ */
+class SessionLogDelegate extends WatchUi.Menu2InputDelegate {
+    function initialize() {
+        Menu2InputDelegate.initialize();
+    }
+
+    function onSelect(item) {
+        // Read-only — no action on item select
+    }
+
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
