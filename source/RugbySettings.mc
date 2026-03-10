@@ -268,6 +268,7 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
     }
 
     function onAccept(values) {
+        if (values == null || values.size() < 2) { WatchUi.popView(WatchUi.SLIDE_DOWN); return true; }
         var minutes = values[0] * 10 + values[1];
         if (minutes < 1) { minutes = 1; }
         var seconds = minutes * 60;

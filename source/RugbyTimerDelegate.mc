@@ -34,7 +34,9 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * @return true if the event is handled, false otherwise
      */
     function onSelect() {
-        if (Application.getApp().rugbyView.isLocked) {
+        var view = Application.getApp().rugbyView;
+        if (view == null) { return true; }
+        if (view.isLocked) {
             return true;
         }
         // Start/pause/resume game with select button
@@ -55,7 +57,9 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * @return true if the event is handled, false otherwise
      */
     function onBack() {
-        if (Application.getApp().rugbyView.isLocked) {
+        var view = Application.getApp().rugbyView;
+        if (view == null) { return false; }
+        if (view.isLocked) {
             return true;
         }
         // Show confirmation menu before exiting
@@ -79,6 +83,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onNextPage() {
         var view = Application.getApp().rugbyView;
+        if (view == null) { return true; }
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
@@ -104,6 +109,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onPreviousPage() {
         var view = Application.getApp().rugbyView;
+        if (view == null) { return true; }
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
@@ -148,6 +154,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
      */
     function onSelect(item) {
         var view = Application.getApp().rugbyView;
+        if (view == null) { WatchUi.popView(WatchUi.SLIDE_DOWN); return; }
         if (item.getId() == :record_score) {
             view.showScoreDialog();
         } else if (item.getId() == :record_card) {
@@ -557,7 +564,8 @@ class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
      */
     function onBack() {
         // Keep prompting on next show until a choice is made
-        Application.getApp().rugbyView.promptedGameType = false;
+        var v = Application.getApp().rugbyView;
+        if (v != null) { v.promptedGameType = false; }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }
@@ -577,6 +585,7 @@ class NewGameTimerPickerDelegate extends WatchUi.PickerDelegate {
     }
 
     function onAccept(values) {
+        if (values == null || values.size() < 2) { WatchUi.popView(WatchUi.SLIDE_DOWN); return true; }
         var minutes = values[0] * 10 + values[1];
         if (minutes < 1) { minutes = 1; }
         mModel.setGameType(mIs7s);
