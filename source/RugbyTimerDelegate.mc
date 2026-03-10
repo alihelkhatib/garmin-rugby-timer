@@ -1,6 +1,8 @@
 using Toybox.WatchUi;
 using Toybox.System;
 using Toybox.Lang;
+using Toybox.Graphics;
+using Toybox.Application.Storage;
 
 /**
  * The main delegate for the application.
@@ -513,8 +515,8 @@ class GameTypeMenu extends WatchUi.Menu2 {
      */
     function initialize() {
         Menu2.initialize({:title=>"Game Type"});
-        addItem(new WatchUi.MenuItem("Rugby 7s", "7:00 halves", :gt_7s, null));
-        addItem(new WatchUi.MenuItem("Rugby 15s", "40:00 halves", :gt_15s, null));
+        addItem(new WatchUi.MenuItem("Rugby 7s", "2 min yellows", :gt_7s, null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", "10 min yellows", :gt_15s, null));
     }
 }
 
@@ -538,12 +540,16 @@ class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
      * @param item The selected menu item
      */
     function onSelect(item) {
-        if (item.getId() == :gt_7s) {
-            model.setGameType(true);
-        } else if (item.getId() == :gt_15s) {
-            model.setGameType(false);
+        var is7s = (item.getId() == :gt_7s);
+        // Pre-fill picker with the saved duration for this game type (FR-005)
+        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
+        var savedSecs = Storage.getValue(typeKey);
+        if (savedSecs == null) {
+            savedSecs = Storage.getValue("countdownTimer"); // legacy fallback
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        var defaultMinutes = (savedSecs != null) ? (savedSecs / 60) : (is7s ? 7 : 40);
+        if (defaultMinutes < 1) { defaultMinutes = 1; }
+        WatchUi.pushView(new MinutesPicker(defaultMinutes), new NewGameTimerPickerDelegate(is7s, model), WatchUi.SLIDE_UP);
     }
 
     /**
@@ -553,6 +559,37 @@ class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
         // Keep prompting on next show until a choice is made
         Application.getApp().rugbyView.promptedGameType = false;
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
+ * Picker delegate for the new-game setup flow.
+ * Finalises both game type and half length, then returns to the watch face.
+ */
+class NewGameTimerPickerDelegate extends WatchUi.PickerDelegate {
+    var mModel;
+    var mIs7s;
+
+    function initialize(is7sFlag, m) {
+        PickerDelegate.initialize();
+        mIs7s = is7sFlag;
+        mModel = m;
+    }
+
+    function onAccept(values) {
+        var minutes = values[0] * 10 + values[1];
+        if (minutes < 1) { minutes = 1; }
+        mModel.setGameType(mIs7s);
+        mModel.setHalfDuration(minutes * 60);
+        // Pop picker then the game-type menu
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
+    }
+
+    function onCancel() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
     }
 }
 
