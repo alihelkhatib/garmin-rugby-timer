@@ -14,8 +14,11 @@
 - `RugbyTimerTiming.mc`: Runs the shared `onUpdate` loop, keeps the `countdownTimer` and `gameTimer` decoupled, emits haptics (30s/15s warnings, yellow-expire), and manages conversion/kickoff/penalty timer synchronization.
 - `RugbyTimerCards.mc`: Tracks yellow/red timer dictionaries per team, enforces “only two visible timers per side” while keeping hidden ones ticking, preserves `Y#`/`R#` labels across replacements, and exposes pause/resume helpers.
 - `RugbyTimerOverlay.mc`: Renders the conversion/kickoff/penalty overlay screen with prompts (UP = success, DOWN = miss) plus countdown text, confirmation message, and ensures the main countdown label stays white while the special timer matches the overlay color.
-- `RugbyTimerPersistence.mc`: Saves/restores game state (`gameStateData`, `eventLog`, `lastGameSummary`), clears cards on reset/finish, records totals per color/team, and wires the “Save log” action to Storage.
+- `RugbyTimerPersistence.mc`: Saves/restores game state (`gameStateData`, `eventLog`, `lastGameSummary`), clears cards on reset/finish, records totals per color/team, wires the "Save log" action to Storage, and provides four session-log helpers — `loadSessionLog()`, `loadSessionMatchCount()`, `appendSessionEntry()`, and `clearSession()` — that manage the `"sessionLog"` / `"sessionMatchCount"` keys (feature 018).
 - `RugbyTimerEventLog.mc`: Formats timestamped entries (`HH:MM – Home Try`) into `lastEvents` and exposes the log view so referees can export it via the Exit dialog.
+- **018 — Multi-Match Session classes** (all in `source/RugbyTimerDelegate.mc`):
+  - `EndGameMenu` / `EndGameDelegate`: four-item post-match menu (Next Match, Session Log, Reset, Exit) that appears automatically when SELECT is pressed in `STATE_ENDED`.
+  - `SessionLogMenu` / `SessionLogDelegate`: scrollable read-only list of up to 20 completed matches built at construction time from `RugbyTimerPersistence.loadSessionLog()`; accessible from both `EndGameMenu` and the main menu.
 
 ## Layout Math Notes
 - `baseTimerY` defines the preferred vertical anchor for the big clocks (game timer at the top, countdown below when overlay inactive). `candidateTimerY` is a computed Y coordinate that moves up/down to avoid overlapping with the card stack; the renderer clamps the final `countdownY` between `countdownMin` and `countdownLimit`.
@@ -31,6 +34,21 @@
 - Card stacks: Up to two visible timers per team. Additional timers keep counting without visibility until a slot frees up. Yellow timers vibrate once when <=10 seconds. All timers reset on “Reset Game” or game completion.
 - Event log: Every scoring or card event logs a human-readable string with `System.getTimer()` timestamps and appends to `lastEvents`. The BACK/LAP dialog exposes the Event Log view and a “Save log” action that persists the list to Storage for post-match sharing.
 - GPS tracking: When the match starts, `Activity.SPORT_RUGBY` recording begins automatically (distance/speed overlays are queued for future work); stopping the game halts GPS logging and writes the record so Connect IQ syncs the rugby session.
+- **Multi-match sessions (feature 018)**: After `model.endGame()` is called the watch face enters `STATE_ENDED` and pressing SELECT opens `EndGameMenu`. Choosing _Next Match_ calls `model.nextMatch()` which appends a `MatchRecord` dict (`matchNum`, `gameType`, `homeScore`, `awayScore`, `startTimeSec`) to the `"sessionLog"` Storage array (capped at 20; oldest entry silently dropped) and increments `"sessionMatchCount"`, then immediately calls `resetGame()` so the next match starts from 0–0 / 1st Half / `STATE_IDLE`. The session log can be viewed as a scrollable list at any time from the main menu or from within `EndGameMenu`. The session is cleared (log wiped, counter reset to 1) via Settings → _Clear Session_ (`RugbyTimerPersistence.clearSession()`).
+
+## Storage Keys
+
+| Key | Type | Written by | Purpose |
+|-----|------|------------|----------|
+| `gameStateData` | Dictionary | `RugbyTimerPersistence.saveState` | Mid-match crash recovery |
+| `lastGameSummary` | Dictionary | `RugbyTimerPersistence.finalizeGameData` | Post-match summary |
+| `eventLogExport` | Array | `RugbyTimerEventLog` | Exported event log |
+| `rugby7s` | Boolean | `RugbySettingsMenuDelegate` | Game type selection |
+| `halfDuration7s` | Number (seconds) | `RugbySettingsMenuDelegate` | Per-type half duration |
+| `halfDuration15s` | Number (seconds) | `RugbySettingsMenuDelegate` | Per-type half duration |
+| `countdownTimer` | Number (seconds) | Legacy (read-only fallback) | Pre-002 duration |
+| `sessionLog` | Array\<Dictionary\> (max 20) | `RugbyTimerPersistence.appendSessionEntry` | Match results for current session |
+| `sessionMatchCount` | Number (starts at 1) | `RugbyTimerPersistence.appendSessionEntry` | Monotonic match counter |
 
 ## Persistence & Release Notes
 - `resources/drawables/` now includes a 40×40 launcher icon referenced in `resources/drawables/drawables.xml` and the manifest; replace it only with same-size assets to avoid scaling warnings.
