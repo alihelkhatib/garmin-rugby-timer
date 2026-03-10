@@ -148,15 +148,14 @@ class RugbyGameModel {
             is7s = is7sValue;
         }
         
-        halfDuration = is7s ? 420 : 2400; // 7 min or 40 min in seconds
-        
-        // Load countdown timer setting
-        var savedCountdown = Storage.getValue("countdownTimer");
-        if (savedCountdown == null) {
-            countdownTimer = halfDuration;  // Default to half duration
-        } else {
-            countdownTimer = savedCountdown;
+        // Load per-type duration; fall back to legacy key, then type default
+        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
+        var savedDuration = Storage.getValue(typeKey);
+        if (savedDuration == null) {
+            savedDuration = Storage.getValue("countdownTimer"); // legacy fallback
         }
+        halfDuration = (savedDuration != null) ? savedDuration : (is7s ? 420 : 2400);
+        countdownTimer = halfDuration;
         
         var ct7 = Storage.getValue("conversionTime7s");
         if (ct7 != null) {
@@ -285,10 +284,32 @@ class RugbyGameModel {
     function setGameType(is7sFlag) {
         is7s = is7sFlag;
         Storage.setValue("rugby7s", is7sFlag);
-        halfDuration = is7s ? 420 : 2400;
+        // Load the saved duration for the newly selected game type (does not overwrite user's custom value)
+        var typeKey = is7sFlag ? "halfDuration7s" : "halfDuration15s";
+        var savedDuration = Storage.getValue(typeKey);
+        if (savedDuration == null) {
+            savedDuration = Storage.getValue("countdownTimer"); // legacy fallback
+        }
+        halfDuration = (savedDuration != null) ? savedDuration : (is7sFlag ? 420 : 2400);
         countdownTimer = halfDuration;
         if (gameState == STATE_IDLE) {
             countdownRemaining = countdownTimer;
+        }
+    }
+
+    /**
+     * Overrides the half duration after game type has been set.
+     * Saves the custom duration to Storage so it persists across restarts.
+     * @param seconds The desired half length in seconds
+     */
+    function setHalfDuration(seconds) {
+        halfDuration = seconds;
+        countdownTimer = seconds;
+        // Write to the per-type key so each game type remembers its own duration independently
+        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
+        Storage.setValue(typeKey, seconds);
+        if (gameState == STATE_IDLE) {
+            countdownRemaining = seconds;
         }
     }
 
