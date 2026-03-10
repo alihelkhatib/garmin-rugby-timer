@@ -3,6 +3,7 @@ using Toybox.System;
 using Toybox.ActivityRecording;
 using Toybox.Activity;
 using Toybox.Lang;
+using Toybox.Time;
 
 // Represents the game state
 enum {
@@ -44,6 +45,8 @@ class RugbyGameModel {
     var lastUpdate;
     // The timestamp when the game started
     var gameStartTime;
+    // Wall-clock Unix seconds at match kick-off, used by the session log
+    var matchStartWallClock;
     
     // The current activity recording session
     var session;
@@ -190,6 +193,7 @@ class RugbyGameModel {
         elapsedTime = 0;
         lastUpdate = null;
         gameStartTime = null;
+        matchStartWallClock = null;
         countdownSeconds = 0;
         countdownRemaining = countdownTimer;
         gpsTrack = [];
@@ -264,6 +268,7 @@ class RugbyGameModel {
         countdownRemaining = countdownTimer;
         countdownSeconds = 0;
         gameStartTime = null;
+        matchStartWallClock = null;
         lastUpdate = null;
         redHome = null;
         redAway = null;
@@ -352,6 +357,8 @@ class RugbyGameModel {
             var now = System.getTimer();
             gameState = STATE_PLAYING;
             gameStartTime = now;
+            // Capture wall-clock time for session log entry timestamp
+            matchStartWallClock = Time.now().value();
             lastUpdate = now;
             elapsedTime = 0;
             gameTime = 0;
@@ -469,6 +476,26 @@ class RugbyGameModel {
         RugbyTimerPersistence.finalizeGameData(self);
         Storage.setValue("gameStateData", null);
         RugbyTimerCards.clearCardTimers(self);
+    }
+
+    /**
+     * Logs the current match result to the session log and immediately resets
+     * the model to STATE_IDLE so play can begin for the next match.
+     *
+     * gameType is "7s" or "15s". The 3-way match (9s etc.) extension requires
+     * feature 002-custom-half-timer to be merged first. // TODO(002)
+     */
+    function nextMatch() {
+        var gameTypeLabel = is7s ? "7s" : "15s";
+        var entry = {
+            "matchNum"     => RugbyTimerPersistence.loadSessionMatchCount(),
+            "gameType"     => gameTypeLabel,
+            "homeScore"    => homeScore,
+            "awayScore"    => awayScore,
+            "startTimeSec" => matchStartWallClock
+        };
+        RugbyTimerPersistence.appendSessionEntry(entry);
+        resetGame();
     }
 
     /**
