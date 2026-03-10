@@ -79,6 +79,52 @@ class RugbyTimerPersistence {
         Storage.setValue("lastGameSummary", summary);
     }
 
+    // -------------------------------------------------------------------------
+    // Session log helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the persisted session log array, or an empty array if none exists.
+     */
+    static function loadSessionLog() {
+        var log = Storage.getValue("sessionLog");
+        if (log == null) { log = []; }
+        return log;
+    }
+
+    /**
+     * Returns the next match number to assign (1-based, monotonically incrementing).
+     */
+    static function loadSessionMatchCount() {
+        var count = Storage.getValue("sessionMatchCount");
+        if (count == null) { count = 1; }
+        return count;
+    }
+
+    /**
+     * Appends a MatchRecord dictionary to the session log and increments the counter.
+     * The log is capped at 20 entries; when full the oldest entry is silently dropped.
+     * @param entry A Dictionary with keys: "matchNum", "gameType", "homeScore", "awayScore", "startTimeSec"
+     */
+    static function appendSessionEntry(entry) {
+        var log = loadSessionLog();
+        log.add(entry);
+        // Silent oldest-drop when cap is reached (FR-007)
+        if (log.size() > 20) { log.remove(0); }
+        Storage.setValue("sessionLog", log);
+        // Increment match counter independently of cap so numbers stay monotonic
+        var next = loadSessionMatchCount() + 1;
+        Storage.setValue("sessionMatchCount", next);
+    }
+
+    /**
+     * Clears the session log and resets the match counter to 1.
+     */
+    static function clearSession() {
+        Storage.setValue("sessionLog", null);
+        Storage.setValue("sessionMatchCount", 1);
+    }
+
     /**
      * Loads the saved game state from storage.
      * @param model The game model
