@@ -78,7 +78,10 @@ class RugbyTimerView extends WatchUi.View {
         
         if (!promptedGameType && model.gameState == STATE_IDLE) {
             promptedGameType = true;
-            showGameTypePrompt();
+            // Only prompt on very first launch — once a game type is saved, go straight to the watch face
+            if (Storage.getValue("rugby7s") == null) {
+                showGameTypePrompt();
+            }
         }
     }
 
