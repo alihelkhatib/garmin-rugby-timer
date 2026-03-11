@@ -522,16 +522,17 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 /**
- * Menu for selecting the game type.
+ * Menu for selecting the game type on first launch.
  */
 class GameTypeMenu extends WatchUi.Menu2 {
-    /**
-     * Initializes the menu.
-     */
     function initialize() {
-        Menu2.initialize({:title=>"Game Type"});
-        addItem(new WatchUi.MenuItem("Rugby 7s", "2 min yellows", :gt_7s, null));
-        addItem(new WatchUi.MenuItem("Rugby 15s", "10 min yellows", :gt_15s, null));
+        Menu2.initialize({:title=>"New Match"});
+        var s7 = Storage.getValue("halfDuration7s");
+        var m7 = (s7 != null) ? (s7 / 60) : 7;
+        var s15 = Storage.getValue("halfDuration15s");
+        var m15 = (s15 != null) ? (s15 / 60) : 40;
+        addItem(new WatchUi.MenuItem("Rugby 7s", m7 + " min halves", :gt_7s, null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", m15 + " min halves", :gt_15s, null));
     }
 }
 
@@ -556,22 +557,21 @@ class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
      */
     function onSelect(item) {
         var is7s = (item.getId() == :gt_7s);
-        // Pre-fill picker with the saved duration for this game type (FR-005)
+        // Apply the saved per-type duration immediately (adjustable later in Settings)
         var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
         var savedSecs = Storage.getValue(typeKey);
         if (savedSecs == null) {
-            savedSecs = Storage.getValue("countdownTimer"); // legacy fallback
+            savedSecs = is7s ? 420 : 2400;
+            Storage.setValue(typeKey, savedSecs);
         }
-        var defaultMinutes = (savedSecs != null) ? (savedSecs / 60) : (is7s ? 7 : 40);
-        if (defaultMinutes < 1) { defaultMinutes = 1; }
-        WatchUi.pushView(new MinutesPicker(defaultMinutes), new NewGameTimerPickerDelegate(is7s, model), WatchUi.SLIDE_UP);
+        model.setGameType(is7s);
+        model.setHalfDuration(savedSecs);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
     }
 
-    /**
-     * This method is called when the back button is pressed.
-     */
     function onBack() {
-        // Keep prompting on next show until a choice is made
+        // User dismissed without choosing — let them pick next time
         var v = Application.getApp().rugbyView;
         if (v != null) { v.promptedGameType = false; }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
