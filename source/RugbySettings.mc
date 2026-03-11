@@ -214,10 +214,10 @@ class DigitPickerFactory extends WatchUi.PickerFactory {
     function getDrawable(index, selected) {
         return new WatchUi.Text({
             :text  => (mMin + index).format("%d"),
-            :font  => Graphics.FONT_NUMBER_HOT,
+            :font  => Graphics.FONT_NUMBER_MEDIUM,
             :locX  => WatchUi.LAYOUT_HALIGN_CENTER,
             :locY  => WatchUi.LAYOUT_VALIGN_CENTER,
-            :color => selected ? Graphics.COLOR_WHITE : Graphics.COLOR_LT_GRAY
+            :color => selected ? Graphics.COLOR_ORANGE : Graphics.COLOR_DK_GRAY
         });
     }
 
@@ -251,7 +251,7 @@ class MinutesPicker extends WatchUi.Picker {
                 :font  => Graphics.FONT_TINY,
                 :locX  => WatchUi.LAYOUT_HALIGN_CENTER,
                 :locY  => WatchUi.LAYOUT_VALIGN_CENTER,
-                :color => Graphics.COLOR_WHITE
+                :color => Graphics.COLOR_ORANGE
             }),
             :pattern => [
                 new DigitPickerFactory(0, 9, tens),
