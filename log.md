@@ -8,7 +8,7 @@
   - `resources/menus/menu.xml`: added `<menu-item id="view_session_log">` to `MainMenu`.
   - `resources/strings/strings.xml`: added `EndGame_NextMatch`, `EndGame_SessionLog`, `EndGame_Reset`, `EndGame_Exit`, `Session_NoMatches`, `Settings_ClearSession`.
 - Build: ⏳ PENDING — must be run on Windows dev machine (`fenix6_sim`, `monkeybrains.jar`); see `AGENTS.md` for command.
-- Manual test flows: ⏳ PENDING — see `specs/002-multi-match-session/quickstart.md` for step-by-step instructions.
+- Manual test flows: ⏳ PENDING — see `specs/003-multi-match-session/quickstart.md` for step-by-step instructions.
 
 ## [2025-12-31] Documentation, icon, and build sync
 

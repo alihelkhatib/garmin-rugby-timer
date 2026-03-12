@@ -1,6 +1,6 @@
 # Quickstart: Multi-Match Session Mode
 
-**Feature**: `002-multi-match-session`
+**Feature**: `003-multi-match-session`
 **Date**: 2026-03-10
 
 ---

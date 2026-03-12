@@ -1,6 +1,6 @@
 # Feature Specification: Multi-Match Session Mode
 
-**Feature Branch**: `002-multi-match-session`
+**Feature Branch**: `003-multi-match-session`
 **Created**: 2026-03-10
 **Status**: Draft
 **Input**: User description: "Multi-match session mode — Run N consecutive matches with automatic reset between them; show a running session score log."

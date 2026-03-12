@@ -1,6 +1,6 @@
 # Tasks: Multi-Match Session Mode
 
-**Input**: Design documents from `/specs/002-multi-match-session/`
+**Input**: Design documents from `/specs/003-multi-match-session/`
 **Prerequisites**: plan.md ✅ · spec.md ✅ · research.md ✅ · data-model.md ✅ · quickstart.md ✅
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -84,7 +84,7 @@
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [ ] T002 Build with `monkeybrains.jar -d fenix6_sim` (zero errors required) and record the build command, target, and PASS/FAIL in `log.md`
-- [ ] T019 [P] Execute the manual test checklist from `specs/002-multi-match-session/quickstart.md` and record results in `log.md`; include an explicit GPS check: end a match, open `EndGameMenu`, and confirm `model.session == null` (GPS already stopped by `endGame()` before the menu is shown) — satisfies FR-008
+- [ ] T019 [P] Execute the manual test checklist from `specs/003-multi-match-session/quickstart.md` and record results in `log.md`; include an explicit GPS check: end a match, open `EndGameMenu`, and confirm `model.session == null` (GPS already stopped by `endGame()` before the menu is shown) — satisfies FR-008
 - [X] T020 [P] Update `project_technical_document.md` with session log architecture
 
 ---

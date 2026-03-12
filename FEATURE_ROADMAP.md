@@ -34,7 +34,7 @@
 
 **Status**: Draft (spec complete, plan complete)  
 **Branch**: `002-multi-match-session`  
-**Spec**: [specs/002-multi-match-session/spec.md](specs/002-multi-match-session/spec.md)
+**Spec**: [specs/003-multi-match-session/spec.md](specs/003-multi-match-session/spec.md)
 
 **Rationale**:
 - Enables tournament referees to run 4–8 consecutive matches without manual reset

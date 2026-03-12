@@ -1,7 +1,7 @@
 # Implementation Plan: Multi-Match Session Mode
 
-**Branch**: `002-multi-match-session` | **Date**: 2026-03-10 | **Spec**: [spec.md](spec.md)
-**Input**: Feature specification from `/specs/002-multi-match-session/spec.md`
+**Branch**: `003-multi-match-session` | **Date**: 2026-03-10 | **Spec**: [spec.md](spec.md)
+**Input**: Feature specification from `/specs/003-multi-match-session/spec.md`
 
 ## Summary
 
@@ -49,7 +49,7 @@ After a match ends, offer a "Next Match" action that saves the final scoreline (
 ### Documentation (this feature)
 
 ```text
-specs/002-multi-match-session/
+specs/003-multi-match-session/
 ├── plan.md          ← this file
 ├── research.md      ← Phase 0 complete
 ├── data-model.md    ← Phase 1 complete
