@@ -75,7 +75,7 @@ At the start of a new tournament day the referee wants to clear the session log 
 - **FR-001**: After a match ends, the app MUST offer a "Next Match" option that resets all match state (scores, half number, card timers) to the start of 1st Half in STATE_IDLE, while preserving game type and timer configuration. The referee must explicitly press start to begin the new match.
 - **FR-002**: When "Next Match" is confirmed, the final score of the completed match MUST be written to the session log before the reset occurs.
 - **FR-003**: The session log MUST be accessible from the main menu at any time during or between matches.
-- **FR-004**: Each session log entry MUST include: match number, game type (7s / 15s; 10s label requires 001-custom-half-timer to be merged), home score, away score, and match start timestamp.
+- **FR-004**: Each session log entry MUST include: match number, game type (7s / 15s; 10s label requires 003-custom-half-timer to be merged), home score, away score, and match start timestamp.
 - **FR-005**: The session log MUST be persisted to Storage and survive app restarts.
 - **FR-006**: Users MUST be able to clear the session log and reset the match counter via Settings.
 - **FR-007**: The session log MUST display a maximum of 20 entries; when a 21st entry is added the oldest is silently dropped with no UI notification.

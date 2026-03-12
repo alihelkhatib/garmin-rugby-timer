@@ -29,7 +29,7 @@
 
 - [X] T002 [P] Add `loadSessionLog()`, `loadSessionMatchCount()`, `appendSessionEntry()`, and `clearSession()` static helpers to `source/RugbyTimerPersistence.mc` using Storage keys `"sessionLog"` (Array\<Dictionary\>, max 20 entries, silent oldest-drop) and `"sessionMatchCount"` (Number, starts at 1)
 - [X] T003 [P] Set `matchStartWallClock = Time.now().value()` in `startGame()` and clear to `null` in `resetGame()` in `source/RugbyGameModel.mc`
-- [X] T004 Add `nextMatch()` method to `source/RugbyGameModel.mc`: builds a `MatchRecord` dict (matchNum from `loadSessionMatchCount`, gameType label derived from `is7s ? "7s" : "15s"` with a `// TODO(001): update to 3-way mapping when 001-custom-half-timer is merged` comment, homeScore, awayScore, startTimeSec from `matchStartWallClock`), calls `appendSessionEntry()`, then calls `resetGame()` — depends on T002, T003
+- [X] T004 Add `nextMatch()` method to `source/RugbyGameModel.mc`: builds a `MatchRecord` dict (matchNum from `loadSessionMatchCount`, gameType label derived from `is7s ? "7s" : "15s"` with a `// TODO(001): update to 3-way mapping when 003-custom-half-timer is merged` comment, homeScore, awayScore, startTimeSec from `matchStartWallClock`), calls `appendSessionEntry()`, then calls `resetGame()` — depends on T002, T003
 
 **Checkpoint**: `model.nextMatch()` can be called from the REPL; session log entry persists across simulated app restart.
 
@@ -96,8 +96,8 @@
 ```
 Phase 1: Setup
     └─► Phase 2: Foundational (T001 must be done first)
-            └─► Phase 3: US1 (T002-T004 must be done)
-                    └─► Phase 4: US2 (T005-T009 must be done)
+            └─► Phase 3: US1 (T003-T004 must be done)
+                    └─► Phase 4: US2 (T003-T009 must be done)
                             └─► Phase 5: US3 (independent of US1/US2 except T002)
                                     └─► Phase 6: Polish (all phases done)
 ```

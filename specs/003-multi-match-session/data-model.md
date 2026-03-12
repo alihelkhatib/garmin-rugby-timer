@@ -14,7 +14,7 @@ Stored at `Storage` key `"sessionLog"` as `Array<Dictionary>`.
 | Field | Type | Description |
 |-------|------|-------------|
 | `"matchNum"` | Number | Sequential match number (1-based, monotonically incrementing) |
-| `"gameType"` | String | `"7s"` or `"15s"` (updated to `"10s"` when 001-custom-half-timer lands) |
+| `"gameType"` | String | `"7s"` or `"15s"` (updated to `"10s"` when 003-custom-half-timer lands) |
 | `"homeScore"` | Number | Final home score at the moment "Next Match" was confirmed |
 | `"awayScore"` | Number | Final away score at the moment "Next Match" was confirmed |
 | `"startTimeSec"` | Number | Unix epoch seconds (`Time.now().value()`) captured when `startGame()` was first called |
