@@ -1,8 +1,8 @@
-# Tasks: 002-custom-half-timer
+# Tasks: 001-custom-half-timer
 
-**Feature Branch**: `002-custom-half-timer`  
+**Feature Branch**: `001-custom-half-timer`  
 **Generated**: 2026-03-10  
-**Plan**: `specs/002-custom-half-timer/plan.md`
+**Plan**: `specs/001-custom-half-timer/plan.md`
 
 ---
 

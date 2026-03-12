@@ -1,6 +1,6 @@
 # Tasks: Multi-Match Session Mode
 
-**Input**: Design documents from `/specs/018-multi-match-session/`
+**Input**: Design documents from `/specs/002-multi-match-session/`
 **Prerequisites**: plan.md ✅ · spec.md ✅ · research.md ✅ · data-model.md ✅ · quickstart.md ✅
 
 ## Format: `[ID] [P?] [Story] Description`
@@ -29,7 +29,7 @@
 
 - [X] T002 [P] Add `loadSessionLog()`, `loadSessionMatchCount()`, `appendSessionEntry()`, and `clearSession()` static helpers to `source/RugbyTimerPersistence.mc` using Storage keys `"sessionLog"` (Array\<Dictionary\>, max 20 entries, silent oldest-drop) and `"sessionMatchCount"` (Number, starts at 1)
 - [X] T003 [P] Set `matchStartWallClock = Time.now().value()` in `startGame()` and clear to `null` in `resetGame()` in `source/RugbyGameModel.mc`
-- [X] T004 Add `nextMatch()` method to `source/RugbyGameModel.mc`: builds a `MatchRecord` dict (matchNum from `loadSessionMatchCount`, gameType label derived from `is7s ? "7s" : "15s"` with a `// TODO(002): update to 3-way mapping when 002-custom-half-timer is merged` comment, homeScore, awayScore, startTimeSec from `matchStartWallClock`), calls `appendSessionEntry()`, then calls `resetGame()` — depends on T002, T003
+- [X] T004 Add `nextMatch()` method to `source/RugbyGameModel.mc`: builds a `MatchRecord` dict (matchNum from `loadSessionMatchCount`, gameType label derived from `is7s ? "7s" : "15s"` with a `// TODO(001): update to 3-way mapping when 001-custom-half-timer is merged` comment, homeScore, awayScore, startTimeSec from `matchStartWallClock`), calls `appendSessionEntry()`, then calls `resetGame()` — depends on T002, T003
 
 **Checkpoint**: `model.nextMatch()` can be called from the REPL; session log entry persists across simulated app restart.
 
@@ -83,8 +83,8 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T018 Build with `monkeybrains.jar -d fenix6_sim` (zero errors required) and record the build command, target, and PASS/FAIL in `log.md`
-- [ ] T019 [P] Execute the manual test checklist from `specs/018-multi-match-session/quickstart.md` and record results in `log.md`; include an explicit GPS check: end a match, open `EndGameMenu`, and confirm `model.session == null` (GPS already stopped by `endGame()` before the menu is shown) — satisfies FR-008
+- [ ] T002 Build with `monkeybrains.jar -d fenix6_sim` (zero errors required) and record the build command, target, and PASS/FAIL in `log.md`
+- [ ] T019 [P] Execute the manual test checklist from `specs/002-multi-match-session/quickstart.md` and record results in `log.md`; include an explicit GPS check: end a match, open `EndGameMenu`, and confirm `model.session == null` (GPS already stopped by `endGame()` before the menu is shown) — satisfies FR-008
 - [X] T020 [P] Update `project_technical_document.md` with session log architecture
 
 ---
@@ -116,7 +116,7 @@ Phase 1: Setup
 | Phase 3 | T005, T006, T009 | All in different files; T007 waits for T005; T008 waits for T007 |
 | Phase 4 | T010, T011, T014 | T012, T013 wait for T010+T011 |
 | Phase 5 | T015, T017 | T016 waits for T015 (or can be in same edit) |
-| Phase 6 | T019, T020 | Both wait for T018 (build must pass first) |
+| Phase 6 | T019, T020 | Both wait for T002 (build must pass first) |
 
 ---
 
@@ -129,7 +129,7 @@ Phase 1: Setup
 2. T005 + T006 + T009 in parallel → T007 → T008 (US1 UI, ~45 min)
 3. T010 + T011 → T012 + T013 + T014 in parallel (US2 view, ~30 min)
 4. T015 + T017 → T016 (US3 clear, ~10 min)
-5. T018 → T019 + T020 in parallel (build + verify, ~20 min)
+5. T002 → T019 + T020 in parallel (build + verify, ~20 min)
 
 **Total task count**: 20 tasks across 6 phases
 - Phase 1: 1 task

@@ -1,6 +1,6 @@
-## [2026-03-10] Feature 018 — Multi-Match Session Mode implementation
+## [2026-03-10] Feature 002 — Multi-Match Session Mode implementation
 
-- Implemented all 17 source-change tasks for `018-multi-match-session` branch:
+- Implemented all 17 source-change tasks for `002-multi-match-session` branch:
   - `source/RugbyGameModel.mc`: added `using Toybox.Time;`, `var matchStartWallClock`, set it in `startGame()` via `Time.now().value()`, cleared it in `resetGame()` / `initialize()`; added `nextMatch()` method that builds a `MatchRecord` dict and calls `RugbyTimerPersistence.appendSessionEntry()` then `resetGame()`.
   - `source/RugbyTimerPersistence.mc`: added four static session helpers — `loadSessionLog()`, `loadSessionMatchCount()`, `appendSessionEntry()` (max-20 silent-drop cap), `clearSession()` — using Storage keys `"sessionLog"` and `"sessionMatchCount"`.
   - `source/RugbyTimerDelegate.mc`: added `using Toybox.Time;`; hooked `STATE_ENDED` branch in `RugbyTimerDelegate.onSelect()` to push `EndGameMenu`/`EndGameDelegate`; wired `:view_session_log` in `MainMenuDelegate`; appended four new classes: `EndGameMenu`, `EndGameDelegate`, `SessionLogMenu`, `SessionLogDelegate`.
@@ -8,7 +8,7 @@
   - `resources/menus/menu.xml`: added `<menu-item id="view_session_log">` to `MainMenu`.
   - `resources/strings/strings.xml`: added `EndGame_NextMatch`, `EndGame_SessionLog`, `EndGame_Reset`, `EndGame_Exit`, `Session_NoMatches`, `Settings_ClearSession`.
 - Build: ⏳ PENDING — must be run on Windows dev machine (`fenix6_sim`, `monkeybrains.jar`); see `AGENTS.md` for command.
-- Manual test flows: ⏳ PENDING — see `specs/018-multi-match-session/quickstart.md` for step-by-step instructions.
+- Manual test flows: ⏳ PENDING — see `specs/002-multi-match-session/quickstart.md` for step-by-step instructions.
 
 ## [2025-12-31] Documentation, icon, and build sync
 

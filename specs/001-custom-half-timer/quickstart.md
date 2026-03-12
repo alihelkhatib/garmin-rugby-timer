@@ -1,6 +1,6 @@
-# Quickstart: Manual Verification — 002-custom-half-timer
+# Quickstart: Manual Verification — 001-custom-half-timer
 
-**Branch**: `002-custom-half-timer`  
+**Branch**: `001-custom-half-timer`  
 **Simulator target**: `fenix6_sim`
 
 Run all flows below on the Connect IQ simulator after building with `monkeybrains.jar`. Record results in `log.md`.
@@ -101,7 +101,7 @@ Run all flows below on the Connect IQ simulator after building with `monkeybrain
 After completing all flows, add to `log.md`:
 
 ```
-## [DATE] — 002-custom-half-timer verification
+## [DATE] — 001-custom-half-timer verification
 
 Build command: java -jar <SDK_PATH>/bin/monkeybrains.jar -o bin/rugbytimer.prg -f monkey.jungle -y developer_key -d fenix6_sim -w
 Build result: PASS / FAIL

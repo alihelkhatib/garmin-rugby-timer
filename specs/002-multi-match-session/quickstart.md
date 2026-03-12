@@ -1,6 +1,6 @@
 # Quickstart: Multi-Match Session Mode
 
-**Feature**: `018-multi-match-session`
+**Feature**: `002-multi-match-session`
 **Date**: 2026-03-10
 
 ---
@@ -179,5 +179,5 @@ In the **main-menu delegate**, add handling for `:view_session_log`:
 
 | Dependency | Status | Impact |
 |------------|--------|--------|
-| 002-custom-half-timer (`gameType` integer) | Not yet merged | Game type label in log will show "7s" or "15s" only until 002 lands; 1-line TODO marked in `nextMatch()` |
+| 001-custom-half-timer (`gameType` integer) | Not yet merged | Game type label in log will show "7s" or "15s" only until 001 lands; 1-line TODO marked in `nextMatch()` |
 | 017-gps-match-summary | Optional / independent | GPS session is already finalised by `endGame()` before "Next Match" is reachable; no coupling required |

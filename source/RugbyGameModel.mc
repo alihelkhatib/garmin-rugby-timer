@@ -483,7 +483,7 @@ class RugbyGameModel {
      * the model to STATE_IDLE so play can begin for the next match.
      *
      * gameType is "7s" or "15s". The 3-way match (9s etc.) extension requires
-     * feature 002-custom-half-timer to be merged first. // TODO(002)
+     * feature 001-custom-half-timer to be merged first. // TODO(001)
      */
     function nextMatch() {
         var gameTypeLabel = is7s ? "7s" : "15s";

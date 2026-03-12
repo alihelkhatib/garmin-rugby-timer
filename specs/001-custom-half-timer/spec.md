@@ -1,6 +1,6 @@
 # Feature Specification: Fully Customizable Half Timer
 
-**Feature Branch**: `002-custom-half-timer`  
+**Feature Branch**: `001-custom-half-timer`  
 **Created**: 2026-03-10  
 **Status**: Draft  
 **Input**: User description: "Make the half-timer fully customizable — any minute value, not just presets"

@@ -1,10 +1,10 @@
-# Implementation Plan: 002-custom-half-timer
+# Implementation Plan: 001-custom-half-timer
 
-**Feature Branch**: `002-custom-half-timer`  
+**Feature Branch**: `001-custom-half-timer`  
 **Created**: 2026-03-10  
-**Spec**: `specs/002-custom-half-timer/spec.md`  
-**Research**: `specs/002-custom-half-timer/research.md`  
-**Data Model**: `specs/002-custom-half-timer/data-model.md`
+**Spec**: `specs/001-custom-half-timer/spec.md`  
+**Research**: `specs/001-custom-half-timer/research.md`  
+**Data Model**: `specs/001-custom-half-timer/data-model.md`
 
 ---
 

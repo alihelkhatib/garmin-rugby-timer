@@ -1,7 +1,7 @@
-# Data Model: 002-custom-half-timer
+# Data Model: 001-custom-half-timer
 
 **Generated**: 2026-03-10  
-**Branch**: `002-custom-half-timer`
+**Branch**: `001-custom-half-timer`
 
 ---
 

@@ -1,6 +1,6 @@
 # Research: Multi-Match Session Mode
 
-**Feature**: `018-multi-match-session`
+**Feature**: `002-multi-match-session`
 **Date**: 2026-03-10
 **Status**: Complete — all unknowns resolved
 
@@ -68,9 +68,9 @@
 
 ## Decision 6: Game Type Label in Log Entries
 
-**Question**: The `gameType` integer refactor (feature 002-custom-half-timer) has not yet been implemented. How should game type be captured in log entries?
+**Question**: The `gameType` integer refactor (feature 001-custom-half-timer) has not yet been implemented. How should game type be captured in log entries?
 
-**Decision**: For this implementation, derive the game type label from the existing `model.is7s` boolean: `is7s ? "7s" : "15s"`. Mark with a `// TODO(002)` comment so the 3-way mapping (`"7s"`, `"10s"`, `"15s"`) is added when 002-custom-half-timer is merged.
+**Decision**: For this implementation, derive the game type label from the existing `model.is7s` boolean: `is7s ? "7s" : "15s"`. Mark with a `// TODO(001)` comment so the 3-way mapping (`"7s"`, `"10s"`, `"15s"`) is added when 001-custom-half-timer is merged.
 
 **Rationale**: Blocking on 002 would delay an otherwise independent feature. The label is a display string; updating it is a 1-line change when 002 lands.
 

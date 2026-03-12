@@ -673,7 +673,7 @@ class EventLogDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 // =============================================================================
-// 018: Multi-Match Session — EndGame, SessionLog UI
+// 002: Multi-Match Session — EndGame, SessionLog UI
 // =============================================================================
 
 /**
