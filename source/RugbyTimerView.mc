@@ -99,6 +99,14 @@ class RugbyTimerView extends WatchUi.View {
         var width = dc.getWidth();
         var height = dc.getHeight();
 
+        // Conversion overlays should reopen automatically when a try transitions the
+        // model into conversion state, even if that happened while a menu was on top.
+        if (model.gameState == STATE_CONVERSION && !specialTimerOverlayVisible) {
+            specialTimerOverlayVisible = true;
+        } else if (specialTimerOverlayVisible && model.gameState != STATE_CONVERSION && model.gameState != STATE_PENALTY) {
+            specialTimerOverlayVisible = false;
+        }
+
         // Use cached fonts and layout
         var fonts = cachedFonts;
         var layout = cachedLayout;
@@ -132,18 +140,34 @@ class RugbyTimerView extends WatchUi.View {
     function renderHint(dc, width, hintFont, hintY) {
         var hint = "";
         if (model.gameState == STATE_IDLE) {
-            hint = Rez.Strings.Hint_Idle_Adjust;
+            hint = loadString(Rez.Strings.Hint_Idle_Adjust);
         } else if (model.gameState == STATE_PLAYING) {
-            hint = Rez.Strings.Hint_Select_Pause;
+            hint = loadString(Rez.Strings.Hint_Select_Pause);
         } else if (model.gameState == STATE_PAUSED) {
-            hint = Rez.Strings.Hint_Select_Resume;
+            hint = loadString(Rez.Strings.Hint_Select_Resume);
         }
         if (isLocked) {
-            hint = Rez.Strings.Hint_Locked;
+            hint = loadString(Rez.Strings.Hint_Locked);
         }
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+    }
+
+    /**
+     * Loads string resources explicitly so the UI never renders raw numeric resource ids.
+     * @param resourceId The Rez string identifier
+     * @return The resolved display string
+     */
+    function loadString(resourceId) {
+        if (resourceId instanceof Lang.String) {
+            return resourceId;
+        }
+        var value = WatchUi.loadResource(resourceId);
+        if (value instanceof Lang.String) {
+            return value;
+        }
+        return "";
     }
 
     /**

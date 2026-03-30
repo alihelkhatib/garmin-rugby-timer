@@ -2,6 +2,7 @@ using Toybox.Application;
 using Toybox.WatchUi;
 using Toybox.Activity;
 using Toybox.Position;
+using Toybox.System;
 
 /**
  * The main application class for the Rugby Timer.
@@ -28,7 +29,11 @@ class RugbyTimerApp extends Application.AppBase {
      * @param state The application state
      */
     function onStart(state) {
-        Position.enableLocationEvents(Position.LOCATION_CONTINUOUS, method(:onPosition) as Method(info as Position.Info) as Void);
+        try {
+            Position.enableLocationEvents(Position.LOCATION_CONTINUOUS, method(:onPosition) as Method(info as Position.Info) as Void);
+        } catch (ex) {
+            System.println("Unable to enable location events: " + ex.getErrorMessage());
+        }
     }
 
     /**
@@ -36,9 +41,13 @@ class RugbyTimerApp extends Application.AppBase {
      * @param state The application state
      */
     function onStop(state) {
-        Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition) as Method(info as Position.Info) as Void);
+        try {
+            Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition) as Method(info as Position.Info) as Void);
+        } catch (ex) {
+            System.println("Unable to disable location events: " + ex.getErrorMessage());
+        }
         if (model != null) {
-            model.stopRecording();
+            model.handleAppStop();
         }
     }
 
