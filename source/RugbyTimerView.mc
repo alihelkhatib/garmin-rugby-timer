@@ -20,8 +20,6 @@ class RugbyTimerView extends WatchUi.View {
     // Cached layout information
     var cachedLayout as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
 
-    // A flag to ensure the game type prompt is shown only once
-    var promptedGameType;
     // A boolean indicating if the screen is locked
     var isLocked;
     // A boolean indicating if the screen is in dim mode
@@ -46,7 +44,6 @@ class RugbyTimerView extends WatchUi.View {
         View.initialize();
         model = m;
         
-        promptedGameType = false;
         isLocked = false;
         lastActionTs = 0;
         specialTimerOverlayVisible = false;
@@ -74,11 +71,6 @@ class RugbyTimerView extends WatchUi.View {
         if (updateTimer == null) {
             updateTimer = new Timer.Timer();
             updateTimer.start(method(:updateGame), 100, true);
-        }
-        
-        if (!promptedGameType && model.gameState == STATE_IDLE) {
-            promptedGameType = true;
-            showGameTypePrompt();
         }
     }
 
@@ -140,7 +132,7 @@ class RugbyTimerView extends WatchUi.View {
     function renderHint(dc, width, hintFont, hintY) {
         var hint = "";
         if (model.gameState == STATE_IDLE) {
-            hint = Rez.Strings.Hint_Select_Start;
+            hint = Rez.Strings.Hint_Idle_Adjust;
         } else if (model.gameState == STATE_PLAYING) {
             hint = Rez.Strings.Hint_Select_Pause;
         } else if (model.gameState == STATE_PAUSED) {
@@ -177,13 +169,6 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     /**
-     * Presents the menu asking whether the match is 7s or 15s.
-     */
-    function showGameTypePrompt() {
-        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(model), WatchUi.SLIDE_UP);
-    }
-
-    /**
      * Launches the score dialog stack; respects the locked state.
      */
     function showScoreDialog() {
@@ -208,6 +193,7 @@ class RugbyTimerView extends WatchUi.View {
      */
     function toggleLock() {
         isLocked = !isLocked;
+        RugbyTimerTiming.triggerLockToggleVibe();
         WatchUi.requestUpdate();
     }
 

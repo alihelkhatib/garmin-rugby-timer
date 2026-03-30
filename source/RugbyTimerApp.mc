@@ -68,7 +68,8 @@ class RugbyTimerApp extends Application.AppBase {
      * @return An array containing the settings view and delegate
      */
     function getSettingsView() {
-        return [new RugbySettingsMenu(), new RugbySettingsMenuDelegate()];
+        var menu = new RugbySettingsMenu();
+        return [menu, new RugbySettingsMenuDelegate(menu)];
     }
 }
 
