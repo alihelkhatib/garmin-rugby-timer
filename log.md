@@ -1,3 +1,43 @@
+## [2026-03-30] Haptics rollout and kickoff overlay removal
+
+- Removed the timed kickoff overlay from the active match flow so conversions now return straight to live play instead of opening a second special-timer state; older saved kickoff states still deserialize safely through the persistence compatibility path.
+- Added distinct haptic patterns for match start, pause, resume, half-time, full-time, lock toggle, conversion start/10-second warning/expiry, penalty start/10-second warning/expiry, and yellow-card warning/expiry.
+- Updated the docs and app-store copy to describe the conversion/penalty-only special overlays and the expanded referee-focused vibration scheme.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings, container-analysis warnings, and the pre-existing `RugbySettings.mc` unreachable-statement warning remain).
+
+## [2026-03-30] Countdown display sync
+
+- Unified countdown display rounding across the main countdown, conversion/penalty/kickoff inline labels, and the special overlay so the special timers no longer appear to lag behind the primary match timer by a second on different screens.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings and longstanding container-analysis warnings remain).
+
+## [2026-03-30] Match profile presets
+
+- Added a profile layer (`7s`, `10s`, `15s`, `U19`, `Custom`) so the settings screen can switch between full preset bundles instead of only toggling a `7s` boolean and per-type half lengths.
+- Refactored the model and persistence to use active `conversionTime` / `kickoffTime` values plus a stored `matchProfileId`, while migrating older `rugby7s` and per-type timer keys into the new profile system without dropping existing custom setups.
+- Rebuilt the settings UI around a `Profile` row, `Format Family`, a new `Kickoff Timer` row, and automatic promotion to `Custom` whenever the user manually edits a preset.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings and longstanding container-analysis warnings remain).
+
+## [2026-03-30] Kickoff controls and idle button mapping
+
+- Split kickoff timing by format so 7s keeps a 30-second restart window while 15s-format matches now use 60 seconds.
+- Fixed the idle-screen button mapping so physical `UP` increases the half length and physical `DOWN` decreases it, matching the on-screen hint.
+- Hardened kickoff overlay input by suppressing the main menu while special overlays are open and routing kickoff button presses away from the normal score/card flows so the overlay can be hidden or cancelled safely.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings and longstanding container-analysis warnings remain).
+
+## [2026-03-30] Persistence and startup flow hardening
+
+- Changed persistence so live matches are saved as resumable paused snapshots, with durable remaining-time serialization for yellow/red card timers plus undo history and event log entries preserved across app restarts.
+- Reattached activity recording when play resumes after a saved session, removed the accidental penalty-kick countdown trigger from yellow/red card events, and wired `Lock on Start` so it now actually locks the watch at kickoff and second-half start.
+- Aligned settings defaults and live updates: `Penalty Timer` now defaults consistently to off, and the conversion/penalty/lock toggles update the in-memory model immediately instead of waiting for an app restart.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings and longstanding container-analysis warnings remain).
+
+## [2026-03-30] Remove startup setup prompt
+
+- Removed the launch-time game type / half-length setup flow so the app now opens directly on the main timer screen; the idle screen keeps the new `UP/DOWN` minute adjustment path instead of pushing the washed-out selector UI.
+- Updated `RugbySettings.mc` so `Game Type` is also treated as idle-only setup, and toggling it while idle updates the live model immediately instead of waiting for an app restart.
+- Refreshed `README.md` and `project_technical_document.md` to describe the direct-to-timer startup flow and the new “Settings for 7s/15s, buttons for minute edits” behavior.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest/device-id warnings and pre-existing container-analysis warnings remain; no new compile errors from this change).
+
 ## [2025-12-31] Documentation, icon, and build sync
 
 - Resized `resources/drawables/icon.jpg` down to 40×40 so the launcher asset now matches Garmin's requirements and no longer triggers the scaling warning.
@@ -1543,4 +1583,3 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
-
