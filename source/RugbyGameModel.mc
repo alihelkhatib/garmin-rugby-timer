@@ -97,6 +97,10 @@ class RugbyGameModel {
     var redHome;
     // The timer for a red card for the away team
     var redAway;
+    // Frozen remaining time for a timed red card while the match clock is paused
+    var redHomePausedRemaining;
+    // Frozen remaining time for a timed red card while the match clock is paused
+    var redAwayPausedRemaining;
     // A boolean indicating if the red card for the home team is permanent
     var redHomePermanent;
     // A boolean indicating if the red card for the away team is permanent
@@ -177,6 +181,7 @@ class RugbyGameModel {
         yellowHomeLabelCounter = 0;
         yellowAwayLabelCounter = 0;
         redHome = null; redAway = null;
+        redHomePausedRemaining = null; redAwayPausedRemaining = null;
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
         specialAlertTriggered = false;
@@ -447,6 +452,15 @@ class RugbyGameModel {
      */
     function pauseGame() {
         if (gameState == STATE_PLAYING) {
+            var now = System.getTimer();
+            yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
+            yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
+            if (!redHomePermanent) {
+                redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+            }
+            if (!redAwayPermanent) {
+                redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+            }
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
             RugbyTimerTiming.triggerPauseVibe();
@@ -459,8 +473,19 @@ class RugbyGameModel {
      */
     function resumeGame() {
         if (gameState == STATE_PAUSED) {
+            var now = System.getTimer();
+            yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
+            yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
+            if (!redHomePermanent && redHomePausedRemaining != null) {
+                redHome = RugbyTimerCards.restoreRedStartTime(redHomePausedRemaining, now);
+                redHomePausedRemaining = null;
+            }
+            if (!redAwayPermanent && redAwayPausedRemaining != null) {
+                redAway = RugbyTimerCards.restoreRedStartTime(redAwayPausedRemaining, now);
+                redAwayPausedRemaining = null;
+            }
             gameState = STATE_PLAYING;
-            lastUpdate = System.getTimer();
+            lastUpdate = now;
             if (gameStartTime == null) {
                 gameStartTime = lastUpdate - (gameTime * 1000.0f);
             }
@@ -474,6 +499,15 @@ class RugbyGameModel {
      */
     function pauseClock() {
         if (gameState != STATE_PAUSED) {
+            var now = System.getTimer();
+            yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
+            yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
+            if (!redHomePermanent) {
+                redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+            }
+            if (!redAwayPermanent) {
+                redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+            }
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
@@ -487,21 +521,32 @@ class RugbyGameModel {
      */
     function resumeClock() {
         if (gameState == STATE_PAUSED) {
+            var now = System.getTimer();
+            yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
+            yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
+            if (!redHomePermanent && redHomePausedRemaining != null) {
+                redHome = RugbyTimerCards.restoreRedStartTime(redHomePausedRemaining, now);
+                redHomePausedRemaining = null;
+            }
+            if (!redAwayPermanent && redAwayPausedRemaining != null) {
+                redAway = RugbyTimerCards.restoreRedStartTime(redAwayPausedRemaining, now);
+                redAwayPausedRemaining = null;
+            }
             if (pausedState != null) {
                 gameState = pausedState;
             } else {
                 gameState = STATE_PLAYING;
             }
             pausedState = null;
-            lastUpdate = System.getTimer();
+            lastUpdate = now;
             if (gameStartTime == null) {
                 gameStartTime = lastUpdate - (gameTime * 1000.0f);
             }
             // Update individual special timer start times if coming out of a pause into a special state
             if (gameState == STATE_CONVERSION) {
-                conversionStartTime = System.getTimer();
+                conversionStartTime = now;
             } else if (gameState == STATE_PENALTY) {
-                penaltyStartTime = System.getTimer();
+                penaltyStartTime = now;
             }
             if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
                 startRecording();
@@ -668,6 +713,10 @@ class RugbyGameModel {
         var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
         var label = "Y" + cardId.toString();
         var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(System.getTimer(), duration, label, cardId);
+        if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
+            entry["startTime"] = null;
+            entry["remaining"] = duration;
+        }
         if (isHome) {
             yellowHomeTimes.add(entry);
             yellowHomeTotal = yellowHomeTotal + 1;
@@ -688,16 +737,30 @@ class RugbyGameModel {
             if (isHome) {
                 redHomePermanent = true;
                 redHome = 0;
+                redHomePausedRemaining = null;
             } else {
                 redAwayPermanent = true;
                 redAway = 0;
+                redAwayPausedRemaining = null;
             }
         } else {
             if (isHome) {
-                redHome = System.getTimer(); // Store start time
+                if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
+                    redHome = null;
+                    redHomePausedRemaining = 1200;
+                } else {
+                    redHome = System.getTimer(); // Store start time
+                    redHomePausedRemaining = null;
+                }
                 redHomePermanent = false;
             } else {
-                redAway = System.getTimer(); // Store start time
+                if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
+                    redAway = null;
+                    redAwayPausedRemaining = 1200;
+                } else {
+                    redAway = System.getTimer(); // Store start time
+                    redAwayPausedRemaining = null;
+                }
                 redAwayPermanent = false;
             }
         }

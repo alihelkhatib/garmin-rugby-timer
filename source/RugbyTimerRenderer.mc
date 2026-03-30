@@ -191,8 +191,8 @@ class RugbyTimerRenderer {
         if (model.yellowAwayTimes == null) { model.yellowAwayTimes = []; }
         var visibleYellowHome = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
         var visibleYellowAway = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
-        var redHomeActive = (model.redHome != null && model.redHome > 0) || model.redHomePermanent;
-        var redAwayActive = (model.redAway != null && model.redAway > 0) || model.redAwayPermanent;
+        var redHomeActive = (model.redHome != null && model.redHome > 0) || (model.redHomePausedRemaining instanceof Lang.Number) || model.redHomePermanent;
+        var redAwayActive = (model.redAway != null && model.redAway > 0) || (model.redAwayPausedRemaining instanceof Lang.Number) || model.redAwayPermanent;
         var homeCardRows = visibleYellowHome + (redHomeActive ? 1 : 0);
         var awayCardRows = visibleYellowAway + (redAwayActive ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
@@ -209,14 +209,7 @@ class RugbyTimerRenderer {
                     homeLine += 1;
                     continue;
                 }
-                var y = entry["remaining"];
-                if (!(y instanceof Lang.Number) && entry["startTime"] != null && entry["duration"] != null) {
-                    y = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
-                } else if (!(y instanceof Lang.Number) && entry["duration"] instanceof Lang.Number) {
-                    y = entry["duration"];
-                }
-                if (!(y instanceof Lang.Number)) { y = 0; }
-                if (y < 0) { y = 0; }
+                var y = RugbyTimerCards.getEntryRemaining(entry, System.getTimer());
                 var label = entry["label"];
                 if (label == null) {
                     label = "Y" + (homeYellowDisplayed + 1).toString();
@@ -233,14 +226,7 @@ class RugbyTimerRenderer {
                     awayLine += 1;
                     continue;
                 }
-                var y2 = entry["remaining"];
-                if (!(y2 instanceof Lang.Number) && entry["startTime"] != null && entry["duration"] != null) {
-                    y2 = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
-                } else if (!(y2 instanceof Lang.Number) && entry["duration"] instanceof Lang.Number) {
-                    y2 = entry["duration"];
-                }
-                if (!(y2 instanceof Lang.Number)) { y2 = 0; }
-                if (y2 < 0) { y2 = 0; }
+                var y2 = RugbyTimerCards.getEntryRemaining(entry, System.getTimer());
                 var label2 = entry["label"];
                 if (label2 == null) {
                     label2 = "Y" + (awayYellowDisplayed + 1).toString();
@@ -255,9 +241,11 @@ class RugbyTimerRenderer {
                 var redText;
                 if (model.redHomePermanent) {
                     redText = "R:PERM";
+                } else if (model.redHomePausedRemaining instanceof Lang.Number) {
+                    redText = "R:" + model.formatShortTime(model.redHomePausedRemaining);
                 } else if (model.redHome != null) {
-                    var redRemaining = 1200 - ((System.getTimer() - model.redHome) / 1000.0f);
-                    if (redRemaining < 0) { redRemaining = 0; }
+                    var redRemaining = RugbyTimerCards.getRedRemaining(model.redHome, System.getTimer());
+                    if (!(redRemaining instanceof Lang.Number)) { redRemaining = 0; }
                     redText = "R:" + model.formatShortTime(redRemaining);
                 } else {
                     redText = "R:--";
@@ -270,9 +258,11 @@ class RugbyTimerRenderer {
                 var redAwayText;
                 if (model.redAwayPermanent) {
                     redAwayText = "R:PERM";
+                } else if (model.redAwayPausedRemaining instanceof Lang.Number) {
+                    redAwayText = "R:" + model.formatShortTime(model.redAwayPausedRemaining);
                 } else if (model.redAway != null) {
-                    var redAwayRemaining = 1200 - ((System.getTimer() - model.redAway) / 1000.0f);
-                    if (redAwayRemaining < 0) { redAwayRemaining = 0; }
+                    var redAwayRemaining = RugbyTimerCards.getRedRemaining(model.redAway, System.getTimer());
+                    if (!(redAwayRemaining instanceof Lang.Number)) { redAwayRemaining = 0; }
                     redAwayText = "R:" + model.formatShortTime(redAwayRemaining);
                 } else {
                     redAwayText = "R:--";

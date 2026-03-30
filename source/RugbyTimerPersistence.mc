@@ -39,8 +39,10 @@ class RugbyTimerPersistence {
             "yellowAwayLabelCounter" => model.yellowAwayLabelCounter,
             "yellowHomeTotal" => model.yellowHomeTotal,
             "yellowAwayTotal" => model.yellowAwayTotal,
-            "redHomeRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redHome, model.redHomePermanent),
-            "redAwayRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redAway, model.redAwayPermanent),
+            "redHomeRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redHome, model.redHomePausedRemaining, model.redHomePermanent),
+            "redAwayRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redAway, model.redAwayPausedRemaining, model.redAwayPermanent),
+            "redHomePausedRemaining" => model.redHomePausedRemaining,
+            "redAwayPausedRemaining" => model.redAwayPausedRemaining,
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent,
             "redHomeTotal" => model.redHomeTotal,
@@ -143,6 +145,16 @@ class RugbyTimerPersistence {
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
                 model.redHome = RugbyTimerPersistence.restoreRedStartTime(data["redHomeRemaining"], data["redHome"], model.redHomePermanent, now);
                 model.redAway = RugbyTimerPersistence.restoreRedStartTime(data["redAwayRemaining"], data["redAway"], model.redAwayPermanent, now);
+                model.redHomePausedRemaining = data["redHomePausedRemaining"];
+                model.redAwayPausedRemaining = data["redAwayPausedRemaining"];
+                if (model.gameState == STATE_PAUSED) {
+                    if (!(model.redHomePausedRemaining instanceof Lang.Number) && data["redHomeRemaining"] instanceof Lang.Number) {
+                        model.redHomePausedRemaining = data["redHomeRemaining"];
+                    }
+                    if (!(model.redAwayPausedRemaining instanceof Lang.Number) && data["redAwayRemaining"] instanceof Lang.Number) {
+                        model.redAwayPausedRemaining = data["redAwayRemaining"];
+                    }
+                }
 
                 model.yellowHomeTotal = data["yellowHomeTotal"];
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
@@ -275,9 +287,16 @@ class RugbyTimerPersistence {
         return restored;
     }
 
-    static function serializeRedRemaining(startTime, isPermanent) {
+    static function serializeRedRemaining(startTime, pausedRemaining, isPermanent) {
         if (isPermanent) {
             return 0;
+        }
+        if (pausedRemaining instanceof Lang.Number) {
+            if (pausedRemaining <= 0) {
+                return null;
+            }
+            if (pausedRemaining > 1200) { pausedRemaining = 1200; }
+            return pausedRemaining;
         }
         if (!(startTime instanceof Lang.Number)) {
             return null;
