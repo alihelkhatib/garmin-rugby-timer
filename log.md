@@ -1,3 +1,9 @@
+## [2026-03-30] Freeze count-up clock until start/resume
+
+- Changed saved-state restore so paused and halftime launches no longer rebuild a running `gameStartTime` immediately. The count-up timer now stays frozen when the app opens and only starts moving after the referee presses `Select` to begin or resume play.
+- Updated resume logic to reconstruct `gameStartTime` from the saved `gameTime` baseline when play is explicitly resumed, so restored matches continue from the correct elapsed time instead of jumping or restarting.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (existing manifest device-id warnings, container-analysis warnings, and the pre-existing `RugbySettings.mc` unreachable-statement warning remain).
+
 ## [2026-03-30] Haptics rollout and kickoff overlay removal
 
 - Removed the timed kickoff overlay from the active match flow so conversions now return straight to live play instead of opening a second special-timer state; older saved kickoff states still deserialize safely through the persistence compatibility path.

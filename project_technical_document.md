@@ -28,7 +28,7 @@
 
 ## Key Behaviors
 - Idle setup: the app now opens directly on the main timer screen, the referee can adjust half length immediately with UP/DOWN, and Settings exposes a `Profile` row for quick switching between Rugby 7s, 10s, 15s, U19, and the saved `Custom` preset.
-- Resume behavior: when the app is reopened during a live match, the saved state returns as a paused snapshot with the prior live state kept in `pausedState`, so the referee can resume safely instead of inheriting stale timer baselines.
+- Resume behavior: when the app is reopened during a live match, the saved state returns as a paused snapshot with the prior live state kept in `pausedState`. The count-up clock stays frozen on launch and only resumes once the referee explicitly restarts play, preventing the game timer from advancing in the background.
 - Game states: countdown sharing (minutes/seconds), conversion/penalty overlays, halftime, and finished.
 - Conversion flow: pressing `UP`/`DOWN` during the overlay records success/miss, applies score updates, and closes the overlay while keeping the main countdown and card timers running.
 - Conversion and penalty timers stay synchronized with the main countdown; they never pause unless the user pauses the countdown (Select), but the game timer continues running regardless of countdown state. Kickoff no longer opens a timed overlay, so play resumes directly after conversion handling.
