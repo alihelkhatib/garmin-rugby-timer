@@ -143,7 +143,7 @@ class RugbyTimerOverlay {
             dc,
             width,
             height,
-            height * 0.21,
+            height * 0.43,
             font,
             RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMade_Action),
             RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMade_Result)
@@ -152,7 +152,7 @@ class RugbyTimerOverlay {
             dc,
             width,
             height,
-            height * 0.79,
+            height * 0.72,
             font,
             RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMiss_Action),
             RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMiss_Result)
@@ -168,8 +168,8 @@ class RugbyTimerOverlay {
 
     static function renderFallbackConversionButtonPrompts(dc, width, height) {
         var font = RugbyTimerOverlay.choosePromptFont(width);
-        dc.drawText(width * 0.18, height * 0.21, font, RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMade_Result), Graphics.TEXT_JUSTIFY_LEFT);
-        dc.drawText(width * 0.18, height * 0.79, font, RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMiss_Result), Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(width * 0.18, height * 0.43, font, RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMade_Result), Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.drawText(width * 0.18, height * 0.72, font, RugbyTimerOverlay.loadString(Rez.Strings.Overlay_ConversionMiss_Result), Graphics.TEXT_JUSTIFY_RIGHT);
     }
 
     /**
@@ -177,23 +177,23 @@ class RugbyTimerOverlay {
      * bezel edge at the requested Y position so text does not clip on round screens.
      */
     static function drawPromptBlock(dc, width, height, centerY, font, lineOne, lineTwo) {
-        var promptX = RugbyTimerOverlay.getPromptLeftX(width, height, centerY);
+        var promptX = RugbyTimerOverlay.getPromptAnchorX(width, height, centerY);
         var displayText = lineTwo;
         if (displayText == null || displayText.length() == 0) {
             displayText = lineOne;
         }
-        dc.drawText(promptX, centerY, font, displayText, Graphics.TEXT_JUSTIFY_LEFT);
+        dc.drawText(promptX, centerY, font, displayText, Graphics.TEXT_JUSTIFY_RIGHT);
     }
 
-    static function getPromptLeftX(width, height, anchorY) {
+    static function getPromptAnchorX(width, height, anchorY) {
         var sidePadding = width * 0.06;
         if (sidePadding < 12) { sidePadding = 12; }
-        var minimumInset = width * 0.17;
-        var computedInset = RugbyTimerOverlay.getVisibleLeftInset(width, height, anchorY) + sidePadding;
-        if (computedInset < minimumInset) {
-            computedInset = minimumInset;
+        var minimumAnchor = width * 0.18;
+        var computedAnchor = RugbyTimerOverlay.getVisibleLeftInset(width, height, anchorY) + sidePadding;
+        if (computedAnchor < minimumAnchor) {
+            computedAnchor = minimumAnchor;
         }
-        return computedInset;
+        return computedAnchor;
     }
 
     static function getSpecialTimerY(model, height) {

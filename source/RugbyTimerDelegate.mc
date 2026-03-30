@@ -37,8 +37,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function showSettingsMenu() as Void {
-        var settingsMenu = new RugbySettingsMenu();
-        WatchUi.pushView(settingsMenu, new RugbySettingsMenuDelegate(settingsMenu), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new RugbySettingsHostView(), new RugbySettingsHostDelegate(), WatchUi.SLIDE_IMMEDIATE);
         WatchUi.requestUpdate();
     }
 
@@ -350,6 +349,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
  */
 class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     var model;
+    var settingsOpenTimer;
 
     /**
      * Initializes the delegate.
@@ -358,12 +358,21 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     function initialize(m) {
         Menu2InputDelegate.initialize();
         model = m;
+        settingsOpenTimer = null;
+    }
+
+    function showSettingsAfterMenuClose() as Void {
+        settingsOpenTimer = null;
+        WatchUi.pushView(new RugbySettingsHostView(), new RugbySettingsHostDelegate(), WatchUi.SLIDE_IMMEDIATE);
+        WatchUi.requestUpdate();
     }
 
     function openSettingsFromMenu() {
-        var settingsMenu = new RugbySettingsMenu();
-        WatchUi.pushView(settingsMenu, new RugbySettingsMenuDelegate(settingsMenu), WatchUi.SLIDE_UP);
-        return;
+        if (settingsOpenTimer != null) {
+            settingsOpenTimer.stop();
+        }
+        settingsOpenTimer = new Timer.Timer();
+        settingsOpenTimer.start(method(:showSettingsAfterMenuClose) as Method() as Void, 50, false);
     }
 
     function handleMenuDelegateFailure(context) {
@@ -396,6 +405,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             } else if (item.getId() == :undo_last) {
                 model.undoLastEvent();
             } else if (item.getId() == :settings) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
                 openSettingsFromMenu();
                 return;
             } else if (item.getId() == :toggle_lock) {

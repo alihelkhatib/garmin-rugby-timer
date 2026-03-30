@@ -19,27 +19,34 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
 
     function initialize() {
         Menu2.initialize({:title=>"Rugby Settings"});
+        var profile = getActiveProfile();
+        var profileLabel = profile != null ? profile["label"] : null;
+        var formatLabel = profile != null ? RugbyMatchProfiles.getFormatLabel(profile["is7s"]) : null;
+        var halfLabel = profile != null ? formatTime(profile["halfDuration"]) : null;
+        var conversionLabel = profile != null ? formatTime(profile["conversionTime"]) : null;
+        var penaltyLabel = profile != null ? formatTime(profile["penaltyKickTime"]) : null;
+        var useConvLabel = (profile != null && profile["useConversionTimer"] == true) ? "On" : "Off";
+        var usePenLabel = (profile != null && profile["usePenaltyTimer"] == true) ? "On" : "Off";
 
-        var inGame = isInGame();
-        profileItem = new WatchUi.MenuItem("Profile", "", :profile, {:enabled => !inGame});
+        profileItem = new WatchUi.MenuItem("Profile", profileLabel, :profile, null);
         addItem(profileItem);
 
-        formatItem = new WatchUi.MenuItem("Format Family", "", :format_family, {:enabled => !inGame});
+        formatItem = new WatchUi.MenuItem("Format Family", formatLabel, :format_family, null);
         addItem(formatItem);
 
-        halfTimerItem = new WatchUi.MenuItem("Half Timer", "", :countdown_timer, {:enabled => !inGame});
+        halfTimerItem = new WatchUi.MenuItem("Half Timer", halfLabel, :countdown_timer, null);
         addItem(halfTimerItem);
 
-        conversionItem = new WatchUi.MenuItem("Conversion Timer", "", :conv_time, null);
+        conversionItem = new WatchUi.MenuItem("Conversion Timer", conversionLabel, :conv_time, null);
         addItem(conversionItem);
 
-        penaltyItem = new WatchUi.MenuItem("Penalty Kick", "", :pen_time, null);
+        penaltyItem = new WatchUi.MenuItem("Penalty Kick", penaltyLabel, :pen_time, null);
         addItem(penaltyItem);
 
-        useConvItem = new WatchUi.MenuItem("Conversion Overlay", "", :use_conv, null);
+        useConvItem = new WatchUi.MenuItem("Conversion Overlay", useConvLabel, :use_conv, null);
         addItem(useConvItem);
 
-        usePenItem = new WatchUi.MenuItem("Penalty Overlay", "", :use_pen, null);
+        usePenItem = new WatchUi.MenuItem("Penalty Overlay", usePenLabel, :use_pen, null);
         addItem(usePenItem);
 
         var lockStart = Storage.getValue("lockOnStart");
@@ -53,7 +60,6 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         addItem(dimModeItem);
 
         addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
-        refresh();
     }
 
     function isInGame() {
@@ -78,22 +84,8 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     }
 
     function refresh() {
-        var profile = getActiveProfile();
-        profileItem.setSubLabel(profile["label"]);
-        formatItem.setSubLabel(RugbyMatchProfiles.getFormatLabel(profile["is7s"]));
-        halfTimerItem.setSubLabel(formatTime(profile["halfDuration"]));
-        conversionItem.setSubLabel(formatTime(profile["conversionTime"]));
-        penaltyItem.setSubLabel(formatTime(profile["penaltyKickTime"]));
-        useConvItem.setSubLabel(profile["useConversionTimer"] ? "On" : "Off");
-        usePenItem.setSubLabel(profile["usePenaltyTimer"] ? "On" : "Off");
-
-        var lockStart = Storage.getValue("lockOnStart");
-        if (lockStart == null) { lockStart = false; }
-        lockStartItem.setSubLabel(lockStart ? "On" : "Off");
-
-        var dimMode = Storage.getValue("dimMode");
-        if (dimMode == null) { dimMode = false; }
-        dimModeItem.setSubLabel(dimMode ? "On" : "Off");
+        // Keep the settings menu static after construction to avoid device-specific
+        // issues around mutating Menu2 item subtitles at runtime.
     }
 
     function formatTime(seconds) {
@@ -104,20 +96,78 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     }
 }
 
+class RugbySettingsHostView extends WatchUi.View {
+    var launchedMenu;
+
+    function initialize() {
+        View.initialize();
+        launchedMenu = false;
+    }
+
+    function onShow() as Void {
+        if (!launchedMenu) {
+            launchedMenu = true;
+            var menu = new RugbySettingsMenu();
+            WatchUi.pushView(menu, new RugbySettingsMenuDelegate(menu, true), WatchUi.SLIDE_IMMEDIATE);
+        }
+    }
+
+    function onUpdate(dc) as Void {
+        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
+        dc.clear();
+    }
+}
+
+class RugbySettingsHostDelegate extends WatchUi.BehaviorDelegate {
+    function initialize() {
+        BehaviorDelegate.initialize();
+    }
+
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        return true;
+    }
+}
+
 /**
  * Delegate for the settings menu.
  */
 class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     var menu;
+    var embeddedInApp;
 
-    function initialize(settingsMenu) {
+    function initialize(settingsMenu, embedded) {
         Menu2InputDelegate.initialize();
         menu = settingsMenu;
+        embeddedInApp = embedded == true;
+    }
+
+    function closeSettingsRoot() {
+        if (embeddedInApp) {
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        } else {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        }
+    }
+
+    function handleIdleOnlySelection() {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app != null && app.rugbyView != null) {
+            app.rugbyView.displaySpecialOverlayMessage("Idle only");
+            WatchUi.requestUpdate();
+        }
     }
 
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app == null || app.model == null) {
+            return;
+        }
+
+        var isIdleOnlyRow = item.getId() == :profile || item.getId() == :format_family || item.getId() == :countdown_timer;
+        if (isIdleOnlyRow && menu.isInGame()) {
+            handleIdleOnlySelection();
             return;
         }
 
@@ -164,12 +214,12 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (item.getId() == :reset) {
             app.model.setMatchProfile(app.model.matchProfileId);
             app.model.resetGame();
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            closeSettingsRoot();
         }
     }
 
     function onBack() {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        closeSettingsRoot();
     }
 }
 
