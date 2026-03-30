@@ -7,68 +7,97 @@ using Toybox.Graphics;
  * The menu for the application settings.
  */
 class RugbySettingsMenu extends WatchUi.Menu2 {
-    /**
-     * Initializes the menu.
-     */
+    var profileItem;
+    var formatItem;
+    var halfTimerItem;
+    var conversionItem;
+    var penaltyItem;
+    var useConvItem;
+    var usePenItem;
+    var lockStartItem;
+    var dimModeItem;
+
     function initialize() {
         Menu2.initialize({:title=>"Rugby Settings"});
-        
-        var is7s = Storage.getValue("rugby7s");
-        if (is7s == null) {
-            is7s = false;
-        }
-        
-        var gameType = is7s ? "Rugby 7s" : "Rugby 15s";
-        addItem(new WatchUi.MenuItem("Game Type", gameType, :game_type, null));
-        
-        // Read per-type saved duration for the sub-label (FR-005)
-        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
-        var savedDuration = Storage.getValue(typeKey);
-        if (savedDuration == null) { savedDuration = Storage.getValue("countdownTimer"); }
-        if (savedDuration == null) { savedDuration = is7s ? 420 : 2400; }
-        var timerStr = formatTime(savedDuration);
-        // Disable the Half Timer item while a match is in progress (FR-003, FR-008)
-        var rugbyApp = Application.getApp();
-        var inGame = (rugbyApp != null && rugbyApp has :model && rugbyApp.model != null && rugbyApp.model.gameState != 0);
-        addItem(new WatchUi.MenuItem("Half Timer", timerStr, :countdown_timer, {:enabled => !inGame}));
-        
-        var conv7 = Storage.getValue("conversionTime7s");
-        if (conv7 == null) { conv7 = 30; }
-        addItem(new WatchUi.MenuItem("7s Conversion", formatTime(conv7), :conv7, null));
-        
-        var conv15 = Storage.getValue("conversionTime15s");
-        if (conv15 == null) { conv15 = 90; }
-        addItem(new WatchUi.MenuItem("15s Conversion", formatTime(conv15), :conv15, null));
-        
-        var penTime = Storage.getValue("penaltyKickTime");
-        if (penTime == null) { penTime = 60; }
-        addItem(new WatchUi.MenuItem("Penalty Kick", formatTime(penTime), :pen_time, null));
-        
-        var useConv = Storage.getValue("useConversionTimer");
-        if (useConv == null) { useConv = true; }
-        addItem(new WatchUi.MenuItem("Conversion Timer", useConv ? "On" : "Off", :use_conv, null));
-        
-        var usePen = Storage.getValue("usePenaltyTimer");
-        if (usePen == null) { usePen = true; }
-        addItem(new WatchUi.MenuItem("Penalty Timer", usePen ? "On" : "Off", :use_pen, null));
+
+        var inGame = isInGame();
+        profileItem = new WatchUi.MenuItem("Profile", "", :profile, {:enabled => !inGame});
+        addItem(profileItem);
+
+        formatItem = new WatchUi.MenuItem("Format Family", "", :format_family, {:enabled => !inGame});
+        addItem(formatItem);
+
+        halfTimerItem = new WatchUi.MenuItem("Half Timer", "", :countdown_timer, {:enabled => !inGame});
+        addItem(halfTimerItem);
+
+        conversionItem = new WatchUi.MenuItem("Conversion Timer", "", :conv_time, null);
+        addItem(conversionItem);
+
+        penaltyItem = new WatchUi.MenuItem("Penalty Kick", "", :pen_time, null);
+        addItem(penaltyItem);
+
+        useConvItem = new WatchUi.MenuItem("Conversion Overlay", "", :use_conv, null);
+        addItem(useConvItem);
+
+        usePenItem = new WatchUi.MenuItem("Penalty Overlay", "", :use_pen, null);
+        addItem(usePenItem);
 
         var lockStart = Storage.getValue("lockOnStart");
         if (lockStart == null) { lockStart = false; }
-        addItem(new WatchUi.MenuItem("Lock on Start", lockStart ? "On" : "Off", :lock_start, null));
+        lockStartItem = new WatchUi.MenuItem("Lock on Start", lockStart ? "On" : "Off", :lock_start, null);
+        addItem(lockStartItem);
 
         var dimMode = Storage.getValue("dimMode");
         if (dimMode == null) { dimMode = false; }
-        addItem(new WatchUi.MenuItem("Dim Theme", dimMode ? "On" : "Off", :dim_mode, null));
-        
+        dimModeItem = new WatchUi.MenuItem("Dim Theme", dimMode ? "On" : "Off", :dim_mode, null);
+        addItem(dimModeItem);
+
         addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
+        refresh();
     }
-    
-    /**
-     * Formats a time in seconds into a MM:SS string.
-     * @param seconds The time in seconds
-     * @return The formatted time string
-     */
+
+    function isInGame() {
+        var rugbyApp = Application.getApp() as RugbyTimerApp;
+        return rugbyApp != null && rugbyApp.model != null && rugbyApp.model.gameState != STATE_IDLE;
+    }
+
+    function getModel() {
+        var rugbyApp = Application.getApp() as RugbyTimerApp;
+        if (rugbyApp != null) {
+            return rugbyApp.model;
+        }
+        return null;
+    }
+
+    function getActiveProfile() {
+        var model = getModel();
+        if (model != null) {
+            return model.buildCurrentProfile(model.matchProfileId);
+        }
+        return RugbyMatchProfiles.getProfile(RugbyMatchProfiles.getStoredProfileId());
+    }
+
+    function refresh() {
+        var profile = getActiveProfile();
+        profileItem.setSubLabel(profile["label"]);
+        formatItem.setSubLabel(RugbyMatchProfiles.getFormatLabel(profile["is7s"]));
+        halfTimerItem.setSubLabel(formatTime(profile["halfDuration"]));
+        conversionItem.setSubLabel(formatTime(profile["conversionTime"]));
+        penaltyItem.setSubLabel(formatTime(profile["penaltyKickTime"]));
+        useConvItem.setSubLabel(profile["useConversionTimer"] ? "On" : "Off");
+        usePenItem.setSubLabel(profile["usePenaltyTimer"] ? "On" : "Off");
+
+        var lockStart = Storage.getValue("lockOnStart");
+        if (lockStart == null) { lockStart = false; }
+        lockStartItem.setSubLabel(lockStart ? "On" : "Off");
+
+        var dimMode = Storage.getValue("dimMode");
+        if (dimMode == null) { dimMode = false; }
+        dimModeItem.setSubLabel(dimMode ? "On" : "Off");
+    }
+
     function formatTime(seconds) {
+        if (seconds == null) { seconds = 0; }
         var mins = (seconds.toLong() / 60).toLong();
         var secs = (seconds.toLong() % 60).toLong();
         return mins.format("%02d") + ":" + secs.format("%02d");
@@ -79,109 +108,116 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
  * Delegate for the settings menu.
  */
 class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
-    /**
-     * Initializes the delegate.
-     */
-    function initialize() {
+    var menu;
+
+    function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
+        menu = settingsMenu;
     }
 
-    /**
-     * This method is called when a menu item is selected.
-     * @param item The selected menu item
-     */
     function onSelect(item) {
-        if (item.getId() == :game_type) {
-            var is7s = Storage.getValue("rugby7s");
-            if (is7s == null) {
-                is7s = false;
-            }
-            is7s = !is7s;
-            Storage.setValue("rugby7s", is7s);
-            
-            // When toggling game type, load the saved duration for the new type
-            var newTypeKey = is7s ? "halfDuration7s" : "halfDuration15s";
-            var savedForNewType = Storage.getValue(newTypeKey);
-            // If no per-type duration saved yet, write the type default as the starting value
-            if (savedForNewType == null) {
-                savedForNewType = is7s ? 420 : 2400;
-                Storage.setValue(newTypeKey, savedForNewType);
-            }
-            
-            // Update menu item
-            var gameType = is7s ? "Rugby 7s" : "Rugby 15s";
-            item.setSubLabel(gameType);
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app == null || app.model == null) {
+            return;
+        }
+
+        if (item.getId() == :profile) {
+            WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(menu), WatchUi.SLIDE_UP);
+        } else if (item.getId() == :format_family) {
+            app.model.setFormatFamily(!(app.model.is7s == true));
+            menu.refresh();
             WatchUi.requestUpdate();
         } else if (item.getId() == :countdown_timer) {
-            // Open free-form minute picker pre-filled with the per-type saved duration
-            var curIs7s = Storage.getValue("rugby7s");
-            if (curIs7s == null) { curIs7s = false; }
-            var curTypeKey = curIs7s ? "halfDuration7s" : "halfDuration15s";
-            var currentSeconds = Storage.getValue(curTypeKey);
-            if (currentSeconds == null) { currentSeconds = Storage.getValue("countdownTimer"); } // legacy fallback
-            if (currentSeconds == null) { currentSeconds = curIs7s ? 420 : 2400; }
-            var initialMinutes = currentSeconds / 60;
+            var initialMinutes = app.model.countdownTimer / 60;
             if (initialMinutes < 1) { initialMinutes = 1; }
-            WatchUi.pushView(new MinutesPicker(initialMinutes), new TimerPickerDelegate(item), WatchUi.SLIDE_UP);
-        } else if (item.getId() == :conv7) {
-            WatchUi.pushView(new ConversionAdjustMenu(true, item), new ConversionAdjustDelegate(true, item), WatchUi.SLIDE_UP);
-        } else if (item.getId() == :conv15) {
-            WatchUi.pushView(new ConversionAdjustMenu(false, item), new ConversionAdjustDelegate(false, item), WatchUi.SLIDE_UP);
+            WatchUi.pushView(new MinutesPicker(initialMinutes), new TimerPickerDelegate(menu), WatchUi.SLIDE_UP);
+        } else if (item.getId() == :conv_time) {
+            WatchUi.pushView(new ConversionAdjustMenu(), new ConversionAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :pen_time) {
-            WatchUi.pushView(new PenaltyAdjustMenu(item), new PenaltyAdjustDelegate(item), WatchUi.SLIDE_UP);
+            WatchUi.pushView(new PenaltyAdjustMenu(), new PenaltyAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :use_conv) {
-            var useConv = Storage.getValue("useConversionTimer");
-            if (useConv == null) { useConv = true; }
-            useConv = !useConv;
-            Storage.setValue("useConversionTimer", useConv);
-            item.setSubLabel(useConv ? "On" : "Off");
+            app.model.setConversionTimerEnabled(!(app.model.useConversionTimer == true));
+            menu.refresh();
             WatchUi.requestUpdate();
         } else if (item.getId() == :use_pen) {
-            var usePen = Storage.getValue("usePenaltyTimer");
-            if (usePen == null) { usePen = true; }
-            usePen = !usePen;
-            Storage.setValue("usePenaltyTimer", usePen);
-            item.setSubLabel(usePen ? "On" : "Off");
+            app.model.setPenaltyTimerEnabled(!(app.model.usePenaltyTimer == true));
+            menu.refresh();
             WatchUi.requestUpdate();
         } else if (item.getId() == :lock_start) {
             var lockStart = Storage.getValue("lockOnStart");
             if (lockStart == null) { lockStart = false; }
             lockStart = !lockStart;
             Storage.setValue("lockOnStart", lockStart);
-            item.setSubLabel(lockStart ? "On" : "Off");
+            app.model.lockOnStart = lockStart;
+            menu.refresh();
             WatchUi.requestUpdate();
         } else if (item.getId() == :dim_mode) {
             var dimMode = Storage.getValue("dimMode");
             if (dimMode == null) { dimMode = false; }
             dimMode = !dimMode;
             Storage.setValue("dimMode", dimMode);
-            item.setSubLabel(dimMode ? "On" : "Off");
-            var app = Application.getApp() as RugbyTimerApp;
-            if (app != null && app.rugbyView != null) {
+            if (app.rugbyView != null) {
                 app.rugbyView.dimMode = dimMode;
             }
+            menu.refresh();
             WatchUi.requestUpdate();
         } else if (item.getId() == :reset) {
-            var app = Application.getApp() as RugbyTimerApp;
-            if (app != null && app.model != null) {
-                // Restore the per-type countdown timer to the model before resetting game state
-                var resetIs7s = Storage.getValue("rugby7s");
-                if (resetIs7s == null) { resetIs7s = false; }
-                var resetTypeKey = resetIs7s ? "halfDuration7s" : "halfDuration15s";
-                var savedTimer = Storage.getValue(resetTypeKey);
-                if (savedTimer == null) { savedTimer = Storage.getValue("countdownTimer"); } // legacy fallback
-                if (savedTimer != null) {
-                    app.model.countdownTimer = savedTimer;
-                }
-                app.model.resetGame();
-            }
+            app.model.setMatchProfile(app.model.matchProfileId);
+            app.model.resetGame();
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         }
     }
 
-    /**
-     * This method is called when the back button is pressed.
-     */
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
+ * Menu for choosing one of the built-in match presets or the saved custom profile.
+ */
+class MatchProfileMenu extends WatchUi.Menu2 {
+    function initialize() {
+        Menu2.initialize({:title=>"Profile"});
+        addItem(new WatchUi.MenuItem("Rugby 7s", null, :profile_7s, null));
+        addItem(new WatchUi.MenuItem("Rugby 10s", null, :profile_10s, null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", null, :profile_15s, null));
+        addItem(new WatchUi.MenuItem("U19", null, :profile_u19, null));
+        addItem(new WatchUi.MenuItem("Custom", null, :profile_custom, null));
+    }
+}
+
+class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
+    var menu;
+
+    function initialize(settingsMenu) {
+        Menu2InputDelegate.initialize();
+        menu = settingsMenu;
+    }
+
+    function onSelect(item) {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app == null || app.model == null) {
+            return;
+        }
+
+        var profileId = "15s";
+        if (item.getId() == :profile_7s) {
+            profileId = "7s";
+        } else if (item.getId() == :profile_10s) {
+            profileId = "10s";
+        } else if (item.getId() == :profile_u19) {
+            profileId = "u19";
+        } else if (item.getId() == :profile_custom) {
+            profileId = "custom";
+        }
+
+        app.model.setMatchProfile(profileId);
+        menu.refresh();
+        WatchUi.requestUpdate();
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
@@ -201,7 +237,7 @@ class DigitPickerFactory extends WatchUi.PickerFactory {
         mMin = min;
         mMax = max;
         mInitialIndex = initialValue - min;
-        if (mInitialIndex < 0)            { mInitialIndex = 0; }
+        if (mInitialIndex < 0) { mInitialIndex = 0; }
         if (mInitialIndex > (mMax - mMin)) { mInitialIndex = mMax - mMin; }
     }
 
@@ -230,14 +266,12 @@ class DigitPickerFactory extends WatchUi.PickerFactory {
 
 /**
  * Two-column minute picker (01–99 minutes).
- * Left column = tens digit, right column = units digit.
- * @param currentMinutes Starting scroll position in whole minutes.
  */
 class MinutesPicker extends WatchUi.Picker {
     function initialize(currentMinutes) {
         if (currentMinutes < 1)  { currentMinutes = 1; }
         if (currentMinutes > 99) { currentMinutes = 99; }
-        var tens  = currentMinutes / 10;
+        var tens = currentMinutes / 10;
         var units = currentMinutes % 10;
         Picker.initialize({
             :title => new WatchUi.Text({
@@ -255,34 +289,21 @@ class MinutesPicker extends WatchUi.Picker {
     }
 }
 
-/**
- * Picker delegate for the Settings → Half Timer flow.
- * Saves the chosen duration to Storage and updates the model if the game is idle.
- */
 class TimerPickerDelegate extends WatchUi.PickerDelegate {
-    var mParentItem;
+    var menu;
 
-    function initialize(parentItem) {
+    function initialize(settingsMenu) {
         PickerDelegate.initialize();
-        mParentItem = parentItem;
+        menu = settingsMenu;
     }
 
     function onAccept(values) {
-        var minutes = values[0] * 10 + values[1];
-        if (minutes < 1) { minutes = 1; }
-        var seconds = minutes * 60;
-        // Write to per-type key so each game type remembers its own duration independently
-        var is7s = Storage.getValue("rugby7s");
-        if (is7s == null) { is7s = false; }
-        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
-        Storage.setValue(typeKey, seconds);
-        if (mParentItem != null) {
-            mParentItem.setSubLabel(minutes.format("%02d") + ":00");
-        }
         var app = Application.getApp() as RugbyTimerApp;
-        if (app != null && app.model != null && app.model.gameState == 0) {
-            app.model.countdownTimer = seconds;
-            app.model.countdownRemaining = seconds;
+        if (app != null && app.model != null) {
+            var minutes = values[0] * 10 + values[1];
+            if (minutes < 1) { minutes = 1; }
+            app.model.setHalfDuration(minutes * 60);
+            menu.refresh();
             WatchUi.requestUpdate();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
@@ -295,102 +316,45 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
     }
 }
 
-/**
- * Menu for adjusting the conversion timer.
- */
 class ConversionAdjustMenu extends WatchUi.Menu2 {
-    /**
-     * Initializes the menu.
-     * @param is7s A boolean indicating if it is a 7s match
-     * @param parent The parent menu item
-     */
-    function initialize(is7s, parent) {
-        Menu2.initialize({:title=> is7s ? "7s Conversion" : "15s Conversion"});
+    function initialize() {
+        Menu2.initialize({:title=>"Conversion Timer"});
         addItem(new WatchUi.MenuItem("30 sec", "00:30", :t30, null));
         addItem(new WatchUi.MenuItem("60 sec", "01:00", :t60, null));
         addItem(new WatchUi.MenuItem("90 sec", "01:30", :t90, null));
-        if (!is7s) {
-            addItem(new WatchUi.MenuItem("120 sec", "02:00", :t120, null));
-        }
+        addItem(new WatchUi.MenuItem("120 sec", "02:00", :t120, null));
     }
 }
 
-/**
- * Delegate for the conversion adjust menu.
- */
 class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
-    var parentItem;
-    var is7s;
-    
-    /**
-     * Initializes the delegate.
-     * @param isSevens A boolean indicating if it is a 7s match
-     * @param parent The parent menu item
-     */
-    function initialize(isSevens, parent) {
+    var menu;
+
+    function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
-        parentItem = parent;
-        is7s = isSevens;
+        menu = settingsMenu;
     }
 
-    /**
-     * This method is called when a menu item is selected.
-     * @param item The selected menu item
-     */
     function onSelect(item) {
-        var val = 0;
-        if (item.getId() == :t30) { val = 30; }
-        else if (item.getId() == :t60) { val = 60; }
-        else if (item.getId() == :t90) { val = 90; }
-        else if (item.getId() == :t120) { val = 120; }
-        
-        if (is7s) {
-            Storage.setValue("conversionTime7s", val);
-        } else {
-            Storage.setValue("conversionTime15s", val);
-        }
-        parentItem.setSubLabel(formatTime(val));
-        
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
-            if (is7s) {
-                app.model.conversionTime7s = val;
-            } else {
-                app.model.conversionTime15s = val;
-            }
+            var val = 30;
+            if (item.getId() == :t60) { val = 60; }
+            else if (item.getId() == :t90) { val = 90; }
+            else if (item.getId() == :t120) { val = 120; }
+            app.model.setConversionTime(val);
+            menu.refresh();
+            WatchUi.requestUpdate();
         }
-        
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
-    
-    /**
-     * This method is called when the back button is pressed.
-     */
+
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
-    
-    /**
-     * Formats a time in seconds into a MM:SS string.
-     * @param seconds The time in seconds
-     * @return The formatted time string
-     */
-    function formatTime(seconds) {
-        var mins = (seconds.toLong() / 60).toLong();
-        var secs = (seconds.toLong() % 60).toLong();
-        return mins.format("%02d") + ":" + secs.format("%02d");
-    }
 }
 
-/**
- * Menu for adjusting the penalty kick timer.
- */
 class PenaltyAdjustMenu extends WatchUi.Menu2 {
-    /**
-     * Initializes the menu.
-     * @param parent The parent menu item
-     */
-    function initialize(parent) {
+    function initialize() {
         Menu2.initialize({:title=>"Penalty Kick"});
         addItem(new WatchUi.MenuItem("30 sec", "00:30", :p30, null));
         addItem(new WatchUi.MenuItem("60 sec", "01:00", :p60, null));
@@ -398,57 +362,28 @@ class PenaltyAdjustMenu extends WatchUi.Menu2 {
     }
 }
 
-/**
- * Delegate for the penalty adjust menu.
- */
 class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
-    var parentItem;
+    var menu;
 
-    /**
-     * Initializes the delegate.
-     * @param parent The parent menu item
-     */
-    function initialize(parent) {
+    function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
-        parentItem = parent;
+        menu = settingsMenu;
     }
 
-    /**
-     * This method is called when a menu item is selected.
-     * @param item The selected menu item
-     */
     function onSelect(item) {
-        var val = 0;
-        if (item.getId() == :p30) { val = 30; }
-        else if (item.getId() == :p60) { val = 60; }
-        else if (item.getId() == :p90) { val = 90; }
-        
-        Storage.setValue("penaltyKickTime", val);
-        parentItem.setSubLabel(formatTime(val));
-        
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
-            app.model.penaltyKickTime = val;
+            var val = 30;
+            if (item.getId() == :p60) { val = 60; }
+            else if (item.getId() == :p90) { val = 90; }
+            app.model.setPenaltyKickTime(val);
+            menu.refresh();
+            WatchUi.requestUpdate();
         }
-        
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
-    
-    /**
-     * This method is called when the back button is pressed.
-     */
+
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
-    }
-    
-    /**
-     * Formats a time in seconds into a MM:SS string.
-     * @param seconds The time in seconds
-     * @return The formatted time string
-     */
-    function formatTime(seconds) {
-        var mins = (seconds.toLong() / 60).toLong();
-        var secs = (seconds.toLong() % 60).toLong();
-        return mins.format("%02d") + ":" + secs.format("%02d");
     }
 }

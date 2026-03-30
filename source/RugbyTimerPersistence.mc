@@ -1,5 +1,6 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
+using Toybox.System;
 
 /**
  * A helper class for saving and loading the game state.
@@ -10,40 +11,42 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function saveState(model) {
+        var persistedStates = RugbyTimerPersistence.getPersistedStates(model);
         var snapshot = {
             "homeScore" => model.homeScore,
             "awayScore" => model.awayScore,
             "homeTries" => model.homeTries,
             "awayTries" => model.awayTries,
             "halfNumber" => model.halfNumber,
-            "gameTime" => model.gameTime,
+            "gameTime" => RugbyTimerPersistence.getSnapshotGameTime(model),
             "elapsedTime" => model.elapsedTime,
             "countdownRemaining" => model.countdownRemaining,
             "countdownSeconds" => model.countdownSeconds,
-            "gameState" => model.gameState,
+            "gameState" => persistedStates[:gameState],
+            "pausedState" => persistedStates[:pausedState],
+            "matchProfileId" => model.matchProfileId,
             "is7s" => model.is7s,
             "countdownTimer" => model.countdownTimer,
-            "conversionTime7s" => model.conversionTime7s,
-            "conversionTime15s" => model.conversionTime15s,
+            "conversionTime" => model.conversionTime,
+            "kickoffTime" => model.kickoffTime,
             "penaltyKickTime" => model.penaltyKickTime,
             "useConversionTimer" => model.useConversionTimer,
             "usePenaltyTimer" => model.usePenaltyTimer,
             "conversionTeam" => model.conversionTeam,
-            "yellowHomeTimes" => model.yellowHomeTimes,
-            "yellowAwayTimes" => model.yellowAwayTimes,
+            "yellowHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowHomeTimes),
+            "yellowAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowAwayTimes),
             "yellowHomeLabelCounter" => model.yellowHomeLabelCounter,
             "yellowAwayLabelCounter" => model.yellowAwayLabelCounter,
             "yellowHomeTotal" => model.yellowHomeTotal,
             "yellowAwayTotal" => model.yellowAwayTotal,
-            "redHome" => model.redHome,
-            "redAway" => model.redAway,
+            "redHomeRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redHome, model.redHomePermanent),
+            "redAwayRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redAway, model.redAwayPermanent),
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent,
-            "conversionStartTime" => model.conversionStartTime,
-            "penaltyStartTime" => model.penaltyStartTime,
-            "kickoffStartTime" => model.kickoffStartTime,
             "homePenalties" => model.homePenalties,
-            "awayPenalties" => model.awayPenalties
+            "awayPenalties" => model.awayPenalties,
+            "lastEvents" => model.lastEvents,
+            "eventLogEntries" => model.eventLogEntries
         };
         Storage.setValue("gameStateData", snapshot);
     }
@@ -87,6 +90,7 @@ class RugbyTimerPersistence {
         var data = Storage.getValue("gameStateData") as Lang.Dictionary;
         if (data != null) {
             try {
+                var now = System.getTimer();
                 model.homeScore = data["homeScore"];
                 model.awayScore = data["awayScore"];
                 model.homeTries = data["homeTries"];
@@ -96,33 +100,47 @@ class RugbyTimerPersistence {
                 model.elapsedTime = data["elapsedTime"];
                 model.countdownRemaining = data["countdownRemaining"];
                 model.countdownSeconds = data["countdownSeconds"];
-                model.gameState = data["gameState"];
+                model.gameState = RugbyTimerPersistence.restoreGameState(data["gameState"]);
+                model.pausedState = RugbyTimerPersistence.restorePausedState(model.gameState, data["gameState"], data["pausedState"]);
+                model.matchProfileId = data["matchProfileId"];
                 model.is7s = data["is7s"];
                 model.countdownTimer = data["countdownTimer"];
-                model.conversionTime7s = data["conversionTime7s"];
-                model.conversionTime15s = data["conversionTime15s"];
+                model.conversionTime = RugbyTimerPersistence.restoreConversionTime(data);
+                model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(data["kickoffTime"], model.is7s);
                 model.penaltyKickTime = data["penaltyKickTime"];
                 model.useConversionTimer = data["useConversionTimer"];
                 model.usePenaltyTimer = data["usePenaltyTimer"];
+                if (model.matchProfileId == null) {
+                    model.matchProfileId = RugbyMatchProfiles.inferProfileIdFromSettings(
+                        model.is7s,
+                        model.countdownTimer,
+                        model.conversionTime,
+                        model.kickoffTime,
+                        model.penaltyKickTime,
+                        model.useConversionTimer,
+                        model.usePenaltyTimer
+                    );
+                }
                 model.conversionTeam = data["conversionTeam"];
+                model.lastEvents = data["lastEvents"];
+                if (model.lastEvents == null) { model.lastEvents = []; }
+                model.eventLogEntries = data["eventLogEntries"];
+                if (model.eventLogEntries == null) { model.eventLogEntries = []; }
                 
-                // Load yellow cards (full entries now)
-                model.yellowHomeTimes = data["yellowHomeTimes"];
-                if (model.yellowHomeTimes == null) { model.yellowHomeTimes = []; }
-                model.yellowAwayTimes = data["yellowAwayTimes"];
-                if (model.yellowAwayTimes == null) { model.yellowAwayTimes = []; }
+                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowHomeTimes"], now);
+                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowAwayTimes"], now);
                 
                 model.yellowHomeLabelCounter = data["yellowHomeLabelCounter"];
                 if (model.yellowHomeLabelCounter == null) { model.yellowHomeLabelCounter = 0; }
                 model.yellowAwayLabelCounter = data["yellowAwayLabelCounter"];
                 if (model.yellowAwayLabelCounter == null) { model.yellowAwayLabelCounter = 0; }
                 
-                model.redHome = data["redHome"];
-                model.redAway = data["redAway"];
                 model.redHomePermanent = data["redHomePermanent"];
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
                 model.redAwayPermanent = data["redAwayPermanent"];
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
+                model.redHome = RugbyTimerPersistence.restoreRedStartTime(data["redHomeRemaining"], data["redHome"], model.redHomePermanent, now);
+                model.redAway = RugbyTimerPersistence.restoreRedStartTime(data["redAwayRemaining"], data["redAway"], model.redAwayPermanent, now);
 
                 model.yellowHomeTotal = data["yellowHomeTotal"];
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
@@ -137,6 +155,17 @@ class RugbyTimerPersistence {
                 if (model.homePenalties == null) { model.homePenalties = 0; }
                 model.awayPenalties = data["awayPenalties"];
                 if (model.awayPenalties == null) { model.awayPenalties = 0; }
+
+                if (model.gameState != STATE_IDLE && model.gameState != STATE_ENDED) {
+                    if (!(model.gameTime instanceof Lang.Number)) { model.gameTime = 0; }
+                    if (model.gameState == STATE_PAUSED || model.gameState == STATE_HALFTIME) {
+                        model.gameStartTime = null;
+                        model.lastUpdate = null;
+                    } else {
+                        model.gameStartTime = now - (model.gameTime * 1000.0f);
+                        model.lastUpdate = now;
+                    }
+                }
             } catch (ex) {
                 Toybox.System.println("Error loading saved state: " + ex.getErrorMessage());
             }
@@ -147,5 +176,179 @@ class RugbyTimerPersistence {
         if (model.yellowAwayTimes == null) {
             model.yellowAwayTimes = [];
         }
+    }
+
+    static function getPersistedStates(model) {
+        if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+            return {
+                :gameState => STATE_PAUSED,
+                :pausedState => model.gameState
+            };
+        }
+        return {
+            :gameState => model.gameState,
+            :pausedState => model.pausedState
+        };
+    }
+
+    static function getSnapshotGameTime(model) {
+        if (model.gameStartTime == null) {
+            return model.gameTime;
+        }
+        return (System.getTimer() - model.gameStartTime) / 1000.0f;
+    }
+
+    static function serializeYellowTimers(list) {
+        var serialized = [];
+        if (list == null) {
+            return serialized;
+        }
+        var now = System.getTimer();
+        for (var i = 0; i < list.size(); i = i + 1) {
+            var entry = list[i] as Lang.Dictionary;
+            if (entry == null) {
+                continue;
+            }
+            var duration = entry["duration"];
+            var remaining = entry["remaining"];
+            if (!(remaining instanceof Lang.Number) && duration instanceof Lang.Number && entry["startTime"] instanceof Lang.Number) {
+                remaining = duration - ((now - entry["startTime"]) / 1000.0f);
+            }
+            if (!(duration instanceof Lang.Number) && remaining instanceof Lang.Number) {
+                duration = remaining;
+            }
+            if (!(remaining instanceof Lang.Number) || !(duration instanceof Lang.Number)) {
+                continue;
+            }
+            if (remaining <= 0) {
+                continue;
+            }
+            if (remaining > duration) { remaining = duration; }
+            serialized.add({
+                "duration" => duration,
+                "remaining" => remaining,
+                "label" => entry["label"],
+                "cardId" => entry["cardId"],
+                "vibeTriggered" => entry["vibeTriggered"] == true
+            });
+        }
+        return serialized;
+    }
+
+    static function restoreYellowTimers(list, now) {
+        var restored = [];
+        if (list == null) {
+            return restored;
+        }
+        for (var i = 0; i < list.size(); i = i + 1) {
+            var entry = list[i] as Lang.Dictionary;
+            if (entry == null) {
+                continue;
+            }
+            var duration = entry["duration"];
+            var remaining = entry["remaining"];
+            if (!(remaining instanceof Lang.Number) && duration instanceof Lang.Number && entry["startTime"] instanceof Lang.Number) {
+                remaining = duration - ((now - entry["startTime"]) / 1000.0f);
+            }
+            if (!(duration instanceof Lang.Number) && remaining instanceof Lang.Number) {
+                duration = remaining;
+            }
+            if (!(remaining instanceof Lang.Number) || !(duration instanceof Lang.Number)) {
+                continue;
+            }
+            if (remaining <= 0) {
+                continue;
+            }
+            if (remaining > duration) { remaining = duration; }
+            var elapsed = duration - remaining;
+            restored.add({
+                "startTime" => now - (elapsed * 1000.0f),
+                "duration" => duration,
+                "label" => entry["label"],
+                "cardId" => entry["cardId"],
+                "vibeTriggered" => entry["vibeTriggered"] == true,
+                "remaining" => remaining
+            });
+        }
+        return restored;
+    }
+
+    static function serializeRedRemaining(startTime, isPermanent) {
+        if (isPermanent) {
+            return 0;
+        }
+        if (!(startTime instanceof Lang.Number)) {
+            return null;
+        }
+        var remaining = 1200 - ((System.getTimer() - startTime) / 1000.0f);
+        if (remaining <= 0) {
+            return null;
+        }
+        if (remaining > 1200) { remaining = 1200; }
+        return remaining;
+    }
+
+    static function restoreRedStartTime(savedRemaining, legacyStartTime, isPermanent, now) {
+        if (isPermanent) {
+            return 0;
+        }
+        var remaining = savedRemaining;
+        if (!(remaining instanceof Lang.Number) && legacyStartTime instanceof Lang.Number) {
+            remaining = 1200 - ((now - legacyStartTime) / 1000.0f);
+        }
+        if (!(remaining instanceof Lang.Number) || remaining <= 0) {
+            return null;
+        }
+        if (remaining > 1200) { remaining = 1200; }
+        return now - ((1200 - remaining) * 1000.0f);
+    }
+
+    static function restoreConversionTime(data) {
+        var conversionTime = data["conversionTime"];
+        if (conversionTime instanceof Lang.Number) {
+            return conversionTime;
+        }
+        var is7s = data["is7s"] == true;
+        conversionTime = is7s ? data["conversionTime7s"] : data["conversionTime15s"];
+        if (conversionTime instanceof Lang.Number) {
+            return conversionTime;
+        }
+        return is7s ? 30 : 90;
+    }
+
+    static function restoreKickoffTime(savedKickoffTime, is7s) {
+        if (savedKickoffTime instanceof Lang.Number) {
+            return savedKickoffTime;
+        }
+        return is7s == true ? 30 : 60;
+    }
+
+    static function restoreGameState(savedGameState) {
+        if (savedGameState == STATE_KICKOFF) {
+            return STATE_PAUSED;
+        }
+        if (savedGameState == STATE_PLAYING || savedGameState == STATE_CONVERSION || savedGameState == STATE_PENALTY) {
+            return STATE_PAUSED;
+        }
+        return savedGameState;
+    }
+
+    static function restorePausedState(restoredGameState, savedGameState, savedPausedState) {
+        if (restoredGameState == STATE_PAUSED) {
+            if (savedPausedState == STATE_KICKOFF) {
+                savedPausedState = STATE_PLAYING;
+            }
+            if (savedPausedState != null) {
+                return savedPausedState;
+            }
+            if (savedGameState == STATE_KICKOFF) {
+                return STATE_PLAYING;
+            }
+            if (savedGameState == STATE_PLAYING || savedGameState == STATE_CONVERSION || savedGameState == STATE_PENALTY) {
+                return savedGameState;
+            }
+            return STATE_PLAYING;
+        }
+        return savedPausedState;
     }
 }

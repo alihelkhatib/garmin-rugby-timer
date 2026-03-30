@@ -49,6 +49,8 @@ class RugbyGameModel {
     var session;
     // A boolean indicating if the game is a 7s or 15s match
     var is7s;
+    // The selected preset/profile id
+    var matchProfileId;
     // The duration of a half in seconds
     var halfDuration;
     // The configured duration for the main countdown timer
@@ -63,12 +65,12 @@ class RugbyGameModel {
     var eventLogEntries;
     // The timestamp of the last time the state was persisted
     var lastPersistTime;
-    // The duration of the conversion timer for 7s matches
-    var conversionTime7s;
-    // The duration of the conversion timer for 15s matches
-    var conversionTime15s;
+    // The active duration of the conversion timer
+    var conversionTime;
     // The team that is currently attempting a conversion (true for home, false for away)
     var conversionTeam;
+    // The active duration of the kickoff timer
+    var kickoffTime;
     // The duration of the penalty kick timer
     var penaltyKickTime;
     // A boolean indicating if the conversion timer should be used
@@ -128,10 +130,7 @@ class RugbyGameModel {
     var speed;
     
     // Timers
-    const CONVERSION_TIME_15S = 90;  // 90 seconds for 15s
-    const CONVERSION_TIME_7S = 30;   // 30 seconds for 7s
-    const KICKOFF_TIME = 30;     // 30 seconds for kickoff
-    const PENALTY_KICK_TIME = 60; // 60 seconds for penalty kicks
+    const PENALTY_KICK_TIME = 60;    // 60 seconds for penalty kicks
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
     
@@ -140,43 +139,13 @@ class RugbyGameModel {
      * Loads settings from storage and initializes the game state.
      */
     function initialize() {
-        // Load settings
-        var is7sValue = Storage.getValue("rugby7s");
-        if (is7sValue == null) {
-            is7s = false;
-        } else {
-            is7s = is7sValue;
+        matchProfileId = RugbyMatchProfiles.getStoredProfileId();
+        var activeProfile = RugbyMatchProfiles.getProfile(matchProfileId);
+        if (activeProfile == null) {
+            activeProfile = RugbyMatchProfiles.getBuiltInProfile("15s");
+            matchProfileId = activeProfile["id"];
         }
-        
-        // Load per-type duration; fall back to legacy key, then type default
-        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
-        var savedDuration = Storage.getValue(typeKey);
-        if (savedDuration == null) {
-            savedDuration = Storage.getValue("countdownTimer"); // legacy fallback
-        }
-        halfDuration = (savedDuration != null) ? savedDuration : (is7s ? 420 : 2400);
-        countdownTimer = halfDuration;
-        
-        var ct7 = Storage.getValue("conversionTime7s");
-        if (ct7 != null) {
-            conversionTime7s = ct7;
-        }
-        var ct15 = Storage.getValue("conversionTime15s");
-        if (ct15 != null) {
-            conversionTime15s = ct15;
-        }
-        var pt = Storage.getValue("penaltyKickTime");
-        if (pt != null) {
-            penaltyKickTime = pt;
-        }
-        var useConv = Storage.getValue("useConversionTimer");
-        if (useConv != null) {
-            useConversionTimer = useConv;
-        }
-        var usePen = Storage.getValue("usePenaltyTimer");
-        if (usePen != null) {
-            usePenaltyTimer = usePen;
-        }
+
         lockOnStart = Storage.getValue("lockOnStart");
         if (lockOnStart == null) { lockOnStart = false; }
         
@@ -191,7 +160,6 @@ class RugbyGameModel {
         lastUpdate = null;
         gameStartTime = null;
         countdownSeconds = 0;
-        countdownRemaining = countdownTimer;
         gpsTrack = [];
         lastEvents = [];
         eventLogEntries = [];
@@ -202,11 +170,6 @@ class RugbyGameModel {
         redAwayTotal = 0;
         homePenalties = 0;
         awayPenalties = 0;
-        if (conversionTime7s == null) { conversionTime7s = CONVERSION_TIME_7S; }
-        if (conversionTime15s == null) { conversionTime15s = CONVERSION_TIME_15S; }
-        if (penaltyKickTime == null) { penaltyKickTime = PENALTY_KICK_TIME; }
-        if (useConversionTimer == null) { useConversionTimer = true; }
-        if (usePenaltyTimer == null) { usePenaltyTimer = false; }
         conversionTeam = null;
         pausedState = null;
         yellowHomeTimes = [];
@@ -223,6 +186,8 @@ class RugbyGameModel {
         
         distance = 0.0;
         speed = 0.0;
+
+        applyProfile(activeProfile, false);
         
         RugbyTimerPersistence.loadSavedState(self);
     }
@@ -278,23 +243,56 @@ class RugbyGameModel {
     }
 
     /**
-     * Updates timers/durations per rugby 7s vs 15s selection.
-     * @param is7sFlag A boolean indicating if the game is a 7s match
+     * Applies the currently selected profile settings to the active model.
      */
-    function setGameType(is7sFlag) {
-        is7s = is7sFlag;
-        Storage.setValue("rugby7s", is7sFlag);
-        // Load the saved duration for the newly selected game type (does not overwrite user's custom value)
-        var typeKey = is7sFlag ? "halfDuration7s" : "halfDuration15s";
-        var savedDuration = Storage.getValue(typeKey);
-        if (savedDuration == null) {
-            savedDuration = Storage.getValue("countdownTimer"); // legacy fallback
+    function applyProfile(profile, persist) {
+        if (profile == null) {
+            return;
         }
-        halfDuration = (savedDuration != null) ? savedDuration : (is7sFlag ? 420 : 2400);
+        matchProfileId = profile["id"];
+        is7s = profile["is7s"] == true;
+        halfDuration = profile["halfDuration"];
         countdownTimer = halfDuration;
+        conversionTime = profile["conversionTime"];
+        kickoffTime = profile["kickoffTime"];
+        penaltyKickTime = profile["penaltyKickTime"];
+        useConversionTimer = profile["useConversionTimer"] == true;
+        usePenaltyTimer = profile["usePenaltyTimer"] == true;
         if (gameState == STATE_IDLE) {
             countdownRemaining = countdownTimer;
         }
+        if (persist) {
+            Storage.setValue("matchProfileId", matchProfileId);
+            if (matchProfileId == "custom") {
+                RugbyMatchProfiles.storeCustomProfile(profile);
+            }
+        }
+    }
+
+    /**
+     * Selects a built-in or custom profile from Settings.
+     * @param profileId The profile identifier
+     */
+    function setMatchProfile(profileId) {
+        if (profileId == "custom" && !RugbyMatchProfiles.hasStoredCustomProfile()) {
+            saveCurrentSettingsAsCustomProfile();
+        }
+        applyProfile(RugbyMatchProfiles.getProfile(profileId), true);
+    }
+
+    /**
+     * Backward-compatible alias for the older 7s/15s toggle.
+     * Manual format changes now convert the active preset into the editable custom profile.
+     * @param is7sFlag A boolean indicating if the active rules should use 7s-style card behavior
+     */
+    function setGameType(is7sFlag) {
+        setFormatFamily(is7sFlag);
+    }
+
+    function setFormatFamily(is7sFlag) {
+        promoteToCustomProfile();
+        is7s = is7sFlag;
+        saveCurrentSettingsAsCustomProfile();
     }
 
     /**
@@ -303,14 +301,69 @@ class RugbyGameModel {
      * @param seconds The desired half length in seconds
      */
     function setHalfDuration(seconds) {
+        promoteToCustomProfile();
         halfDuration = seconds;
         countdownTimer = seconds;
-        // Write to the per-type key so each game type remembers its own duration independently
-        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
-        Storage.setValue(typeKey, seconds);
         if (gameState == STATE_IDLE) {
             countdownRemaining = seconds;
         }
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function setConversionTime(seconds) {
+        promoteToCustomProfile();
+        conversionTime = seconds;
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function setKickoffTime(seconds) {
+        promoteToCustomProfile();
+        kickoffTime = seconds;
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function setPenaltyKickTime(seconds) {
+        promoteToCustomProfile();
+        penaltyKickTime = seconds;
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function setConversionTimerEnabled(enabled) {
+        promoteToCustomProfile();
+        useConversionTimer = enabled;
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function setPenaltyTimerEnabled(enabled) {
+        promoteToCustomProfile();
+        usePenaltyTimer = enabled;
+        saveCurrentSettingsAsCustomProfile();
+    }
+
+    function promoteToCustomProfile() {
+        if (matchProfileId != "custom") {
+            saveCurrentSettingsAsCustomProfile();
+            matchProfileId = "custom";
+            Storage.setValue("matchProfileId", matchProfileId);
+        }
+    }
+
+    function saveCurrentSettingsAsCustomProfile() {
+        RugbyMatchProfiles.storeCustomProfile(buildCurrentProfile("custom"));
+    }
+
+    function buildCurrentProfile(profileId) {
+        return RugbyMatchProfiles.createProfile(
+            profileId,
+            RugbyMatchProfiles.getProfileLabel(profileId),
+            is7s,
+            countdownTimer,
+            conversionTime,
+            kickoffTime,
+            penaltyKickTime,
+            useConversionTimer,
+            usePenaltyTimer
+        );
     }
 
     /**
@@ -359,6 +412,7 @@ class RugbyGameModel {
             countdownSeconds = 0;
             thirtySecondAlerted = false;
             startRecording();
+            RugbyTimerTiming.triggerMatchStartVibe();
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -370,6 +424,7 @@ class RugbyGameModel {
         if (gameState == STATE_PLAYING) {
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
+            RugbyTimerTiming.triggerPauseVibe();
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -381,6 +436,10 @@ class RugbyGameModel {
         if (gameState == STATE_PAUSED) {
             gameState = STATE_PLAYING;
             lastUpdate = System.getTimer();
+            if (gameStartTime == null) {
+                gameStartTime = lastUpdate - (gameTime * 1000.0f);
+            }
+            RugbyTimerTiming.triggerResumeVibe();
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -393,6 +452,7 @@ class RugbyGameModel {
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
+            RugbyTimerTiming.triggerPauseVibe();
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -410,16 +470,18 @@ class RugbyGameModel {
             pausedState = null;
             lastUpdate = System.getTimer();
             if (gameStartTime == null) {
-                gameStartTime = lastUpdate;
+                gameStartTime = lastUpdate - (gameTime * 1000.0f);
             }
             // Update individual special timer start times if coming out of a pause into a special state
             if (gameState == STATE_CONVERSION) {
                 conversionStartTime = System.getTimer();
             } else if (gameState == STATE_PENALTY) {
                 penaltyStartTime = System.getTimer();
-            } else if (gameState == STATE_KICKOFF) {
-                kickoffStartTime = System.getTimer();
             }
+            if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
+                startRecording();
+            }
+            RugbyTimerTiming.triggerResumeVibe();
             RugbyTimerPersistence.saveState(self);
         }
     }
@@ -430,6 +492,7 @@ class RugbyGameModel {
     function resumePlay() {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
+        startRecording();
         RugbyTimerPersistence.saveState(self);
     }
 
@@ -439,6 +502,7 @@ class RugbyGameModel {
     function enterHalfTime() {
         gameState = STATE_HALFTIME;
         lastUpdate = null;
+        RugbyTimerTiming.triggerHalfTimeVibe();
         RugbyTimerPersistence.saveState(self);
     }
 
@@ -453,8 +517,10 @@ class RugbyGameModel {
             gameState = STATE_PLAYING;
             countdownSeconds = 0;
             lastUpdate = System.getTimer();
-            RugbyTimerPersistence.saveState(self);
+            startRecording();
             thirtySecondAlerted = false;
+            RugbyTimerTiming.triggerMatchStartVibe();
+            RugbyTimerPersistence.saveState(self);
         }
     }
 
@@ -465,6 +531,7 @@ class RugbyGameModel {
         gameState = STATE_ENDED;
         lastUpdate = null;
         stopRecording();
+        RugbyTimerTiming.triggerFullTimeVibe();
         RugbyTimerPersistence.saveState(self);
         RugbyTimerPersistence.finalizeGameData(self);
         Storage.setValue("gameStateData", null);
@@ -508,7 +575,7 @@ class RugbyGameModel {
         trimEvents();
         conversionTeam = null;
         if (gameState == STATE_CONVERSION) {
-            startKickoffCountdown();
+            resumePlay();
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Conversion (made)");
     }
@@ -578,9 +645,6 @@ class RugbyGameModel {
             yellowAwayTotal = yellowAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
-        if (gameState == STATE_PLAYING && usePenaltyTimer) {
-            startPenaltyCountdown();
-        }
     }
 
     /**
@@ -611,9 +675,6 @@ class RugbyGameModel {
             redAwayTotal = redAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
-        if (gameState == STATE_PLAYING && usePenaltyTimer) {
-            startPenaltyCountdown();
-        }
     }
     
     /**
@@ -707,32 +768,11 @@ class RugbyGameModel {
      */
     function startConversionCountdown() {
         gameState = STATE_CONVERSION;
-        countdownSeconds = is7s ? conversionTime7s : conversionTime15s;
+        countdownSeconds = conversionTime;
         conversionStartTime = System.getTimer();
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
-    }
-
-    /**
-     * After a conversion attempt ends, prepare the kickoff countdown.
-     */
-    function startKickoffCountdown() {
-        conversionTeam = null;
-        gameState = STATE_KICKOFF;
-        countdownSeconds = KICKOFF_TIME;
-        kickoffStartTime = System.getTimer();
-        specialAlertTriggered = false;
-        lastUpdate = System.getTimer();
-    }
-
-    /**
-     * Cancels the kickoff countdown.
-     */
-    function cancelKickoff() {
-        if (gameState == STATE_KICKOFF) {
-            countdownSeconds = 0;
-            resumePlay();
-        }
+        RugbyTimerTiming.triggerConversionStartVibe();
     }
 
     /**
@@ -744,6 +784,7 @@ class RugbyGameModel {
         penaltyStartTime = System.getTimer();
         specialAlertTriggered = false;
         lastUpdate = System.getTimer();
+        RugbyTimerTiming.triggerPenaltyStartVibe();
     }
 
     /**
@@ -751,7 +792,8 @@ class RugbyGameModel {
      */
     function endConversionWithoutScore() {
         if (gameState == STATE_CONVERSION) {
-            startKickoffCountdown();
+            conversionTeam = null;
+            resumePlay();
         }
     }
 
