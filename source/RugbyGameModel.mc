@@ -200,6 +200,31 @@ class RugbyGameModel {
     }
 
     /**
+     * Persists the live match snapshot and advances the autosave baseline so
+     * the same change is not immediately written again by the periodic timer.
+     */
+    function persistState() {
+        try {
+            RugbyTimerPersistence.saveState(self);
+            lastPersistTime = System.getTimer();
+        } catch (ex) {
+            System.println("Error persisting state");
+        }
+    }
+
+    /**
+     * Saves any in-progress match state before the app stops and closes the
+     * current recording segment cleanly because Connect IQ sessions cannot be
+     * resumed after the app process exits.
+     */
+    function handleAppStop() {
+        if (gameState != STATE_IDLE && gameState != STATE_ENDED) {
+            persistState();
+        }
+        stopRecording();
+    }
+
+    /**
      * Helper that displays a short M:SS string for cards while hiding zeros.
      * @param seconds The number of seconds to format
      * @return A formatted string in M:SS format
@@ -237,7 +262,7 @@ class RugbyGameModel {
         lastEvents = [];
         eventLogEntries = [];
         RugbyTimerCards.clearCardTimers(self);
-        RugbyTimerPersistence.saveState(self);
+        persistState();
         Storage.setValue("gameStateData", null);
         conversionTeam = null;
     }
@@ -394,7 +419,7 @@ class RugbyGameModel {
      */
     function saveGame() {
         RugbyTimerPersistence.finalizeGameData(self);
-        RugbyTimerPersistence.saveState(self);
+        persistState();
     }
 
     /**
@@ -413,7 +438,7 @@ class RugbyGameModel {
             thirtySecondAlerted = false;
             startRecording();
             RugbyTimerTiming.triggerMatchStartVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -425,7 +450,7 @@ class RugbyGameModel {
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
             RugbyTimerTiming.triggerPauseVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -440,7 +465,7 @@ class RugbyGameModel {
                 gameStartTime = lastUpdate - (gameTime * 1000.0f);
             }
             RugbyTimerTiming.triggerResumeVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -453,7 +478,7 @@ class RugbyGameModel {
             gameState = STATE_PAUSED;
             lastUpdate = null;
             RugbyTimerTiming.triggerPauseVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -482,7 +507,7 @@ class RugbyGameModel {
                 startRecording();
             }
             RugbyTimerTiming.triggerResumeVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -493,7 +518,7 @@ class RugbyGameModel {
         gameState = STATE_PLAYING;
         lastUpdate = System.getTimer();
         startRecording();
-        RugbyTimerPersistence.saveState(self);
+        persistState();
     }
 
     /**
@@ -503,7 +528,7 @@ class RugbyGameModel {
         gameState = STATE_HALFTIME;
         lastUpdate = null;
         RugbyTimerTiming.triggerHalfTimeVibe();
-        RugbyTimerPersistence.saveState(self);
+        persistState();
     }
 
     /**
@@ -520,7 +545,7 @@ class RugbyGameModel {
             startRecording();
             thirtySecondAlerted = false;
             RugbyTimerTiming.triggerMatchStartVibe();
-            RugbyTimerPersistence.saveState(self);
+            persistState();
         }
     }
 
@@ -532,7 +557,7 @@ class RugbyGameModel {
         lastUpdate = null;
         stopRecording();
         RugbyTimerTiming.triggerFullTimeVibe();
-        RugbyTimerPersistence.saveState(self);
+        persistState();
         RugbyTimerPersistence.finalizeGameData(self);
         Storage.setValue("gameStateData", null);
         RugbyTimerCards.clearCardTimers(self);
@@ -559,6 +584,7 @@ class RugbyGameModel {
             startConversionCountdown();
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Try");
+        persistState();
     }
 
     /**
@@ -574,10 +600,12 @@ class RugbyGameModel {
         lastEvents.add({:type => :conversion, :home => isHome});
         trimEvents();
         conversionTeam = null;
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Conversion (made)");
         if (gameState == STATE_CONVERSION) {
             resumePlay();
+        } else {
+            persistState();
         }
-        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Conversion (made)");
     }
 
     /**
@@ -600,6 +628,7 @@ class RugbyGameModel {
             startPenaltyCountdown();
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Penalty Goal");
+        persistState();
     }
 
     /**
@@ -615,6 +644,7 @@ class RugbyGameModel {
         lastEvents.add({:type => :drop, :home => isHome});
         trimEvents();
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Drop Goal");
+        persistState();
     }
 
     function recordPenaltyTry(isHome) {
@@ -626,6 +656,7 @@ class RugbyGameModel {
         lastEvents.add({:type => :penalty_try, :home => isHome});
         trimEvents();
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Penalty Try");
+        persistState();
     }
     
     /**
@@ -636,7 +667,7 @@ class RugbyGameModel {
         var duration = is7s ? 120 : 600;
         var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
         var label = "Y" + cardId.toString();
-        var entry = { "startTime" => System.getTimer(), "vibeTriggered" => false, "label" => label, "cardId" => cardId, "duration" => duration };
+        var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(System.getTimer(), duration, label, cardId);
         if (isHome) {
             yellowHomeTimes.add(entry);
             yellowHomeTotal = yellowHomeTotal + 1;
@@ -645,6 +676,7 @@ class RugbyGameModel {
             yellowAwayTotal = yellowAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
+        persistState();
     }
 
     /**
@@ -675,6 +707,7 @@ class RugbyGameModel {
             redAwayTotal = redAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
+        persistState();
     }
     
     /**
@@ -688,7 +721,7 @@ class RugbyGameModel {
         } else {
             awayScore = (awayScore + delta < 0) ? 0 : awayScore + delta;
         }
-        RugbyTimerPersistence.saveState(self);
+        persistState();
     }
     
     /**
@@ -736,7 +769,7 @@ class RugbyGameModel {
                 if (awayScore < 0) { awayScore = 0; }
             }
         }
-        RugbyTimerPersistence.saveState(self);
+        persistState();
         return true;
     }
     
@@ -801,12 +834,34 @@ class RugbyGameModel {
      * Begin GPS/activity recording tied to the `SPORT_RUGBY` session.
      */
     function startRecording() {
-        if (session == null) {
-            session = ActivityRecording.createSession({
-                :name => "Rugby",
-                :sport => Activity.SPORT_RUGBY
-            });
-            session.start();
+        if (!(Toybox has :ActivityRecording)) {
+            return;
+        }
+        try {
+            if (session == null) {
+                var preferredSport = (Activity has :SPORT_RUGBY) ? Activity.SPORT_RUGBY : Activity.SPORT_GENERIC;
+                try {
+                    session = ActivityRecording.createSession({
+                        :name => "Rugby",
+                        :sport => preferredSport
+                    });
+                } catch (preferredSportEx) {
+                    if ((Activity has :SPORT_GENERIC) && preferredSport != Activity.SPORT_GENERIC) {
+                        session = ActivityRecording.createSession({
+                            :name => "Rugby",
+                            :sport => Activity.SPORT_GENERIC
+                        });
+                    } else {
+                        throw preferredSportEx;
+                    }
+                }
+            }
+            if (session != null && !session.isRecording()) {
+                session.start();
+            }
+        } catch (ex) {
+            System.println("Error starting activity recording: " + ex.getErrorMessage());
+            session = null;
         }
     }
 
@@ -814,11 +869,18 @@ class RugbyGameModel {
      * Stop the GPS/activity recording safely.
      */
     function stopRecording() {
-        if (session != null && session.isRecording()) {
-            session.stop();
-            session.save();
-            session = null;
+        if (session == null) {
+            return;
         }
+        try {
+            if (session.isRecording()) {
+                session.stop();
+            }
+            session.save();
+        } catch (ex) {
+            System.println("Error stopping activity recording: " + ex.getErrorMessage());
+        }
+        session = null;
     }
 
     /**

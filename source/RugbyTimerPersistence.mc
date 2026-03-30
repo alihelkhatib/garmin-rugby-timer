@@ -43,6 +43,8 @@ class RugbyTimerPersistence {
             "redAwayRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redAway, model.redAwayPermanent),
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent,
+            "redHomeTotal" => model.redHomeTotal,
+            "redAwayTotal" => model.redAwayTotal,
             "homePenalties" => model.homePenalties,
             "awayPenalties" => model.awayPenalties,
             "lastEvents" => model.lastEvents,
