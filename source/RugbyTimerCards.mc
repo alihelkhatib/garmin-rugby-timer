@@ -28,11 +28,12 @@ class RugbyTimerCards {
      * Updates the yellow card timers.
      * @param model The game model
      * @param list The list of yellow card timers
-     * @param delta The time delta since the last update
-     * @return The updated list of yellow card timers
+     * @param newGameTime The current timer baseline
+     * @return A dictionary containing the updated timers plus an expiry flag
      */
     static function updateYellowTimers(model, list, newGameTime) {
         var newList = [];
+        var expiredAny = false;
         for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i] as Lang.Dictionary;
             if (entry == null) {
@@ -51,18 +52,21 @@ class RugbyTimerCards {
             var remaining = duration - elapsedTime;
 
             if (remaining <= 0) {
+                expiredAny = true;
                 continue;
             }
 
-            // Vibrate logic remains
             entry["vibeTriggered"] = entry["vibeTriggered"] == true;
             if (!entry["vibeTriggered"] && remaining <= 10) {
                 entry["vibeTriggered"] = true;
-                RugbyTimerTiming.triggerYellowTimerVibe();
+                RugbyTimerTiming.triggerYellowTimerWarningVibe();
             }
             newList.add({ "startTime" => startTime, "duration" => duration, "label" => label, "cardId" => cardId, "vibeTriggered" => entry["vibeTriggered"], "remaining" => remaining });
         }
-        return newList;
+        return {
+            "timers" => newList,
+            "expired" => expiredAny
+        };
     }
 
 

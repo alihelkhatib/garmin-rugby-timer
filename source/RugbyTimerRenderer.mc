@@ -337,8 +337,7 @@ class RugbyTimerRenderer {
     static function renderCountdown(dc, model, width, countdownFont, countdownY) {
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var displaySeconds = model.countdownRemaining + 0.999; // prevent dropping a second early
-        if (displaySeconds < 0) { displaySeconds = 0; }
+        var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -356,7 +355,7 @@ class RugbyTimerRenderer {
     static function renderStateText(dc, model, width, stateFont, stateY, height) {
         // Each special state adopts a red accent, while the idle/paused text stays white for clarity.
         var stateColor = Graphics.COLOR_WHITE;
-        if (model.gameState == STATE_CONVERSION || model.gameState == STATE_KICKOFF || model.gameState == STATE_PENALTY) {
+        if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
             stateColor = Graphics.COLOR_RED;
         }
         dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
@@ -364,21 +363,13 @@ class RugbyTimerRenderer {
             dc.drawText(width / 2, stateY, stateFont, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_CONVERSION) {
             dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
-            var convSeconds = (model.countdownSeconds == null) ? 0 : model.countdownSeconds + 0.999;
-            if (convSeconds < 0) { convSeconds = 0; }
+            var convSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
             var countdownStr = (convSeconds as Lang.Number).toLong().toString();
             dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_PENALTY) {
             dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
-            var penSeconds = (model.countdownSeconds == null) ? 0 : model.countdownSeconds + 0.999;
-            if (penSeconds < 0) { penSeconds = 0; }
+            var penSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
             var countdownStr = (penSeconds as Lang.Number).toLong().toString();
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
-        } else if (model.gameState == STATE_KICKOFF) {
-            dc.drawText(width / 2, stateY, stateFont, "KICKOFF", Graphics.TEXT_JUSTIFY_CENTER);
-            var koSeconds = (model.countdownSeconds == null) ? 0 : model.countdownSeconds + 0.999;
-            if (koSeconds < 0) { koSeconds = 0; }
-            var countdownStr = (koSeconds as Lang.Number).toLong().toString();
             dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_HALFTIME) {
             dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);

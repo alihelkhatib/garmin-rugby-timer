@@ -20,8 +20,8 @@ class RugbyTimerOverlay {
             return;
         }
         var label = RugbyTimerOverlay.getSpecialStateLabel(model);
-        var countdown = RugbyTimerTiming.formatTime(model.countdownSeconds);
-        var countdownMain = RugbyTimerTiming.formatTime(model.countdownRemaining);
+        var countdown = RugbyTimerTiming.formatTime(RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds));
+        var countdownMain = RugbyTimerTiming.formatTime(RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining));
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -44,7 +44,7 @@ class RugbyTimerOverlay {
      * @return true if it is a special state, false otherwise
      */
     static function isSpecialState(model) {
-        return model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF;
+        return model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY;
     }
 
     /**
@@ -88,8 +88,6 @@ class RugbyTimerOverlay {
             return Rez.Strings.Overlay_Hint_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
             return Rez.Strings.Overlay_Hint_Conversion; // Same hint for penalty kick
-        } else if (model.gameState == STATE_KICKOFF) {
-            return Rez.Strings.Overlay_Hint_Kickoff;
         }
         return Rez.Strings.Overlay_Hint_SelectBack;
     }
@@ -104,8 +102,6 @@ class RugbyTimerOverlay {
             return Rez.Strings.State_Conversion;
         } else if (model.gameState == STATE_PENALTY) {
             return Rez.Strings.State_PenaltyKick;
-        } else if (model.gameState == STATE_KICKOFF) {
-            return Rez.Strings.State_Kickoff;
         }
         return "";
     }
@@ -116,7 +112,7 @@ class RugbyTimerOverlay {
      * @return The color for the special state
      */
     static function getSpecialStateColor(model) {
-        if (model.gameState == STATE_CONVERSION || model.gameState == STATE_KICKOFF || model.gameState == STATE_PENALTY) {
+        if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
             return Graphics.COLOR_RED;
         }
         return Graphics.COLOR_WHITE;
