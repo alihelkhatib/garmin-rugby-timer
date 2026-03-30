@@ -16,6 +16,10 @@
     <string id="State_GameEnded">GAME ENDED</string>
     <string id="State_ReadyToStart">Ready to start</string>
     <string id="Overlay_Countdown">COUNTDOWN</string>
-    <string id="Overlay_Hint_Conversion">UP: Success DOWN: Miss</string>
+    <string id="Overlay_Hint_Penalty">UP/DOWN: Hide</string>
+    <string id="Overlay_ConversionMade_Action">MENU</string>
+    <string id="Overlay_ConversionMade_Result">+2</string>
+    <string id="Overlay_ConversionMiss_Action">DOWN</string>
+    <string id="Overlay_ConversionMiss_Result">MISS</string>
     <string id="Overlay_Hint_SelectBack">SELECT: Back</string>
 </strings>
