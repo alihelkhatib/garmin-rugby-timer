@@ -210,8 +210,10 @@ class RugbyTimerRenderer {
                     continue;
                 }
                 var y = entry["remaining"];
-                if (y == null && entry["startTime"] != null && entry["duration"] != null) {
+                if (!(y instanceof Lang.Number) && entry["startTime"] != null && entry["duration"] != null) {
                     y = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
+                } else if (!(y instanceof Lang.Number) && entry["duration"] instanceof Lang.Number) {
+                    y = entry["duration"];
                 }
                 if (!(y instanceof Lang.Number)) { y = 0; }
                 if (y < 0) { y = 0; }
@@ -232,8 +234,10 @@ class RugbyTimerRenderer {
                     continue;
                 }
                 var y2 = entry["remaining"];
-                if (y2 == null && entry["startTime"] != null && entry["duration"] != null) {
+                if (!(y2 instanceof Lang.Number) && entry["startTime"] != null && entry["duration"] != null) {
                     y2 = entry["duration"] - ((System.getTimer() - entry["startTime"]) / 1000.0f);
+                } else if (!(y2 instanceof Lang.Number) && entry["duration"] instanceof Lang.Number) {
+                    y2 = entry["duration"];
                 }
                 if (!(y2 instanceof Lang.Number)) { y2 = 0; }
                 if (y2 < 0) { y2 = 0; }

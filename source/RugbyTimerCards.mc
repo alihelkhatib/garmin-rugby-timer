@@ -18,6 +18,7 @@ class RugbyTimerCards {
         return {
             "startTime" => startTime,
             "duration" => duration,
+            "remaining" => duration,
             "label" => label,
             "cardId" => cardId,
             "vibeTriggered" => false
@@ -41,15 +42,20 @@ class RugbyTimerCards {
             }
             var startTime = entry["startTime"] as Lang.Number;
             var duration = entry["duration"] as Lang.Number;
+            var remaining = entry["remaining"] as Lang.Number;
             var label = entry["label"] as Lang.String;
             var cardId = entry["cardId"] as Lang.Number;
 
-            if (startTime == null || duration == null) {
+            if (duration == null) {
                 continue;
             }
 
-            var elapsedTime = (newGameTime - startTime) / 1000.0f;
-            var remaining = duration - elapsedTime;
+            if (startTime instanceof Lang.Number) {
+                var elapsedTime = (newGameTime - startTime) / 1000.0f;
+                remaining = duration - elapsedTime;
+            } else if (!(remaining instanceof Lang.Number)) {
+                remaining = duration;
+            }
 
             if (remaining <= 0) {
                 expiredAny = true;

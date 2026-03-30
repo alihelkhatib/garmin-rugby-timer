@@ -111,8 +111,7 @@ class RugbyTimerTiming {
 
             model.lastUpdate = now;
             if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
-                RugbyTimerPersistence.saveState(model);
-                model.lastPersistTime = now;
+                model.persistState();
             }
 
         } catch (ex) {
