@@ -226,11 +226,11 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 class MatchProfileMenu extends WatchUi.Menu2 {
     function initialize() {
         Menu2.initialize({:title=>"Match Preset"});
-        addItem(new WatchUi.MenuItem("Rugby 7s", null, "7s", null));
-        addItem(new WatchUi.MenuItem("Rugby 10s", null, "10s", null));
-        addItem(new WatchUi.MenuItem("Rugby 15s", null, "15s", null));
-        addItem(new WatchUi.MenuItem("U19", null, "u19", null));
-        addItem(new WatchUi.MenuItem("Custom", null, "custom", null));
+        addItem(new WatchUi.MenuItem("Rugby 7s", null, :profile_7s, null));
+        addItem(new WatchUi.MenuItem("Rugby 10s", null, :profile_10s, null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", null, :profile_15s, null));
+        addItem(new WatchUi.MenuItem("U19", null, :profile_u19, null));
+        addItem(new WatchUi.MenuItem("Custom", null, :profile_custom, null));
     }
 }
 
@@ -269,9 +269,7 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             return;
         }
-        if (app.model.gameState != STATE_IDLE) {
-            app.model.resetGame();
-        }
+        app.model.resetGame();
         app.model.setMatchProfile(profileId);
         if (menu != null) {
             menu.refresh();
