@@ -22,7 +22,7 @@ class RugbyMatchProfiles {
         if (profileId == "7s") {
             return RugbyMatchProfiles.createProfile("7s", "Rugby 7s", true, 420, 30, 30, 60, true, false);
         } else if (profileId == "10s") {
-            return RugbyMatchProfiles.createProfile("10s", "Rugby 10s", false, 600, 60, 60, 60, true, false);
+            return RugbyMatchProfiles.createProfile("10s", "Rugby 10s", false, 2400, 90, 60, 60, true, false);
         } else if (profileId == "u19") {
             return RugbyMatchProfiles.createProfile("u19", "U19", false, 2100, 90, 60, 60, true, false);
         }
