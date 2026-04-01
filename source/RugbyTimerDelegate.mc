@@ -201,7 +201,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 var newMinutes = (model.countdownTimer / 60).toLong() + 1;
                 if (newMinutes > 99) { newMinutes = 99; }
                 model.setHalfDuration(newMinutes * 60);
-                view.displaySpecialOverlayMessage(newMinutes.format("%d") + ":00");
                 return true;
             }
 
@@ -286,7 +285,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 var newMinutes = (model.countdownTimer / 60).toLong() - 1;
                 if (newMinutes < 1) { newMinutes = 1; }
                 model.setHalfDuration(newMinutes * 60);
-                view.displaySpecialOverlayMessage(newMinutes.format("%d") + ":00");
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {
@@ -332,7 +330,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 var newMinutes = (model.countdownTimer / 60).toLong() + 1;
                 if (newMinutes > 99) { newMinutes = 99; }
                 model.setHalfDuration(newMinutes * 60);
-                view.displaySpecialOverlayMessage(newMinutes.format("%d") + ":00");
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {

@@ -69,10 +69,7 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
 
     function getModel() {
         var rugbyApp = Application.getApp() as RugbyTimerApp;
-        if (rugbyApp != null) {
-            return rugbyApp.model;
-        }
-        return null;
+        return rugbyApp.model;
     }
 
     function getActiveProfile() {
@@ -246,16 +243,19 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function resolveProfileId(itemId) {
-        if (itemId == :profile_7s) {
+        var idText = itemId != null ? itemId.toString() : "";
+        if (itemId == :profile_7s || idText == "profile_7s" || idText == ":profile_7s") {
             return "7s";
-        } else if (itemId == :profile_10s) {
+        } else if (itemId == :profile_10s || idText == "profile_10s" || idText == ":profile_10s") {
             return "10s";
-        } else if (itemId == :profile_u19) {
+        } else if (itemId == :profile_15s || idText == "profile_15s" || idText == ":profile_15s") {
+            return "15s";
+        } else if (itemId == :profile_u19 || idText == "profile_u19" || idText == ":profile_u19") {
             return "u19";
-        } else if (itemId == :profile_custom) {
+        } else if (itemId == :profile_custom || idText == "profile_custom" || idText == ":profile_custom") {
             return "custom";
         }
-        return "15s";
+        return null;
     }
 
     function onSelect(item) {
@@ -274,12 +274,18 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
         }
 
         var profileId = resolveProfileId(item.getId());
+        if (profileId == null) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            return;
+        }
         app.model.setMatchProfile(profileId);
         if (menu != null) {
             menu.refresh();
         }
-        if (app.rugbyView != null) {
-            app.rugbyView.displaySpecialOverlayMessage(RugbyMatchProfiles.getProfileLabel(profileId));
+        if (profileId == "custom") {
+            var customMenu = new RugbySettingsMenu();
+            WatchUi.pushView(customMenu, new RugbySettingsMenuDelegate(customMenu, true), WatchUi.SLIDE_UP);
+            return;
         }
         WatchUi.requestUpdate();
         WatchUi.popView(WatchUi.SLIDE_DOWN);
