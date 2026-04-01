@@ -11,9 +11,9 @@ using Toybox.Timer;
 class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     var model;
     var overlayActionHandledUntil;
-    var menuHoldTimer;
-    var menuKeyPressed;
-    var suppressNextMenu;
+    var upMenuHoldTimer;
+    var upMenuKeyPressed;
+    var suppressNextUpMenuAction;
 
     /**
      * Initializes the delegate.
@@ -23,32 +23,32 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         BehaviorDelegate.initialize();
         model = m;
         overlayActionHandledUntil = 0;
-        menuHoldTimer = null;
-        menuKeyPressed = false;
-        suppressNextMenu = false;
+        upMenuHoldTimer = null;
+        upMenuKeyPressed = false;
+        suppressNextUpMenuAction = false;
     }
 
-    function cancelMenuHoldTimer() {
-        menuKeyPressed = false;
-        if (menuHoldTimer != null) {
-            menuHoldTimer.stop();
-            menuHoldTimer = null;
+    function cancelUpMenuHoldTimer() {
+        upMenuKeyPressed = false;
+        if (upMenuHoldTimer != null) {
+            upMenuHoldTimer.stop();
+            upMenuHoldTimer = null;
         }
     }
 
-    function showSettingsMenu() as Void {
-        WatchUi.pushView(new RugbySettingsHostView(), new RugbySettingsHostDelegate(), WatchUi.SLIDE_IMMEDIATE);
+    function showPresetMenu() as Void {
+        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
         WatchUi.requestUpdate();
     }
 
-    function handleMenuHoldTimer() as Void {
+    function handleUpMenuHoldTimer() as Void {
         var view = Application.getApp().rugbyView;
-        if (!menuKeyPressed || view == null || view.isLocked || view.isSpecialOverlayActive()) {
+        if (!upMenuKeyPressed || view == null || view.isLocked || view.isSpecialOverlayActive()) {
             return;
         }
-        suppressNextMenu = true;
-        cancelMenuHoldTimer();
-        showSettingsMenu();
+        suppressNextUpMenuAction = true;
+        cancelUpMenuHoldTimer();
+        showPresetMenu();
     }
 
     /**
@@ -125,11 +125,11 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 if (key == WatchUi.KEY_DOWN) {
                     return handleOverlayAction(:miss);
                 }
-                if (key == WatchUi.KEY_MENU || key == WatchUi.KEY_UP) {
+                if (key == WatchUi.KEY_MENU) {
                     return handleOverlayAction(:made);
                 }
             } else if (model.gameState == STATE_PENALTY) {
-                if (key == WatchUi.KEY_DOWN || key == WatchUi.KEY_MENU || key == WatchUi.KEY_UP) {
+                if (key == WatchUi.KEY_DOWN || key == WatchUi.KEY_MENU) {
                     return handleOverlayAction(:hide);
                 }
             }
@@ -145,11 +145,11 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             if (view == null || view.isLocked || view.isSpecialOverlayActive()) {
                 return false;
             }
-            if (evt.getKey() == WatchUi.KEY_MENU) {
-                cancelMenuHoldTimer();
-                menuKeyPressed = true;
-                menuHoldTimer = new Timer.Timer();
-                menuHoldTimer.start(method(:handleMenuHoldTimer), 700, false);
+            if (evt.getKey() == WatchUi.KEY_MENU || evt.getKey() == WatchUi.KEY_UP) {
+                cancelUpMenuHoldTimer();
+                upMenuKeyPressed = true;
+                upMenuHoldTimer = new Timer.Timer();
+                upMenuHoldTimer.start(method(:handleUpMenuHoldTimer), 700, false);
             }
             return false;
         } catch (ex) {
@@ -159,9 +159,9 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
 
     function onKeyReleased(evt) {
         try {
-            if (evt.getKey() == WatchUi.KEY_MENU) {
-                cancelMenuHoldTimer();
-                return suppressNextMenu;
+            if (evt.getKey() == WatchUi.KEY_MENU || evt.getKey() == WatchUi.KEY_UP) {
+                cancelUpMenuHoldTimer();
+                return suppressNextUpMenuAction;
             }
             return false;
         } catch (ex) {
@@ -176,9 +176,9 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onMenu() {
         try {
             var view = Application.getApp().rugbyView;
-            cancelMenuHoldTimer();
-            if (suppressNextMenu) {
-                suppressNextMenu = false;
+            cancelUpMenuHoldTimer();
+            if (suppressNextUpMenuAction) {
+                suppressNextUpMenuAction = false;
                 return true;
             }
             if (view.isLocked) {
@@ -195,6 +195,16 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 }
                 return true;
             }
+
+            // Before kickoff only, map UP/MENU to +1 minute adjustment.
+            if (model.gameState == STATE_IDLE) {
+                var newMinutes = (model.countdownTimer / 60).toLong() + 1;
+                if (newMinutes > 99) { newMinutes = 99; }
+                model.setHalfDuration(newMinutes * 60);
+                view.displaySpecialOverlayMessage(newMinutes.format("%d") + ":00");
+                return true;
+            }
+
             WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(model), WatchUi.SLIDE_UP);
             return true;
         } catch (ex) {
@@ -309,6 +319,11 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onPreviousPage() {
         try {
             var view = Application.getApp().rugbyView;
+            cancelUpMenuHoldTimer();
+            if (suppressNextUpMenuAction) {
+                suppressNextUpMenuAction = false;
+                return true;
+            }
             if (view.isLocked || !view.isActionAllowed()) {
                 return true;
             }
@@ -349,7 +364,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
  */
 class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     var model;
-    var settingsOpenTimer;
+    var presetOpenTimer;
 
     /**
      * Initializes the delegate.
@@ -358,21 +373,21 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     function initialize(m) {
         Menu2InputDelegate.initialize();
         model = m;
-        settingsOpenTimer = null;
+        presetOpenTimer = null;
     }
 
-    function showSettingsAfterMenuClose() as Void {
-        settingsOpenTimer = null;
-        WatchUi.pushView(new RugbySettingsHostView(), new RugbySettingsHostDelegate(), WatchUi.SLIDE_IMMEDIATE);
+    function showPresetAfterMenuClose() as Void {
+        presetOpenTimer = null;
+        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
         WatchUi.requestUpdate();
     }
 
-    function openSettingsFromMenu() {
-        if (settingsOpenTimer != null) {
-            settingsOpenTimer.stop();
+    function openPresetFromMenu() {
+        if (presetOpenTimer != null) {
+            presetOpenTimer.stop();
         }
-        settingsOpenTimer = new Timer.Timer();
-        settingsOpenTimer.start(method(:showSettingsAfterMenuClose) as Method() as Void, 50, false);
+        presetOpenTimer = new Timer.Timer();
+        presetOpenTimer.start(method(:showPresetAfterMenuClose) as Method() as Void, 50, false);
     }
 
     function handleMenuDelegateFailure(context) {
@@ -406,7 +421,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
                 model.undoLastEvent();
             } else if (item.getId() == :settings) {
                 WatchUi.popView(WatchUi.SLIDE_DOWN);
-                openSettingsFromMenu();
+                openPresetFromMenu();
                 return;
             } else if (item.getId() == :toggle_lock) {
                 view.toggleLock();
@@ -641,6 +656,7 @@ class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN); // type
         WatchUi.popView(WatchUi.SLIDE_DOWN); // team
+        WatchUi.requestUpdate();
     }
 
     /**

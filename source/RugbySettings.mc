@@ -228,7 +228,7 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
  */
 class MatchProfileMenu extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({:title=>"Profile"});
+        Menu2.initialize({:title=>"Match Preset"});
         addItem(new WatchUi.MenuItem("Rugby 7s", null, :profile_7s, null));
         addItem(new WatchUi.MenuItem("Rugby 10s", null, :profile_10s, null));
         addItem(new WatchUi.MenuItem("Rugby 15s", null, :profile_15s, null));
@@ -245,25 +245,42 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
         menu = settingsMenu;
     }
 
+    function resolveProfileId(itemId) {
+        if (itemId == :profile_7s) {
+            return "7s";
+        } else if (itemId == :profile_10s) {
+            return "10s";
+        } else if (itemId == :profile_u19) {
+            return "u19";
+        } else if (itemId == :profile_custom) {
+            return "custom";
+        }
+        return "15s";
+    }
+
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app == null || app.model == null) {
             return;
         }
 
-        var profileId = "15s";
-        if (item.getId() == :profile_7s) {
-            profileId = "7s";
-        } else if (item.getId() == :profile_10s) {
-            profileId = "10s";
-        } else if (item.getId() == :profile_u19) {
-            profileId = "u19";
-        } else if (item.getId() == :profile_custom) {
-            profileId = "custom";
+        if (app.model.gameState != STATE_IDLE) {
+            if (app.rugbyView != null) {
+                app.rugbyView.displaySpecialOverlayMessage("Idle only");
+                WatchUi.requestUpdate();
+            }
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            return;
         }
 
+        var profileId = resolveProfileId(item.getId());
         app.model.setMatchProfile(profileId);
-        menu.refresh();
+        if (menu != null) {
+            menu.refresh();
+        }
+        if (app.rugbyView != null) {
+            app.rugbyView.displaySpecialOverlayMessage(RugbyMatchProfiles.getProfileLabel(profileId));
+        }
         WatchUi.requestUpdate();
         WatchUi.popView(WatchUi.SLIDE_DOWN);
     }

@@ -128,6 +128,11 @@ class RugbyTimerView extends WatchUi.View {
         renderHint(dc, width, fonts[:hintFont], hintY);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
+        // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
+        if (!isSpecialOverlayActive() && specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+            dc.drawText(width / 2, height * 0.62, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     /**
