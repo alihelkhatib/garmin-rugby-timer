@@ -226,11 +226,11 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 class MatchProfileMenu extends WatchUi.Menu2 {
     function initialize() {
         Menu2.initialize({:title=>"Match Preset"});
-        addItem(new WatchUi.MenuItem("Rugby 7s", null, :profile_7s, null));
-        addItem(new WatchUi.MenuItem("Rugby 10s", null, :profile_10s, null));
-        addItem(new WatchUi.MenuItem("Rugby 15s", null, :profile_15s, null));
-        addItem(new WatchUi.MenuItem("U19", null, :profile_u19, null));
-        addItem(new WatchUi.MenuItem("Custom", null, :profile_custom, null));
+        addItem(new WatchUi.MenuItem("Rugby 7s", null, "7s", null));
+        addItem(new WatchUi.MenuItem("Rugby 10s", null, "10s", null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", null, "15s", null));
+        addItem(new WatchUi.MenuItem("U19", null, "u19", null));
+        addItem(new WatchUi.MenuItem("Custom", null, "custom", null));
     }
 }
 
@@ -244,15 +244,15 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
 
     function resolveProfileId(itemId) {
         var idText = itemId != null ? itemId.toString() : "";
-        if (itemId == :profile_7s || idText == "profile_7s" || idText == ":profile_7s") {
+        if (itemId == "7s" || idText == "7s" || itemId == :profile_7s || idText == "profile_7s" || idText == ":profile_7s") {
             return "7s";
-        } else if (itemId == :profile_10s || idText == "profile_10s" || idText == ":profile_10s") {
+        } else if (itemId == "10s" || idText == "10s" || itemId == :profile_10s || idText == "profile_10s" || idText == ":profile_10s") {
             return "10s";
-        } else if (itemId == :profile_15s || idText == "profile_15s" || idText == ":profile_15s") {
+        } else if (itemId == "15s" || idText == "15s" || itemId == :profile_15s || idText == "profile_15s" || idText == ":profile_15s") {
             return "15s";
-        } else if (itemId == :profile_u19 || idText == "profile_u19" || idText == ":profile_u19") {
+        } else if (itemId == "u19" || idText == "u19" || itemId == :profile_u19 || idText == "profile_u19" || idText == ":profile_u19") {
             return "u19";
-        } else if (itemId == :profile_custom || idText == "profile_custom" || idText == ":profile_custom") {
+        } else if (itemId == "custom" || idText == "custom" || itemId == :profile_custom || idText == "profile_custom" || idText == ":profile_custom") {
             return "custom";
         }
         return null;
@@ -264,19 +264,13 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
 
-        if (app.model.gameState != STATE_IDLE) {
-            if (app.rugbyView != null) {
-                app.rugbyView.displaySpecialOverlayMessage("Idle only");
-                WatchUi.requestUpdate();
-            }
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            return;
-        }
-
         var profileId = resolveProfileId(item.getId());
         if (profileId == null) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             return;
+        }
+        if (app.model.gameState != STATE_IDLE) {
+            app.model.resetGame();
         }
         app.model.setMatchProfile(profileId);
         if (menu != null) {
