@@ -281,14 +281,14 @@ class RugbyGameModel {
         penaltyKickTime = profile["penaltyKickTime"];
         useConversionTimer = profile["useConversionTimer"] == true;
         usePenaltyTimer = profile["usePenaltyTimer"] == true;
-        if (gameState == STATE_IDLE) {
-            countdownRemaining = countdownTimer;
-        }
+        // Always update countdownRemaining to match the new profile timer
+        countdownRemaining = countdownTimer;
         if (persist) {
             Storage.setValue("matchProfileId", matchProfileId);
             if (matchProfileId == "custom") {
                 RugbyMatchProfiles.storeCustomProfile(profile);
             }
+            persistState();
         }
     }
 
