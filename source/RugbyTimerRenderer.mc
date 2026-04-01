@@ -195,8 +195,8 @@ class RugbyTimerRenderer {
         }
         var visibleYellowHome = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
         var visibleYellowAway = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
-        var redHomeActive = (model.redHome != null && model.redHome > 0) || (model.redHomePausedRemaining instanceof Lang.Number) || model.redHomePermanent;
-        var redAwayActive = (model.redAway != null && model.redAway > 0) || (model.redAwayPausedRemaining instanceof Lang.Number) || model.redAwayPermanent;
+        var redHomeActive = model.redHome == true || (model.redHomePausedRemaining instanceof Lang.Number || model.redHomePausedRemaining instanceof Lang.Float) || model.redHomePermanent;
+        var redAwayActive = model.redAway == true || (model.redAwayPausedRemaining instanceof Lang.Number || model.redAwayPausedRemaining instanceof Lang.Float) || model.redAwayPermanent;
         var homeCardRows = visibleYellowHome + (redHomeActive ? 1 : 0);
         var awayCardRows = visibleYellowAway + (redAwayActive ? 1 : 0);
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
@@ -251,12 +251,8 @@ class RugbyTimerRenderer {
                 var redText;
                 if (model.redHomePermanent) {
                     redText = "R:PERM";
-                } else if (model.redHomePausedRemaining instanceof Lang.Number) {
+                } else if (model.redHomePausedRemaining instanceof Lang.Number || model.redHomePausedRemaining instanceof Lang.Float) {
                     redText = "R:" + model.formatShortTime(model.redHomePausedRemaining);
-                } else if (model.redHome != null) {
-                    var redRemaining = RugbyTimerCards.getRedRemaining(model.redHome, timerNow);
-                    if (!(redRemaining instanceof Lang.Number) && !(redRemaining instanceof Lang.Float)) { redRemaining = 0; }
-                    redText = "R:" + model.formatShortTime(redRemaining);
                 } else {
                     redText = "R:--";
                 }
@@ -268,12 +264,8 @@ class RugbyTimerRenderer {
                 var redAwayText;
                 if (model.redAwayPermanent) {
                     redAwayText = "R:PERM";
-                } else if (model.redAwayPausedRemaining instanceof Lang.Number) {
+                } else if (model.redAwayPausedRemaining instanceof Lang.Number || model.redAwayPausedRemaining instanceof Lang.Float) {
                     redAwayText = "R:" + model.formatShortTime(model.redAwayPausedRemaining);
-                } else if (model.redAway != null) {
-                    var redAwayRemaining = RugbyTimerCards.getRedRemaining(model.redAway, timerNow);
-                    if (!(redAwayRemaining instanceof Lang.Number) && !(redAwayRemaining instanceof Lang.Float)) { redAwayRemaining = 0; }
-                    redAwayText = "R:" + model.formatShortTime(redAwayRemaining);
                 } else {
                     redAwayText = "R:--";
                 }

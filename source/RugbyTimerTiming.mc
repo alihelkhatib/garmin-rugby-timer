@@ -40,15 +40,15 @@ class RugbyTimerTiming {
                 model.elapsedTime = 0;
             }
 
-            var clockRunning = RugbyTimerTiming.isClockRunning(model.gameState);
-            if (clockRunning) {
+            var mainClockRunning = RugbyTimerTiming.isClockRunning(model.gameState);
+            if (mainClockRunning) {
                 model.gameTime = model.gameTime + deltaSeconds;
                 model.elapsedTime = model.elapsedTime + deltaSeconds;
             }
 
-            // Countdown only ticks during active states
-            if (clockRunning) {
-                model.countdownRemaining = model.countdownRemaining - deltaSeconds;
+            // Keep the half countdown locked to the canonical match clock so they cannot drift.
+            if (mainClockRunning) {
+                model.countdownRemaining = model.countdownTimer - model.gameTime;
                 if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
                 if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
                     model.thirtySecondAlerted = true;
@@ -57,7 +57,7 @@ class RugbyTimerTiming {
             }
 
             // Special timers tick only when active and not paused
-            if (clockRunning && (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY)) {
+            if (mainClockRunning && (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY)) {
                 var specialState = model.gameState;
                 model.countdownSeconds = model.countdownSeconds - deltaSeconds;
                 if (model.countdownSeconds < 0) { model.countdownSeconds = 0; }
@@ -83,7 +83,7 @@ class RugbyTimerTiming {
                 }
             }
             
-            if (clockRunning) {
+            if (mainClockRunning) {
                 var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, deltaSeconds);
                 model.yellowHomeTimes = homeYellowUpdate["timers"];
                 var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, deltaSeconds);
@@ -94,32 +94,26 @@ class RugbyTimerTiming {
 
                 // Red card timers
                 if (!model.redHomePermanent && model.redHome != null) {
-                    if (!RugbyTimerTiming.isNumeric(model.redHomePausedRemaining)) {
-                        model.redHomePausedRemaining = RugbyTimerCards.getRedRemaining(model.redHome, now);
-                    }
                     if (RugbyTimerTiming.isNumeric(model.redHomePausedRemaining)) {
-                        model.redHomePausedRemaining = model.redHomePausedRemaining - deltaSeconds;
+                        model.redHomePausedRemaining = (model.redHomePausedRemaining - deltaSeconds).toNumber();
                     }
                     if (!RugbyTimerTiming.isNumeric(model.redHomePausedRemaining) || model.redHomePausedRemaining <= 0) {
-                        model.redHome = null; // Card expired
+                        model.redHome = null;
                         model.redHomePausedRemaining = null;
                     }
                 }
                 if (!model.redAwayPermanent && model.redAway != null) {
-                    if (!RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining)) {
-                        model.redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(model.redAway, now);
-                    }
                     if (RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining)) {
-                        model.redAwayPausedRemaining = model.redAwayPausedRemaining - deltaSeconds;
+                        model.redAwayPausedRemaining = (model.redAwayPausedRemaining - deltaSeconds).toNumber();
                     }
                     if (!RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining) || model.redAwayPausedRemaining <= 0) {
-                        model.redAway = null; // Card expired
+                        model.redAway = null;
                         model.redAwayPausedRemaining = null;
                     }
                 }
             }
 
-            if (clockRunning && model.countdownRemaining <= 0) {
+            if (mainClockRunning && model.countdownRemaining <= 0) {
                 model.countdownRemaining = 0;
                 if (model.halfNumber == 1) {
                     model.enterHalfTime();

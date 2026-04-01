@@ -1,3 +1,11 @@
+## [2026-04-01] Fix red card timer type mismatch (Long vs Number) and sentinel refactor
+
+- Root cause: `(Number - Float).toLong()` yields `Lang.Long`; `isNumeric` only checked `Number | Float`, so the first decrement made `redHomePausedRemaining` a Long, which failed the `isNumeric` check and immediately cleared the card to null — renderer showed `R:--` after the first tick.
+- Fix 1 (`RugbyTimerTiming.mc`): Changed `.toLong()` → `.toNumber()` on the red card decrement so the value stays `Lang.Number`. Removed the now-dead boolean fallback that would have assigned `redHome = true` (boolean) back into `redHomePausedRemaining`.
+- Fix 2 (`RugbyTimerRenderer.mc`): Changed `redHomeActive`/`redAwayActive` detection from `redHome > 0` (broken since `redHome` is now boolean `true`) to `redHome == true`; also added `instanceof Lang.Float` to the `redHomePausedRemaining` active detection for robustness.
+- Fix 3 (`RugbyGameModel.mc`): Removed stale `getRedRemaining(redHome, now)` fallback from `pauseGame()` — `redHome` is now `true` (not a timestamp), so this would have computed garbage. `redHomePausedRemaining` is always valid at pause time since `recordRedCard` sets it and the tick loop keeps it current.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (warnings only, no errors).
+
 ## [2026-03-31] Route in-app configuration to a preset picker and stabilize card sanctions
 
 - Replaced the broken in-app settings route with a direct `Match Preset` picker. A held `UP/MENU` press now opens the preset dialog straight from the main timer screen, and the former crashing main-menu `Settings` item now opens that same lightweight preset menu instead of the old nested settings stack.
