@@ -195,10 +195,10 @@ class RugbyTimerRenderer {
         }
         var visibleYellowHome = model.yellowHomeTimes.size() > 2 ? 2 : model.yellowHomeTimes.size();
         var visibleYellowAway = model.yellowAwayTimes.size() > 2 ? 2 : model.yellowAwayTimes.size();
-        var redHomeActive = model.redHome == true || (model.redHomePausedRemaining instanceof Lang.Number || model.redHomePausedRemaining instanceof Lang.Float) || model.redHomePermanent;
-        var redAwayActive = model.redAway == true || (model.redAwayPausedRemaining instanceof Lang.Number || model.redAwayPausedRemaining instanceof Lang.Float) || model.redAwayPermanent;
-        var homeCardRows = visibleYellowHome + (redHomeActive ? 1 : 0);
-        var awayCardRows = visibleYellowAway + (redAwayActive ? 1 : 0);
+        var visibleRedHome = (model.redHomePermanent || model.redHomeTimes.size() > 0) ? 1 : 0;
+        var visibleRedAway = (model.redAwayPermanent || model.redAwayTimes.size() > 0) ? 1 : 0;
+        var homeCardRows = visibleYellowHome + visibleRedHome;
+        var awayCardRows = visibleYellowAway + visibleRedAway;
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
         var lineStep = height * 0.1;
         if (maxCardRows > 0) {
@@ -246,30 +246,32 @@ class RugbyTimerRenderer {
                 awayYellowDisplayed += 1;
                 awayLine += 1;
             }
-            if (redHomeActive) {
+            if (model.redHomePermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                var redText;
-                if (model.redHomePermanent) {
-                    redText = "R:PERM";
-                } else if (model.redHomePausedRemaining instanceof Lang.Number || model.redHomePausedRemaining instanceof Lang.Float) {
-                    redText = "R:" + model.formatShortTime(model.redHomePausedRemaining);
-                } else {
-                    redText = "R:--";
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFontRed, "R:PERM", Graphics.TEXT_JUSTIFY_CENTER);
+                homeLine += 1;
+            } else if (model.redHomeTimes.size() > 0) {
+                var redHomeEntry = model.redHomeTimes[0] as Lang.Dictionary;
+                var redHomeRem = redHomeEntry["remaining"];
+                if (!(redHomeRem instanceof Lang.Number) && !(redHomeRem instanceof Lang.Float)) {
+                    redHomeRem = RugbyTimerCards.getEntryRemaining(redHomeEntry, timerNow);
                 }
-                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFontRed, redText, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(width / 4, cardsY + homeLine * lineStep, cardFontRed, "R:" + model.formatShortTime(redHomeRem), Graphics.TEXT_JUSTIFY_CENTER);
                 homeLine += 1;
             }
-            if (redAwayActive) {
+            if (model.redAwayPermanent) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                var redAwayText;
-                if (model.redAwayPermanent) {
-                    redAwayText = "R:PERM";
-                } else if (model.redAwayPausedRemaining instanceof Lang.Number || model.redAwayPausedRemaining instanceof Lang.Float) {
-                    redAwayText = "R:" + model.formatShortTime(model.redAwayPausedRemaining);
-                } else {
-                    redAwayText = "R:--";
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFontRed, "R:PERM", Graphics.TEXT_JUSTIFY_CENTER);
+                awayLine += 1;
+            } else if (model.redAwayTimes.size() > 0) {
+                var redAwayEntry = model.redAwayTimes[0] as Lang.Dictionary;
+                var redAwayRem = redAwayEntry["remaining"];
+                if (!(redAwayRem instanceof Lang.Number) && !(redAwayRem instanceof Lang.Float)) {
+                    redAwayRem = RugbyTimerCards.getEntryRemaining(redAwayEntry, timerNow);
                 }
-                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFontRed, redAwayText, Graphics.TEXT_JUSTIFY_CENTER);
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
+                dc.drawText(3 * width / 4, cardsY + awayLine * lineStep, cardFontRed, "R:" + model.formatShortTime(redAwayRem), Graphics.TEXT_JUSTIFY_CENTER);
                 awayLine += 1;
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);

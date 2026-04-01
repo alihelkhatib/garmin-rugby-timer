@@ -43,10 +43,8 @@ class RugbyTimerPersistence {
             "yellowAwayLabelCounter" => model.yellowAwayLabelCounter,
             "yellowHomeTotal" => model.yellowHomeTotal,
             "yellowAwayTotal" => model.yellowAwayTotal,
-            "redHomeRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redHome, model.redHomePausedRemaining, model.redHomePermanent),
-            "redAwayRemaining" => RugbyTimerPersistence.serializeRedRemaining(model.redAway, model.redAwayPausedRemaining, model.redAwayPermanent),
-            "redHomePausedRemaining" => model.redHomePausedRemaining,
-            "redAwayPausedRemaining" => model.redAwayPausedRemaining,
+            "redHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redHomeTimes),
+            "redAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redAwayTimes),
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent,
             "redHomeTotal" => model.redHomeTotal,
@@ -74,8 +72,8 @@ class RugbyTimerPersistence {
             "countdownRemaining" => model.countdownRemaining,
             "yellowHomeTimes" => model.yellowHomeTimes,
             "yellowAwayTimes" => model.yellowAwayTimes,
-            "redHome" => model.redHome,
-            "redAway" => model.redAway,
+            "redHomeActive" => (model.redHomePermanent || model.redHomeTimes.size() > 0),
+            "redAwayActive" => (model.redAwayPermanent || model.redAwayTimes.size() > 0),
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent
         };
@@ -147,18 +145,8 @@ class RugbyTimerPersistence {
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
                 model.redAwayPermanent = data["redAwayPermanent"];
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
-                model.redHome = RugbyTimerPersistence.restoreRedStartTime(data["redHomeRemaining"], data["redHome"], model.redHomePermanent, now);
-                model.redAway = RugbyTimerPersistence.restoreRedStartTime(data["redAwayRemaining"], data["redAway"], model.redAwayPermanent, now);
-                model.redHomePausedRemaining = data["redHomePausedRemaining"];
-                model.redAwayPausedRemaining = data["redAwayPausedRemaining"];
-                if (model.gameState == STATE_PAUSED) {
-                    if (!(model.redHomePausedRemaining instanceof Lang.Number) && data["redHomeRemaining"] instanceof Lang.Number) {
-                        model.redHomePausedRemaining = data["redHomeRemaining"];
-                    }
-                    if (!(model.redAwayPausedRemaining instanceof Lang.Number) && data["redAwayRemaining"] instanceof Lang.Number) {
-                        model.redAwayPausedRemaining = data["redAwayRemaining"];
-                    }
-                }
+                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["redHomeTimes"], now);
+                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["redAwayTimes"], now);
 
                 model.yellowHomeTotal = data["yellowHomeTotal"];
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
@@ -193,6 +181,12 @@ class RugbyTimerPersistence {
         }
         if (model.yellowAwayTimes == null) {
             model.yellowAwayTimes = [];
+        }
+        if (model.redHomeTimes == null) {
+            model.redHomeTimes = [];
+        }
+        if (model.redAwayTimes == null) {
+            model.redAwayTimes = [];
         }
     }
 

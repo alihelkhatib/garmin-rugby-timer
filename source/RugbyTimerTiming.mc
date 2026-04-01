@@ -92,25 +92,11 @@ class RugbyTimerTiming {
                     RugbyTimerTiming.triggerYellowTimerExpiredVibe();
                 }
 
-                // Red card timers
-                if (!model.redHomePermanent && model.redHome != null) {
-                    if (RugbyTimerTiming.isNumeric(model.redHomePausedRemaining)) {
-                        model.redHomePausedRemaining = (model.redHomePausedRemaining - deltaSeconds).toNumber();
-                    }
-                    if (!RugbyTimerTiming.isNumeric(model.redHomePausedRemaining) || model.redHomePausedRemaining <= 0) {
-                        model.redHome = null;
-                        model.redHomePausedRemaining = null;
-                    }
-                }
-                if (!model.redAwayPermanent && model.redAway != null) {
-                    if (RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining)) {
-                        model.redAwayPausedRemaining = (model.redAwayPausedRemaining - deltaSeconds).toNumber();
-                    }
-                    if (!RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining) || model.redAwayPausedRemaining <= 0) {
-                        model.redAway = null;
-                        model.redAwayPausedRemaining = null;
-                    }
-                }
+                // Red card timers (same mechanism as yellow cards)
+                var homeRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redHomeTimes, deltaSeconds);
+                model.redHomeTimes = homeRedUpdate["timers"];
+                var awayRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redAwayTimes, deltaSeconds);
+                model.redAwayTimes = awayRedUpdate["timers"];
             }
 
             if (mainClockRunning && model.countdownRemaining <= 0) {

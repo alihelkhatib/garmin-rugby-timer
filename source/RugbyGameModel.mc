@@ -93,14 +93,10 @@ class RugbyGameModel {
     var yellowHomeLabelCounter;
     // A counter for the labels of yellow cards for the away team
     var yellowAwayLabelCounter;
-    // The timer for a red card for the home team
-    var redHome;
-    // The timer for a red card for the away team
-    var redAway;
-    // Frozen remaining time for a timed red card while the match clock is paused
-    var redHomePausedRemaining;
-    // Frozen remaining time for a timed red card while the match clock is paused
-    var redAwayPausedRemaining;
+    // Timed red card entries for the home team (same structure as yellow card entries)
+    var redHomeTimes;
+    // Timed red card entries for the away team (same structure as yellow card entries)
+    var redAwayTimes;
     // A boolean indicating if the red card for the home team is permanent
     var redHomePermanent;
     // A boolean indicating if the red card for the away team is permanent
@@ -180,8 +176,7 @@ class RugbyGameModel {
         yellowAwayTimes = [];
         yellowHomeLabelCounter = 0;
         yellowAwayLabelCounter = 0;
-        redHome = null; redAway = null;
-        redHomePausedRemaining = null; redAwayPausedRemaining = null;
+        redHomeTimes = []; redAwayTimes = [];
         redHomePermanent = false; redAwayPermanent = false;
         thirtySecondAlerted = false;
         specialAlertTriggered = false;
@@ -260,8 +255,6 @@ class RugbyGameModel {
         countdownSeconds = 0;
         gameStartTime = null;
         lastUpdate = null;
-        redHome = null;
-        redAway = null;
         homePenalties = 0;
         awayPenalties = 0;
         lastEvents = [];
@@ -484,8 +477,8 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
-            // redHomePausedRemaining / redAwayPausedRemaining always hold the live countdown
-            // (set by recordRedCard and decremented each tick), so no snapshot needed here.
+            redHomeTimes = RugbyTimerCards.pauseYellowTimers(redHomeTimes, now);
+            redAwayTimes = RugbyTimerCards.pauseYellowTimers(redAwayTimes, now);
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
             RugbyTimerTiming.triggerPauseVibe();
@@ -501,6 +494,8 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
+            redHomeTimes = RugbyTimerCards.resumeYellowTimers(redHomeTimes, now);
+            redAwayTimes = RugbyTimerCards.resumeYellowTimers(redAwayTimes, now);
             gameState = STATE_PLAYING;
             lastUpdate = now;
             if (gameStartTime == null) {
@@ -519,6 +514,8 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
+            redHomeTimes = RugbyTimerCards.pauseYellowTimers(redHomeTimes, now);
+            redAwayTimes = RugbyTimerCards.pauseYellowTimers(redAwayTimes, now);
             pausedState = gameState;
             gameState = STATE_PAUSED;
             lastUpdate = null;
@@ -535,6 +532,8 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
+            redHomeTimes = RugbyTimerCards.resumeYellowTimers(redHomeTimes, now);
+            redAwayTimes = RugbyTimerCards.resumeYellowTimers(redAwayTimes, now);
             if (pausedState != null) {
                 gameState = pausedState;
             } else {
@@ -740,21 +739,20 @@ class RugbyGameModel {
         if (usesSevensCardRules()) {
             if (isHome) {
                 redHomePermanent = true;
-                redHome = true;
-                redHomePausedRemaining = null;
             } else {
                 redAwayPermanent = true;
-                redAway = true;
-                redAwayPausedRemaining = null;
             }
         } else {
+            var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(System.getTimer(), redDuration, "R", 0);
+            if (gameState == STATE_IDLE || gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
+                entry["startTime"] = null;
+                entry["remaining"] = redDuration;
+            }
             if (isHome) {
-                redHome = true;
-                redHomePausedRemaining = redDuration;
+                redHomeTimes = [entry];
                 redHomePermanent = false;
             } else {
-                redAway = true;
-                redAwayPausedRemaining = redDuration;
+                redAwayTimes = [entry];
                 redAwayPermanent = false;
             }
         }

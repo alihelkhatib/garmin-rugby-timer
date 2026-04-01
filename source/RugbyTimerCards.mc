@@ -299,10 +299,8 @@ class RugbyTimerCards {
         model.yellowAwayTimes = [];
         model.yellowHomeLabelCounter = 0;
         model.yellowAwayLabelCounter = 0;
-        model.redHome = null;
-        model.redAway = null;
-        model.redHomePausedRemaining = null;
-        model.redAwayPausedRemaining = null;
+        model.redHomeTimes = [];
+        model.redAwayTimes = [];
         model.redHomePermanent = false;
         model.redAwayPermanent = false;
         model.yellowHomeTotal = 0;
