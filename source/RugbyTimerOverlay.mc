@@ -41,6 +41,7 @@ class RugbyTimerOverlay {
         dc.setColor(RugbyTimerOverlay.getSpecialStateColor(model), Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width / 2, specialTimerY, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+        RugbyTimerOverlay.renderOverlayCardTimers(model, dc, width, height);
         if (model.gameState == STATE_CONVERSION) {
             try {
                 RugbyTimerOverlay.renderConversionButtonPrompts(dc, width, height);
@@ -69,6 +70,7 @@ class RugbyTimerOverlay {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, height * 0.08, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width / 2, specialTimerY, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
+        RugbyTimerOverlay.renderOverlayCardTimers(model, dc, width, height);
         if (model.gameState == STATE_CONVERSION) {
             RugbyTimerOverlay.renderFallbackConversionButtonPrompts(dc, width, height);
         }
@@ -76,6 +78,11 @@ class RugbyTimerOverlay {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.72, Graphics.FONT_TINY, view.specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }
+    }
+
+    static function renderOverlayCardTimers(model, dc, width, height) {
+        var cardsY = height * 0.37;
+        RugbyTimerRenderer.renderCardTimers(dc, model, width, cardsY, height);
     }
 
     /**
@@ -269,5 +276,6 @@ class RugbyTimerOverlay {
     static function displaySpecialOverlayMessage(view, text) {
         view.specialOverlayMessage = text;
         view.specialOverlayMessageExpiry = System.getTimer() + 2000;
+        WatchUi.requestUpdate();
     }
 }

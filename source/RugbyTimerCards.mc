@@ -5,12 +5,16 @@ using Toybox.System;
  * A helper class for managing yellow and red card timers.
  */
 class RugbyTimerCards {
+    static function isNumeric(value) {
+        return value instanceof Lang.Number || value instanceof Lang.Float;
+    }
+
     static function clampRemaining(remaining, duration) {
-        if (!(remaining instanceof Lang.Number)) {
+        if (!RugbyTimerCards.isNumeric(remaining)) {
             return 0;
         }
         if (remaining < 0) { remaining = 0; }
-        if (duration instanceof Lang.Number && remaining > duration) {
+        if (RugbyTimerCards.isNumeric(duration) && remaining > duration) {
             remaining = duration;
         }
         return remaining;
@@ -40,33 +44,32 @@ class RugbyTimerCards {
         if (entry == null) {
             return 0;
         }
-        var duration = entry["duration"] as Lang.Number;
-        var remaining = entry["remaining"] as Lang.Number;
-        if (remaining instanceof Lang.Number) {
-            return RugbyTimerCards.clampRemaining(remaining, duration);
+        var duration = entry["duration"];
+        var startTime = entry["startTime"];
+        // Timer is live: integer division keeps result as Lang.Number (not Float),
+        // which is required for instanceof checks in clampRemaining and formatShortTime.
+        if (RugbyTimerCards.isNumeric(startTime) && RugbyTimerCards.isNumeric(duration)) {
+            var elapsedSecs = (now - startTime) / 1000;
+            if (elapsedSecs < 0) { elapsedSecs = 0; }
+            var remaining = duration - elapsedSecs;
+            if (remaining < 0) { remaining = 0; }
+            if (remaining > duration) { remaining = duration; }
+            return remaining;
         }
-        var startTime = entry["startTime"] as Lang.Number;
-        if (startTime instanceof Lang.Number && duration instanceof Lang.Number) {
-            remaining = duration - ((now - startTime) / 1000.0f);
-        } else if (duration instanceof Lang.Number) {
-            remaining = duration;
+        // Timer is paused/frozen: use stored remaining.
+        var stored = entry["remaining"];
+        if (RugbyTimerCards.isNumeric(stored) && stored > 0) {
+            return stored;
         }
-        return RugbyTimerCards.clampRemaining(remaining, duration);
+        // Fallback: return full duration so a fresh card never shows '--'.
+        if (RugbyTimerCards.isNumeric(duration)) {
+            return duration;
+        }
+        return 0;
     }
 
     static function getLiveEntryRemaining(entry, now) {
-        if (entry == null) {
-            return 0;
-        }
-        var duration = entry["duration"] as Lang.Number;
-        var remaining = entry["remaining"] as Lang.Number;
-        var startTime = entry["startTime"] as Lang.Number;
-        if (startTime instanceof Lang.Number && duration instanceof Lang.Number) {
-            remaining = duration - ((now - startTime) / 1000.0f);
-        } else if (!(remaining instanceof Lang.Number) && duration instanceof Lang.Number) {
-            remaining = duration;
-        }
-        return RugbyTimerCards.clampRemaining(remaining, duration);
+        return RugbyTimerCards.getEntryRemaining(entry, now);
     }
 
     /**
@@ -93,25 +96,54 @@ class RugbyTimerCards {
      * Updates the yellow card timers.
      * @param model The game model
      * @param list The list of yellow card timers
-     * @param newGameTime The current timer baseline
+     * @param deltaSeconds The elapsed seconds since the previous update tick
      * @return A dictionary containing the updated timers plus an expiry flag
      */
-    static function updateYellowTimers(model, list, newGameTime) {
+    static function updateYellowTimers(model, list, deltaSeconds) {
         var newList = [];
         var expiredAny = false;
+        if (!RugbyTimerCards.isNumeric(deltaSeconds) || deltaSeconds < 0) {
+            deltaSeconds = 0;
+        }
         for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i] as Lang.Dictionary;
             if (entry == null) {
                 continue;
             }
-            var duration = entry["duration"] as Lang.Number;
-            var label = entry["label"] as Lang.String;
-            var cardId = entry["cardId"] as Lang.Number;
+            var duration = entry["duration"];
+            var startTime = entry["startTime"];
+            var storedRemaining = entry["remaining"];
 
-            if (duration == null) {
+            if (!RugbyTimerCards.isNumeric(duration) && RugbyTimerCards.isNumeric(storedRemaining)) {
+                duration = storedRemaining;
+            }
+
+            if (!RugbyTimerCards.isNumeric(duration)) {
                 continue;
             }
-            var remaining = RugbyTimerCards.getLiveEntryRemaining(entry, newGameTime);
+            var remaining;
+            if (RugbyTimerCards.isNumeric(storedRemaining)) {
+                remaining = storedRemaining;
+            } else {
+                remaining = duration;
+            }
+
+            if (RugbyTimerCards.isNumeric(startTime)) {
+                remaining = remaining - deltaSeconds;
+            }
+            remaining = RugbyTimerCards.clampRemaining(remaining, duration);
+
+            // Safety: never expire a card within the first 2 seconds of creation.
+            if (remaining <= 0) {
+                if (startTime instanceof Lang.Number) {
+                    var ageMs = System.getTimer() - startTime;
+                    if (ageMs < 2000) {
+                        remaining = duration;
+                    }
+                } else if (RugbyTimerCards.isNumeric(storedRemaining) && storedRemaining > 0) {
+                    remaining = storedRemaining;
+                }
+            }
 
             if (remaining <= 0) {
                 expiredAny = true;
@@ -123,14 +155,8 @@ class RugbyTimerCards {
                 entry["vibeTriggered"] = true;
                 RugbyTimerTiming.triggerYellowTimerWarningVibe();
             }
-            newList.add({
-                "startTime" => entry["startTime"],
-                "duration" => duration,
-                "label" => label,
-                "cardId" => cardId,
-                "vibeTriggered" => entry["vibeTriggered"],
-                "remaining" => remaining
-            });
+            entry["remaining"] = remaining;
+            newList.add(entry);
         }
         return {
             "timers" => newList,
@@ -148,7 +174,10 @@ class RugbyTimerCards {
             if (entry == null) {
                 continue;
             }
-            var remaining = RugbyTimerCards.getLiveEntryRemaining(entry, now);
+            var remaining = entry["remaining"];
+            if (!RugbyTimerCards.isNumeric(remaining)) {
+                remaining = RugbyTimerCards.getLiveEntryRemaining(entry, now);
+            }
             if (remaining <= 0) {
                 continue;
             }
@@ -174,18 +203,18 @@ class RugbyTimerCards {
             if (entry == null) {
                 continue;
             }
-            var duration = entry["duration"] as Lang.Number;
-            var remaining = entry["remaining"] as Lang.Number;
-            if (!(remaining instanceof Lang.Number)) {
+            var duration = entry["duration"];
+            var remaining = entry["remaining"];
+            if (!RugbyTimerCards.isNumeric(remaining)) {
                 remaining = RugbyTimerCards.getEntryRemaining(entry, now);
             }
-            if (!(duration instanceof Lang.Number) || remaining <= 0) {
+            if (!RugbyTimerCards.isNumeric(duration) || remaining <= 0) {
                 continue;
             }
             if (remaining > duration) { remaining = duration; }
             var elapsed = duration - remaining;
             resumedList.add({
-                "startTime" => now - (elapsed * 1000.0f),
+                "startTime" => now - (elapsed * 1000),
                 "duration" => duration,
                 "label" => entry["label"],
                 "cardId" => entry["cardId"],

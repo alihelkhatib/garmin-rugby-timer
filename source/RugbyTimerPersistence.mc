@@ -6,6 +6,10 @@ using Toybox.System;
  * A helper class for saving and loading the game state.
  */
 class RugbyTimerPersistence {
+    static function isNumeric(value) {
+        return value instanceof Lang.Number || value instanceof Lang.Float;
+    }
+
     /**
      * Saves the current game state to storage.
      * @param model The game model
@@ -217,7 +221,6 @@ class RugbyTimerPersistence {
         if (list == null) {
             return serialized;
         }
-        var now = System.getTimer();
         for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i] as Lang.Dictionary;
             if (entry == null) {
@@ -225,13 +228,14 @@ class RugbyTimerPersistence {
             }
             var duration = entry["duration"];
             var remaining = entry["remaining"];
-            if (!(remaining instanceof Lang.Number) && duration instanceof Lang.Number && entry["startTime"] instanceof Lang.Number) {
+            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(entry["startTime"])) {
+                var now = System.getTimer();
                 remaining = duration - ((now - entry["startTime"]) / 1000.0f);
             }
-            if (!(duration instanceof Lang.Number) && remaining instanceof Lang.Number) {
+            if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
                 duration = remaining;
             }
-            if (!(remaining instanceof Lang.Number) || !(duration instanceof Lang.Number)) {
+            if (!RugbyTimerPersistence.isNumeric(remaining) || !RugbyTimerPersistence.isNumeric(duration)) {
                 continue;
             }
             if (remaining <= 0) {
@@ -261,13 +265,13 @@ class RugbyTimerPersistence {
             }
             var duration = entry["duration"];
             var remaining = entry["remaining"];
-            if (!(remaining instanceof Lang.Number) && duration instanceof Lang.Number && entry["startTime"] instanceof Lang.Number) {
+            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(entry["startTime"])) {
                 remaining = duration - ((now - entry["startTime"]) / 1000.0f);
             }
-            if (!(duration instanceof Lang.Number) && remaining instanceof Lang.Number) {
+            if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
                 duration = remaining;
             }
-            if (!(remaining instanceof Lang.Number) || !(duration instanceof Lang.Number)) {
+            if (!RugbyTimerPersistence.isNumeric(remaining) || !RugbyTimerPersistence.isNumeric(duration)) {
                 continue;
             }
             if (remaining <= 0) {

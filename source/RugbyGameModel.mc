@@ -396,6 +396,19 @@ class RugbyGameModel {
         );
     }
 
+    function usesSevensCardRules() {
+        return is7s == true || halfDuration == 420 || countdownTimer == 420;
+    }
+
+    function getYellowCardDuration() {
+        return usesSevensCardRules() ? 120 : 600;
+    }
+
+    function getRedCardDuration() {
+        // Rugby 15s temporary red cards run for 20 minutes.
+        return 1200;
+    }
+
     /**
      * Handles a successful conversion.
      */
@@ -434,6 +447,8 @@ class RugbyGameModel {
         if (gameState == STATE_IDLE) {
             var now = System.getTimer();
             gameState = STATE_PLAYING;
+            yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
+            yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
             gameStartTime = now;
             lastUpdate = now;
             elapsedTime = 0;
@@ -456,10 +471,14 @@ class RugbyGameModel {
             yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
             if (!redHomePermanent) {
-                redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+                if (!(redHomePausedRemaining instanceof Lang.Number) && !(redHomePausedRemaining instanceof Lang.Float)) {
+                    redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+                }
             }
             if (!redAwayPermanent) {
-                redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+                if (!(redAwayPausedRemaining instanceof Lang.Number) && !(redAwayPausedRemaining instanceof Lang.Float)) {
+                    redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+                }
             }
             gameState = STATE_PAUSED;
             // Keep lastUpdate intact so the running game clock keeps progressing while the countdown is paused.
@@ -476,13 +495,15 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
-            if (!redHomePermanent && redHomePausedRemaining != null) {
-                redHome = RugbyTimerCards.restoreRedStartTime(redHomePausedRemaining, now);
-                redHomePausedRemaining = null;
+            if (!redHomePermanent && (redHomePausedRemaining instanceof Lang.Number || redHomePausedRemaining instanceof Lang.Float)) {
+                if (redHome == null) {
+                    redHome = now;
+                }
             }
-            if (!redAwayPermanent && redAwayPausedRemaining != null) {
-                redAway = RugbyTimerCards.restoreRedStartTime(redAwayPausedRemaining, now);
-                redAwayPausedRemaining = null;
+            if (!redAwayPermanent && (redAwayPausedRemaining instanceof Lang.Number || redAwayPausedRemaining instanceof Lang.Float)) {
+                if (redAway == null) {
+                    redAway = now;
+                }
             }
             gameState = STATE_PLAYING;
             lastUpdate = now;
@@ -503,10 +524,14 @@ class RugbyGameModel {
             yellowHomeTimes = RugbyTimerCards.pauseYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.pauseYellowTimers(yellowAwayTimes, now);
             if (!redHomePermanent) {
-                redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+                if (!(redHomePausedRemaining instanceof Lang.Number) && !(redHomePausedRemaining instanceof Lang.Float)) {
+                    redHomePausedRemaining = RugbyTimerCards.getRedRemaining(redHome, now);
+                }
             }
             if (!redAwayPermanent) {
-                redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+                if (!(redAwayPausedRemaining instanceof Lang.Number) && !(redAwayPausedRemaining instanceof Lang.Float)) {
+                    redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(redAway, now);
+                }
             }
             pausedState = gameState;
             gameState = STATE_PAUSED;
@@ -524,13 +549,15 @@ class RugbyGameModel {
             var now = System.getTimer();
             yellowHomeTimes = RugbyTimerCards.resumeYellowTimers(yellowHomeTimes, now);
             yellowAwayTimes = RugbyTimerCards.resumeYellowTimers(yellowAwayTimes, now);
-            if (!redHomePermanent && redHomePausedRemaining != null) {
-                redHome = RugbyTimerCards.restoreRedStartTime(redHomePausedRemaining, now);
-                redHomePausedRemaining = null;
+            if (!redHomePermanent && (redHomePausedRemaining instanceof Lang.Number || redHomePausedRemaining instanceof Lang.Float)) {
+                if (redHome == null) {
+                    redHome = now;
+                }
             }
-            if (!redAwayPermanent && redAwayPausedRemaining != null) {
-                redAway = RugbyTimerCards.restoreRedStartTime(redAwayPausedRemaining, now);
-                redAwayPausedRemaining = null;
+            if (!redAwayPermanent && (redAwayPausedRemaining instanceof Lang.Number || redAwayPausedRemaining instanceof Lang.Float)) {
+                if (redAway == null) {
+                    redAway = now;
+                }
             }
             if (pausedState != null) {
                 gameState = pausedState;
@@ -709,11 +736,11 @@ class RugbyGameModel {
      * @param isHome A boolean indicating if the home team received the card
      */
     function recordYellowCard(isHome) {
-        var duration = is7s ? 120 : 600;
+        var duration = getYellowCardDuration();
         var cardId = RugbyTimerCards.allocateYellowCardId(self, isHome);
         var label = "Y" + cardId.toString();
         var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(System.getTimer(), duration, label, cardId);
-        if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
+        if (gameState == STATE_IDLE || gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
             entry["startTime"] = null;
             entry["remaining"] = duration;
         }
@@ -733,7 +760,8 @@ class RugbyGameModel {
      * @param isHome A boolean indicating if the home team received the card
      */
     function recordRedCard(isHome) {
-        if (is7s) {
+        var redDuration = getRedCardDuration();
+        if (usesSevensCardRules()) {
             if (isHome) {
                 redHomePermanent = true;
                 redHome = 0;
@@ -747,19 +775,19 @@ class RugbyGameModel {
             if (isHome) {
                 if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
                     redHome = null;
-                    redHomePausedRemaining = 1200;
+                    redHomePausedRemaining = redDuration;
                 } else {
                     redHome = System.getTimer(); // Store start time
-                    redHomePausedRemaining = null;
+                    redHomePausedRemaining = redDuration;
                 }
                 redHomePermanent = false;
             } else {
                 if (gameState == STATE_PAUSED || gameState == STATE_HALFTIME) {
                     redAway = null;
-                    redAwayPausedRemaining = 1200;
+                    redAwayPausedRemaining = redDuration;
                 } else {
                     redAway = System.getTimer(); // Store start time
-                    redAwayPausedRemaining = null;
+                    redAwayPausedRemaining = redDuration;
                 }
                 redAwayPermanent = false;
             }
@@ -769,7 +797,7 @@ class RugbyGameModel {
         } else {
             redAwayTotal = redAwayTotal + 1;
         }
-        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (is7s ? " (permanent)" : ""));
+        RugbyTimerEventLog.appendEntry(self, (isHome ? "Home" : "Away") + " Red Card" + (usesSevensCardRules() ? " (permanent)" : ""));
         persistState();
     }
     

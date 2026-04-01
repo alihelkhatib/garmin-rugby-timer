@@ -1,11 +1,16 @@
 using Toybox.Attention;
 using Toybox.System;
 using Toybox.WatchUi;
+using Toybox.Lang;
 
 /**
  * A helper class for handling game timing.
  */
 class RugbyTimerTiming {
+        static function isNumeric(value) {
+            return value instanceof Lang.Number || value instanceof Lang.Float;
+        }
+
     const HALF_WARNING_SECONDS = 30;
     const SPECIAL_WARNING_SECONDS = 10;
 
@@ -73,9 +78,9 @@ class RugbyTimerTiming {
             }
             
             if (!timersPaused) {
-                var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, now);
+                var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, deltaSeconds);
                 model.yellowHomeTimes = homeYellowUpdate["timers"];
-                var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, now);
+                var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, deltaSeconds);
                 model.yellowAwayTimes = awayYellowUpdate["timers"];
                 if (homeYellowUpdate["expired"] == true || awayYellowUpdate["expired"] == true) {
                     RugbyTimerTiming.triggerYellowTimerExpiredVibe();
@@ -83,19 +88,27 @@ class RugbyTimerTiming {
 
                 // Red card timers
                 if (!model.redHomePermanent && model.redHome != null) {
-                    var redHomeDuration = 1200; // 20 minutes for 15s matches
-                    var redHomeElapsedTime = (now - model.redHome) / 1000.0f;
-                    var redHomeRemaining = redHomeDuration - redHomeElapsedTime;
-                    if (redHomeRemaining < 0) {
+                    if (!RugbyTimerTiming.isNumeric(model.redHomePausedRemaining)) {
+                        model.redHomePausedRemaining = RugbyTimerCards.getRedRemaining(model.redHome, now);
+                    }
+                    if (RugbyTimerTiming.isNumeric(model.redHomePausedRemaining)) {
+                        model.redHomePausedRemaining = model.redHomePausedRemaining - deltaSeconds;
+                    }
+                    if (!RugbyTimerTiming.isNumeric(model.redHomePausedRemaining) || model.redHomePausedRemaining <= 0) {
                         model.redHome = null; // Card expired
+                        model.redHomePausedRemaining = null;
                     }
                 }
                 if (!model.redAwayPermanent && model.redAway != null) {
-                    var redAwayDuration = 1200; // 20 minutes for 15s matches
-                    var redAwayElapsedTime = (now - model.redAway) / 1000.0f;
-                    var redAwayRemaining = redAwayDuration - redAwayElapsedTime;
-                    if (redAwayRemaining < 0) {
+                    if (!RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining)) {
+                        model.redAwayPausedRemaining = RugbyTimerCards.getRedRemaining(model.redAway, now);
+                    }
+                    if (RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining)) {
+                        model.redAwayPausedRemaining = model.redAwayPausedRemaining - deltaSeconds;
+                    }
+                    if (!RugbyTimerTiming.isNumeric(model.redAwayPausedRemaining) || model.redAwayPausedRemaining <= 0) {
                         model.redAway = null; // Card expired
+                        model.redAwayPausedRemaining = null;
                     }
                 }
             }
