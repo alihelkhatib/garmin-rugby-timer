@@ -210,10 +210,7 @@ class RugbyTimerPersistence {
     }
 
     static function getSnapshotGameTime(model) {
-        if (model.gameStartTime == null) {
-            return model.gameTime;
-        }
-        return (System.getTimer() - model.gameStartTime) / 1000.0f;
+        return model.gameTime;
     }
 
     static function serializeYellowTimers(list) {

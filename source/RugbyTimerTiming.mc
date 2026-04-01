@@ -11,6 +11,10 @@ class RugbyTimerTiming {
             return value instanceof Lang.Number || value instanceof Lang.Float;
         }
 
+    static function isClockRunning(state) {
+        return state == STATE_PLAYING || state == STATE_CONVERSION || state == STATE_PENALTY || state == STATE_KICKOFF;
+    }
+
     const HALF_WARNING_SECONDS = 30;
     const SPECIAL_WARNING_SECONDS = 10;
 
@@ -21,27 +25,29 @@ class RugbyTimerTiming {
     static function updateGame(model) {
         try {
             var now = System.getTimer();
-
-            if (model.gameStartTime == null) {
-                model.lastUpdate = now;
-                return;
-            }
-
             if (model.lastUpdate == null) {
                 model.lastUpdate = now;
                 return;
             }
 
-            // Always derive gameTime from absolute start so it never stops during pauses.
-            model.gameTime = (now - model.gameStartTime) / 1000.0f;
-
             var deltaSeconds = (now - model.lastUpdate) / 1000.0f;
             if (deltaSeconds < 0) { deltaSeconds = 0; }
 
-            var timersPaused = (model.gameState == STATE_PAUSED);
+            if (!RugbyTimerTiming.isNumeric(model.gameTime)) {
+                model.gameTime = 0;
+            }
+            if (!RugbyTimerTiming.isNumeric(model.elapsedTime)) {
+                model.elapsedTime = 0;
+            }
+
+            var clockRunning = RugbyTimerTiming.isClockRunning(model.gameState);
+            if (clockRunning) {
+                model.gameTime = model.gameTime + deltaSeconds;
+                model.elapsedTime = model.elapsedTime + deltaSeconds;
+            }
 
             // Countdown only ticks during active states
-            if (!timersPaused && (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY)) {
+            if (clockRunning) {
                 model.countdownRemaining = model.countdownRemaining - deltaSeconds;
                 if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
                 if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
@@ -51,7 +57,7 @@ class RugbyTimerTiming {
             }
 
             // Special timers tick only when active and not paused
-            if (!timersPaused && (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY)) {
+            if (clockRunning && (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY)) {
                 var specialState = model.gameState;
                 model.countdownSeconds = model.countdownSeconds - deltaSeconds;
                 if (model.countdownSeconds < 0) { model.countdownSeconds = 0; }
@@ -77,7 +83,7 @@ class RugbyTimerTiming {
                 }
             }
             
-            if (!timersPaused) {
+            if (clockRunning) {
                 var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, deltaSeconds);
                 model.yellowHomeTimes = homeYellowUpdate["timers"];
                 var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, deltaSeconds);
@@ -113,7 +119,7 @@ class RugbyTimerTiming {
                 }
             }
 
-            if (!timersPaused && model.countdownRemaining <= 0) {
+            if (clockRunning && model.countdownRemaining <= 0) {
                 model.countdownRemaining = 0;
                 if (model.halfNumber == 1) {
                     model.enterHalfTime();
