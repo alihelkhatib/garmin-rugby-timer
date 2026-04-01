@@ -113,9 +113,25 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onKey(evt) {
         try {
             var view = Application.getApp().rugbyView;
-            if (view == null || view.isLocked || !view.isSpecialOverlayActive()) {
+            if (view == null || view.isLocked) {
                 return false;
             }
+
+            if (!view.isSpecialOverlayActive() && model.gameState == STATE_IDLE) {
+                var idleKey = evt.getKey();
+                if (idleKey == WatchUi.KEY_UP) {
+                    return onPreviousPage();
+                }
+                if (idleKey == WatchUi.KEY_DOWN) {
+                    return onNextPage();
+                }
+                return false;
+            }
+
+            if (!view.isSpecialOverlayActive()) {
+                return false;
+            }
+
             if (!view.isActionAllowed()) {
                 return true;
             }
