@@ -2,7 +2,7 @@ using Toybox.WatchUi;
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Graphics;
-using Toybox.Application.Storage;
+using Toybox.Timer;
 
 /**
  * The main delegate for the application.
@@ -10,6 +10,10 @@ using Toybox.Application.Storage;
  */
 class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     var model;
+    var overlayActionHandledUntil;
+    var upMenuHoldTimer;
+    var upMenuKeyPressed;
+    var suppressNextUpMenuAction;
 
     /**
      * Initializes the delegate.
@@ -18,15 +22,18 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function initialize(m) {
         BehaviorDelegate.initialize();
         model = m;
+        overlayActionHandledUntil = 0;
+        upMenuHoldTimer = null;
+        upMenuKeyPressed = false;
+        suppressNextUpMenuAction = false;
     }
 
-    /**
-     * This method is called when the menu button is pressed.
-     * @return true if the event is handled, false otherwise
-     */
-    function onMenu() {
-        WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(model), WatchUi.SLIDE_UP);
-        return true;
+    function cancelUpMenuHoldTimer() {
+        upMenuKeyPressed = false;
+        if (upMenuHoldTimer != null) {
+            upMenuHoldTimer.stop();
+            upMenuHoldTimer = null;
+        }
     }
 
     /**
@@ -74,14 +81,18 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             WatchUi.pushView(menu, new ExitMenuDelegate(model), WatchUi.SLIDE_UP);
             return true;
         }
-        return false;
+        suppressNextUpMenuAction = true;
+        cancelUpMenuHoldTimer();
+        showPresetMenu();
     }
 
     /**
-     * This method is called when the next page button is pressed.
-     * @return true if the event is handled, false otherwise
+     * Logs and swallows input failures so one bad state transition does not crash the app.
+     * @param context Short label describing the failing input path
+     * @param ex The raised exception
+     * @return true after the failure is handled
      */
-    function onNextPage() {
+    function handleInputFailure(context, ex) {
         var view = Application.getApp().rugbyView;
         if (view == null) { return true; }
         if (view.isLocked || !view.isActionAllowed()) {
@@ -95,62 +106,174 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         if (view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }
-        if (model.gameState == STATE_CONVERSION) {
-            model.handleConversionMiss();
-        } else {
-            view.showCardDialog();
-        }
+        WatchUi.requestUpdate();
         return true;
     }
 
     /**
-     * This method is called when the previous page button is pressed.
-     * @return true if the event is handled, false otherwise
+     * Runs overlay actions through one guarded path so different hardware mappings
+     * cannot send the app into inconsistent state transitions.
+     * @param action The logical overlay action
+     * @return true after the input is consumed
      */
-    function onPreviousPage() {
+    function handleOverlayAction(action) {
         var view = Application.getApp().rugbyView;
         if (view == null) { return true; }
         if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
-        if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
-            view.closeSpecialTimerScreen();
-            model.handleConversionSuccess();
+        var now = System.getTimer();
+        if (overlayActionHandledUntil != null && now < overlayActionHandledUntil) {
             return true;
         }
-        if (view.isSpecialOverlayActive()) {
+        overlayActionHandledUntil = now + 500;
+        try {
             view.closeSpecialTimerScreen();
-        }
-        if (model.gameState == STATE_CONVERSION) {
-            model.handleConversionSuccess();
-        } else if (model.gameState == STATE_KICKOFF) {
-            model.cancelKickoff();
-        }
-        else {
-            view.showScoreDialog();
+            if (model.gameState == STATE_CONVERSION) {
+                if (action == :made) {
+                    model.handleConversionSuccess();
+                } else if (action == :miss) {
+                    model.handleConversionMiss();
+                }
+                WatchUi.requestUpdate();
+                return true;
+            }
+            if (model.gameState == STATE_PENALTY) {
+                WatchUi.requestUpdate();
+                return true;
+            }
+        } catch (ex) {
+            return handleInputFailure("overlay_" + action.toString(), ex);
         }
         return true;
     }
-}
-
-/**
- * Delegate for the main menu.
- */
-class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
-    var model;
 
     /**
-     * Initializes the delegate.
-     * @param m The game model
+     * Handles raw hardware keys during overlays so fenix button mappings do not fall
+     * through to unrelated behaviors or device defaults.
+     * @param evt The key event
+     * @return true if handled, false otherwise
      */
-    function initialize(m) {
-        Menu2InputDelegate.initialize();
-        model = m;
+    function onKey(evt) {
+        try {
+            var view = Application.getApp().rugbyView;
+            if (view == null || view.isLocked) {
+                return false;
+            }
+
+            if (!view.isSpecialOverlayActive() && model.gameState == STATE_IDLE) {
+                var idleKey = evt.getKey();
+                if (idleKey == WatchUi.KEY_UP) {
+                    return onPreviousPage();
+                }
+                if (idleKey == WatchUi.KEY_DOWN) {
+                    return onNextPage();
+                }
+                return false;
+            }
+
+            if (!view.isSpecialOverlayActive()) {
+                return false;
+            }
+
+            if (!view.isActionAllowed()) {
+                return true;
+            }
+
+            var key = evt.getKey();
+            if (model.gameState == STATE_CONVERSION) {
+                if (key == WatchUi.KEY_DOWN) {
+                    return handleOverlayAction(:miss);
+                }
+                if (key == WatchUi.KEY_MENU) {
+                    return handleOverlayAction(:made);
+                }
+            } else if (model.gameState == STATE_PENALTY) {
+                if (key == WatchUi.KEY_DOWN || key == WatchUi.KEY_MENU) {
+                    return handleOverlayAction(:hide);
+                }
+            }
+            return false;
+        } catch (ex) {
+            return handleInputFailure("key", ex);
+        }
+    }
+
+    function onKeyPressed(evt) {
+        try {
+            var view = Application.getApp().rugbyView;
+            if (view == null || view.isLocked || view.isSpecialOverlayActive()) {
+                return false;
+            }
+            if (evt.getKey() == WatchUi.KEY_MENU || evt.getKey() == WatchUi.KEY_UP) {
+                cancelUpMenuHoldTimer();
+                upMenuKeyPressed = true;
+                upMenuHoldTimer = new Timer.Timer();
+                upMenuHoldTimer.start(method(:handleUpMenuHoldTimer), 700, false);
+            }
+            return false;
+        } catch (ex) {
+            return handleInputFailure("key_pressed", ex);
+        }
+    }
+
+    function onKeyReleased(evt) {
+        try {
+            if (evt.getKey() == WatchUi.KEY_MENU || evt.getKey() == WatchUi.KEY_UP) {
+                cancelUpMenuHoldTimer();
+                return suppressNextUpMenuAction;
+            }
+            return false;
+        } catch (ex) {
+            return handleInputFailure("key_released", ex);
+        }
     }
 
     /**
-     * This method is called when a menu item is selected.
-     * @param item The selected menu item
+     * This method is called when the menu button is pressed.
+     * @return true if the event is handled, false otherwise
+     */
+    function onMenu() {
+        try {
+            var view = Application.getApp().rugbyView;
+            cancelUpMenuHoldTimer();
+            if (suppressNextUpMenuAction) {
+                suppressNextUpMenuAction = false;
+                return true;
+            }
+            if (view.isLocked) {
+                return true;
+            }
+            if (view.isSpecialOverlayActive()) {
+                if (!view.isActionAllowed()) {
+                    return true;
+                }
+                if (model.gameState == STATE_CONVERSION) {
+                    return handleOverlayAction(:made);
+                } else if (model.gameState == STATE_PENALTY) {
+                    return handleOverlayAction(:hide);
+                }
+                return true;
+            }
+
+            // Before kickoff only, map UP/MENU to +1 minute adjustment.
+            if (model.gameState == STATE_IDLE) {
+                var newMinutes = (model.countdownTimer / 60).toLong() + 1;
+                if (newMinutes > 99) { newMinutes = 99; }
+                model.setHalfDuration(newMinutes * 60);
+                return true;
+            }
+
+            WatchUi.pushView(new Rez.Menus.MainMenu(), new MainMenuDelegate(model), WatchUi.SLIDE_UP);
+            return true;
+        } catch (ex) {
+            return handleInputFailure("menu", ex);
+        }
+    }
+
+    /**
+     * This method is called when the select button is pressed.
+     * @return true if the event is handled, false otherwise
      */
     function onSelect(item) {
         var view = Application.getApp().rugbyView;
@@ -164,51 +287,139 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
                 model.resumeClock();
             } else {
                 model.pauseClock();
+            } else if (model.gameState == STATE_PAUSED) {
+                model.resumeClock();
+            } else if (model.gameState == STATE_HALFTIME) {
+                model.startSecondHalf();
+                if (model.lockOnStart && !view.isLocked) {
+                    view.toggleLock();
+                }
             }
-        } else if (item.getId() == :start_half2) {
-            model.startSecondHalf();
-        } else if (item.getId() == :end_game) {
-            model.endGame();
-        } else if (item.getId() == :undo_last) {
-            model.undoLastEvent();
-        } else if (item.getId() == :adjust_score) {
-            WatchUi.pushView(new AdjustScoreMenu(), new AdjustScoreDelegate(model), WatchUi.SLIDE_UP);
-            return;
-        } else if (item.getId() == :toggle_lock) {
-            view.toggleLock();
+            return true;
+        } catch (ex) {
+            return handleInputFailure("select", ex);
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 
     /**
      * This method is called when the back button is pressed.
+     * @return true if the event is handled, false otherwise
      */
     function onBack() {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        try {
+            if (Application.getApp().rugbyView.isLocked) {
+                return true;
+            }
+            // Show confirmation menu before exiting
+            if (model.gameState != STATE_IDLE) {
+                var menu = new WatchUi.Menu2({:title=>"Exit?"});
+                menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
+                menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
+                menu.addItem(new WatchUi.MenuItem("Reset Game", null, :reset, null));
+                menu.addItem(new WatchUi.MenuItem("Save Game", null, :save_game, null));
+                menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
+                menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
+                WatchUi.pushView(menu, new ExitMenuDelegate(model), WatchUi.SLIDE_UP);
+                return true;
+            }
+            return false;
+        } catch (ex) {
+            return handleInputFailure("back", ex);
+        }
     }
-}
 
-/**
- * Menu for adjusting the score.
- */
-class AdjustScoreMenu extends WatchUi.Menu2 {
     /**
-     * Initializes the menu.
+     * This method is called when the next page button is pressed.
+     * @return true if the event is handled, false otherwise
      */
-    function initialize() {
-        Menu2.initialize({:title=>"Adjust Score"});
-        addItem(new WatchUi.MenuItem("Home +1", null, :home_plus, null));
-        addItem(new WatchUi.MenuItem("Home -1", null, :home_minus, null));
-        addItem(new WatchUi.MenuItem("Away +1", null, :away_plus, null));
-        addItem(new WatchUi.MenuItem("Away -1", null, :away_minus, null));
+    function onNextPage() {
+        try {
+            var view = Application.getApp().rugbyView;
+            if (view.isLocked || !view.isActionAllowed()) {
+                return true;
+            }
+            // Physical DOWN should shorten the idle half length by one minute.
+            if (model.gameState == STATE_IDLE) {
+                var newMinutes = (model.countdownTimer / 60).toLong() - 1;
+                if (newMinutes < 1) { newMinutes = 1; }
+                model.setHalfDuration(newMinutes * 60);
+                return true;
+            }
+            if (model.gameState == STATE_PENALTY) {
+                if (view.isSpecialOverlayActive()) {
+                    handleOverlayAction(:hide);
+                }
+                return true;
+            }
+            if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
+                return handleOverlayAction(:miss);
+            }
+            if (view.isSpecialOverlayActive()) {
+                view.closeSpecialTimerScreen();
+            }
+            if (model.gameState == STATE_CONVERSION) {
+                model.handleConversionMiss();
+            } else {
+                view.showCardDialog();
+            }
+            return true;
+        } catch (ex) {
+            return handleInputFailure("next_page", ex);
+        }
+    }
+
+    /**
+     * This method is called when the previous page button is pressed.
+     * @return true if the event is handled, false otherwise
+     */
+    function onPreviousPage() {
+        try {
+            var view = Application.getApp().rugbyView;
+            cancelUpMenuHoldTimer();
+            if (suppressNextUpMenuAction) {
+                suppressNextUpMenuAction = false;
+                return true;
+            }
+            if (view.isLocked || !view.isActionAllowed()) {
+                return true;
+            }
+            // Physical UP should lengthen the idle half length by one minute.
+            if (model.gameState == STATE_IDLE) {
+                var newMinutes = (model.countdownTimer / 60).toLong() + 1;
+                if (newMinutes > 99) { newMinutes = 99; }
+                model.setHalfDuration(newMinutes * 60);
+                return true;
+            }
+            if (model.gameState == STATE_PENALTY) {
+                if (view.isSpecialOverlayActive()) {
+                    handleOverlayAction(:hide);
+                }
+                return true;
+            }
+            if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
+                return handleOverlayAction(:made);
+            }
+            if (view.isSpecialOverlayActive()) {
+                return true;
+            }
+            if (model.gameState == STATE_CONVERSION) {
+                return true;
+            } else {
+                view.showScoreDialog();
+            }
+            return true;
+        } catch (ex) {
+            return handleInputFailure("previous_page", ex);
+        }
     }
 }
 
 /**
- * Delegate for the adjust score menu.
+ * Delegate for the main menu.
  */
-class AdjustScoreDelegate extends WatchUi.Menu2InputDelegate {
+class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     var model;
+    var presetOpenTimer;
 
     /**
      * Initializes the delegate.
@@ -217,6 +428,27 @@ class AdjustScoreDelegate extends WatchUi.Menu2InputDelegate {
     function initialize(m) {
         Menu2InputDelegate.initialize();
         model = m;
+        presetOpenTimer = null;
+    }
+
+    function showPresetAfterMenuClose() as Void {
+        presetOpenTimer = null;
+        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
+        WatchUi.requestUpdate();
+    }
+
+    function openPresetFromMenu() {
+        if (presetOpenTimer != null) {
+            presetOpenTimer.stop();
+        }
+        presetOpenTimer = new Timer.Timer();
+        presetOpenTimer.start(method(:showPresetAfterMenuClose) as Method() as Void, 50, false);
+    }
+
+    function handleMenuDelegateFailure(context) {
+        System.println("Menu delegate failure (" + context + ")");
+        WatchUi.requestUpdate();
+        return true;
     }
 
     /**
@@ -224,16 +456,35 @@ class AdjustScoreDelegate extends WatchUi.Menu2InputDelegate {
      * @param item The selected menu item
      */
     function onSelect(item) {
-        if (item.getId() == :home_plus) {
-            model.adjustScore(true, 1);
-        } else if (item.getId() == :home_minus) {
-            model.adjustScore(true, -1);
-        } else if (item.getId() == :away_plus) {
-            model.adjustScore(false, 1);
-        } else if (item.getId() == :away_minus) {
-            model.adjustScore(false, -1);
+        try {
+            var view = Application.getApp().rugbyView;
+            if (item.getId() == :record_score) {
+                view.showScoreDialog();
+            } else if (item.getId() == :record_card) {
+                view.showCardDialog();
+            } else if (item.getId() == :pause_clock) {
+                if (model.gameState == STATE_PAUSED) {
+                    model.resumeClock();
+                } else {
+                    model.pauseClock();
+                }
+            } else if (item.getId() == :start_half2) {
+                model.startSecondHalf();
+            } else if (item.getId() == :end_game) {
+                model.endGame();
+            } else if (item.getId() == :undo_last) {
+                model.undoLastEvent();
+            } else if (item.getId() == :settings) {
+                WatchUi.popView(WatchUi.SLIDE_DOWN);
+                openPresetFromMenu();
+                return;
+            } else if (item.getId() == :toggle_lock) {
+                view.toggleLock();
+            }
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+        } catch (ex) {
+            handleMenuDelegateFailure("main_select");
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 
     /**
@@ -273,13 +524,23 @@ class ScoreTeamDelegate extends WatchUi.Menu2InputDelegate {
         model = m;
     }
 
+    function handleMenuDelegateFailure(context) {
+        System.println("Menu delegate failure (" + context + ")");
+        WatchUi.requestUpdate();
+        return true;
+    }
+
     /**
      * This method is called when a menu item is selected.
      * @param item The selected menu item
      */
     function onSelect(item) {
-        var isHome = (item.getId() == :team_home);
-        WatchUi.pushView(new ScoreTypeMenu(isHome), new ScoreTypeDelegate(model, isHome), WatchUi.SLIDE_UP);
+        try {
+            var isHome = (item.getId() == :team_home);
+            WatchUi.pushView(new ScoreTypeMenu(isHome), new ScoreTypeDelegate(model, isHome), WatchUi.SLIDE_UP);
+        } catch (ex) {
+            handleMenuDelegateFailure("score_team_select");
+        }
     }
 
     /**
@@ -300,17 +561,9 @@ class ScoreTypeMenu extends WatchUi.Menu2 {
      */
     function initialize(isHome) {
         Menu2.initialize({:title=> isHome ? "Home Score" : "Away Score"});
-        var model = Application.getApp().model;
-        if (model != null && model.gameState == STATE_CONVERSION) {
-            addItem(new WatchUi.MenuItem("Conversion Made", null, :conv_made, null));
-            addItem(new WatchUi.MenuItem("Conversion Missed", null, :conv_miss, null));
-        } else {
-            addItem(new WatchUi.MenuItem("Try (5)", null, :score_try, null));
-            addItem(new WatchUi.MenuItem("Conversion (2)", null, :score_conv, null));
-            addItem(new WatchUi.MenuItem("Penalty (3)", null, :score_pen, null));
-            addItem(new WatchUi.MenuItem("Penalty Try (7)", null, :score_pen_try, null));
-            addItem(new WatchUi.MenuItem("Drop Goal (3)", null, :score_drop, null));
-        }
+        addItem(new WatchUi.MenuItem("Try (5)", null, :score_try, null));
+        addItem(new WatchUi.MenuItem("Penalty Try (7)", null, :score_pen_try, null));
+        addItem(new WatchUi.MenuItem("Drop Goal (3)", null, :score_drop, null));
     }
 }
 
@@ -332,28 +585,31 @@ class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
         isHome = homeFlag;
     }
 
+    function handleMenuDelegateFailure(context) {
+        System.println("Menu delegate failure (" + context + ")");
+        WatchUi.requestUpdate();
+        return true;
+    }
+
     /**
      * This method is called when a menu item is selected.
      * @param item The selected menu item
      */
     function onSelect(item) {
-        if (item.getId() == :score_try) {
-            model.recordTry(isHome);
-        } else if (item.getId() == :score_conv) {
-            model.recordConversion(isHome);
-        } else if (item.getId() == :score_pen) {
-            model.recordPenalty(isHome);
-        } else if (item.getId() == :score_pen_try) {
-            model.recordPenaltyTry(isHome);
-        } else if (item.getId() == :score_drop) {
-            model.recordDropGoal(isHome);
-        } else if (item.getId() == :conv_made) {
-            model.recordConversion(isHome);
-        } else if (item.getId() == :conv_miss) {
-            model.endConversionWithoutScore();
+        try {
+            if (item.getId() == :score_try) {
+                model.recordTry(isHome);
+            } else if (item.getId() == :score_pen_try) {
+                model.recordPenaltyTry(isHome);
+            } else if (item.getId() == :score_drop) {
+                model.recordDropGoal(isHome);
+            }
+            WatchUi.popView(WatchUi.SLIDE_DOWN); // Close type
+            WatchUi.popView(WatchUi.SLIDE_DOWN); // Close team
+            WatchUi.requestUpdate();
+        } catch (ex) {
+            handleMenuDelegateFailure("score_type_select");
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN); // Close type
-        WatchUi.popView(WatchUi.SLIDE_DOWN); // Close team
     }
 
     /**
@@ -455,6 +711,7 @@ class CardTypeDelegate extends WatchUi.Menu2InputDelegate {
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN); // type
         WatchUi.popView(WatchUi.SLIDE_DOWN); // team
+        WatchUi.requestUpdate();
     }
 
     /**
@@ -500,7 +757,6 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             model.showEventLog();
         } else if (item.getId() == :exit) {
-            model.stopRecording();
             System.exit();
         }
     }

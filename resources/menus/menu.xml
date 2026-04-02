@@ -6,6 +6,6 @@
     <menu-item id="start_half2" label="Start 2nd Half" />
     <menu-item id="end_game" label="End Game" />
     <menu-item id="undo_last" label="Undo Last Score" />
-    <menu-item id="adjust_score" label="Adjust Score" />
+    <menu-item id="settings" label="Match Preset" />
     <menu-item id="toggle_lock" label="Toggle Lock" />
 </menu>

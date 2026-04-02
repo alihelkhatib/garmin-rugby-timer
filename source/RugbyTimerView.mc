@@ -20,8 +20,6 @@ class RugbyTimerView extends WatchUi.View {
     // Cached layout information
     var cachedLayout as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
 
-    // A flag to ensure the game type prompt is shown only once
-    var promptedGameType;
     // A boolean indicating if the screen is locked
     var isLocked;
     // A boolean indicating if the screen is in dim mode
@@ -46,7 +44,6 @@ class RugbyTimerView extends WatchUi.View {
         View.initialize();
         model = m;
         
-        promptedGameType = false;
         isLocked = false;
         lastActionTs = 0;
         specialTimerOverlayVisible = false;
@@ -75,11 +72,6 @@ class RugbyTimerView extends WatchUi.View {
             updateTimer = new Timer.Timer();
             updateTimer.start(method(:updateGame), 100, true);
         }
-        
-        if (!promptedGameType && model.gameState == STATE_IDLE) {
-            promptedGameType = true;
-            showGameTypePrompt();
-        }
     }
 
     /**
@@ -107,6 +99,14 @@ class RugbyTimerView extends WatchUi.View {
         var width = dc.getWidth();
         var height = dc.getHeight();
 
+        // Conversion overlays should reopen automatically when a try transitions the
+        // model into conversion state, even if that happened while a menu was on top.
+        if (model.gameState == STATE_CONVERSION && !specialTimerOverlayVisible) {
+            specialTimerOverlayVisible = true;
+        } else if (specialTimerOverlayVisible && model.gameState != STATE_CONVERSION && model.gameState != STATE_PENALTY) {
+            specialTimerOverlayVisible = false;
+        }
+
         // Use cached fonts and layout
         var fonts = cachedFonts;
         var layout = cachedLayout;
@@ -120,14 +120,17 @@ class RugbyTimerView extends WatchUi.View {
         }
 
         var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);
-        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], countdownY);
-        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], stateY, height);
-        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
-        renderHint(dc, width, fonts[:hintFont], hintY);
+        var mainContentLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, isLocked);
+        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], mainContentLayout[:countdownY]);
+        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], mainContentLayout[:stateY], height);
+        renderHint(dc, width, fonts[:hintFont], mainContentLayout[:hintY], height, mainContentLayout[:hintLineGap]);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
+        // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
+        if (!isSpecialOverlayActive() && specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+            dc.drawText(width / 2, height * 0.62, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+        }
     }
 
     /**
@@ -137,21 +140,41 @@ class RugbyTimerView extends WatchUi.View {
      * @param hintFont The font to use for the hint
      * @param hintY The Y position of the hint
      */
-    function renderHint(dc, width, hintFont, hintY) {
-        var hint = "";
-        if (model.gameState == STATE_IDLE) {
-            hint = Rez.Strings.Hint_Select_Start;
-        } else if (model.gameState == STATE_PLAYING) {
-            hint = Rez.Strings.Hint_Select_Pause;
-        } else if (model.gameState == STATE_PAUSED) {
-            hint = Rez.Strings.Hint_Select_Resume;
-        }
-        if (isLocked) {
-            hint = Rez.Strings.Hint_Locked;
-        }
+    function renderHint(dc, width, hintFont, hintY, height, hintLineGap) {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+        if (isLocked) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Locked), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_IDLE) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_PLAYING) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Select_Pause), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_PAUSED) {
+            return;
+        }
+    }
+
+    /**
+     * Loads string resources explicitly so the UI never renders raw numeric resource ids.
+     * @param resourceId The Rez string identifier
+     * @return The resolved display string
+     */
+    function loadString(resourceId) {
+        if (resourceId instanceof Lang.String) {
+            return resourceId;
+        }
+        var value = WatchUi.loadResource(resourceId);
+        if (value instanceof Lang.String) {
+            return value;
+        }
+        return "";
     }
 
     /**
@@ -174,13 +197,6 @@ class RugbyTimerView extends WatchUi.View {
         var mins = (seconds.toLong() / 60);
         var secs = (seconds.toLong() % 60);
         return mins.toString() + ":" + secs.format("%02d");
-    }
-
-    /**
-     * Presents the menu asking whether the match is 7s or 15s.
-     */
-    function showGameTypePrompt() {
-        WatchUi.pushView(new GameTypeMenu(), new GameTypePromptDelegate(model), WatchUi.SLIDE_UP);
     }
 
     /**
@@ -208,6 +224,7 @@ class RugbyTimerView extends WatchUi.View {
      */
     function toggleLock() {
         isLocked = !isLocked;
+        RugbyTimerTiming.triggerLockToggleVibe();
         WatchUi.requestUpdate();
     }
 
