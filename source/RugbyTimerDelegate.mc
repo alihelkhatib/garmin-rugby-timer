@@ -36,15 +36,50 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         }
     }
 
-    function showPresetMenu() as Void {
-        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
-        WatchUi.requestUpdate();
+    /**
+     * This method is called when the select button is pressed.
+     * @return true if the event is handled, false otherwise
+     */
+    function onSelect() {
+        var view = Application.getApp().rugbyView;
+        if (view == null) { return true; }
+        if (view.isLocked) {
+            return true;
+        }
+        // Start/pause/resume game with select button
+        if (model.gameState == STATE_IDLE) {
+            model.startGame();
+        } else if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+            model.pauseClock();
+        } else if (model.gameState == STATE_PAUSED) {
+            model.resumeClock();
+        } else if (model.gameState == STATE_HALFTIME) {
+            model.startSecondHalf();
+        }
+        return true;
     }
 
-    function handleUpMenuHoldTimer() as Void {
+    /**
+     * This method is called when the back button is pressed.
+     * @return true if the event is handled, false otherwise
+     */
+    function onBack() {
         var view = Application.getApp().rugbyView;
-        if (!upMenuKeyPressed || view == null || view.isLocked || view.isSpecialOverlayActive()) {
-            return;
+        if (view == null) { return false; }
+        if (view.isLocked) {
+            return true;
+        }
+        // Show confirmation menu before exiting
+        if (model.gameState != STATE_IDLE) {
+            var menu = new WatchUi.Menu2({:title=>"Exit?"});
+            menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
+            menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
+            menu.addItem(new WatchUi.MenuItem("Reset Game", null, :reset, null));
+            menu.addItem(new WatchUi.MenuItem("Save Game", null, :save_game, null));
+            menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
+            menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
+            WatchUi.pushView(menu, new ExitMenuDelegate(model), WatchUi.SLIDE_UP);
+            return true;
         }
         suppressNextUpMenuAction = true;
         cancelUpMenuHoldTimer();
@@ -59,8 +94,16 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function handleInputFailure(context, ex) {
         var view = Application.getApp().rugbyView;
-        System.println("Input failure (" + context + "): " + ex.getErrorMessage());
-        if (view != null && view.isSpecialOverlayActive()) {
+        if (view == null) { return true; }
+        if (view.isLocked || !view.isActionAllowed()) {
+            return true;
+        }
+        if (view.isSpecialOverlayActive() && model.gameState == STATE_CONVERSION) {
+            view.closeSpecialTimerScreen();
+            model.handleConversionMiss();
+            return true;
+        }
+        if (view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }
         WatchUi.requestUpdate();
@@ -75,7 +118,8 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function handleOverlayAction(action) {
         var view = Application.getApp().rugbyView;
-        if (view == null) {
+        if (view == null) { return true; }
+        if (view.isLocked || !view.isActionAllowed()) {
             return true;
         }
         var now = System.getTimer();
@@ -231,19 +275,17 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      * This method is called when the select button is pressed.
      * @return true if the event is handled, false otherwise
      */
-    function onSelect() {
-        try {
-            var view = Application.getApp().rugbyView;
-            if (view.isLocked) {
-                return true;
-            }
-            // Start/pause/resume game with select button
-            if (model.gameState == STATE_IDLE) {
-                model.startGame();
-                if (model.lockOnStart && !view.isLocked) {
-                    view.toggleLock();
-                }
-            } else if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
+    function onSelect(item) {
+        var view = Application.getApp().rugbyView;
+        if (view == null) { WatchUi.popView(WatchUi.SLIDE_DOWN); return; }
+        if (item.getId() == :record_score) {
+            view.showScoreDialog();
+        } else if (item.getId() == :record_card) {
+            view.showCardDialog();
+        } else if (item.getId() == :pause_clock) {
+            if (model.gameState == STATE_PAUSED) {
+                model.resumeClock();
+            } else {
                 model.pauseClock();
             } else if (model.gameState == STATE_PAUSED) {
                 model.resumeClock();
@@ -724,6 +766,95 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
      */
     function onBack() {
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
+ * Menu for selecting the game type.
+ */
+class GameTypeMenu extends WatchUi.Menu2 {
+    /**
+     * Initializes the menu.
+     */
+    function initialize() {
+        Menu2.initialize({:title=>"Game Type"});
+        addItem(new WatchUi.MenuItem("Rugby 7s", "2 min yellows", :gt_7s, null));
+        addItem(new WatchUi.MenuItem("Rugby 15s", "10 min yellows", :gt_15s, null));
+    }
+}
+
+/**
+ * Delegate for the game type prompt.
+ */
+class GameTypePromptDelegate extends WatchUi.Menu2InputDelegate {
+    var model;
+
+    /**
+     * Initializes the delegate.
+     * @param m The game model
+     */
+    function initialize(m) {
+        Menu2InputDelegate.initialize();
+        model = m;
+    }
+
+    /**
+     * This method is called when a menu item is selected.
+     * @param item The selected menu item
+     */
+    function onSelect(item) {
+        var is7s = (item.getId() == :gt_7s);
+        // Pre-fill picker with the saved duration for this game type (FR-005)
+        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
+        var savedSecs = Storage.getValue(typeKey);
+        if (savedSecs == null) {
+            savedSecs = Storage.getValue("countdownTimer"); // legacy fallback
+        }
+        var defaultMinutes = (savedSecs != null) ? (savedSecs / 60) : (is7s ? 7 : 40);
+        if (defaultMinutes < 1) { defaultMinutes = 1; }
+        WatchUi.pushView(new MinutesPicker(defaultMinutes), new NewGameTimerPickerDelegate(is7s, model), WatchUi.SLIDE_UP);
+    }
+
+    /**
+     * This method is called when the back button is pressed.
+     */
+    function onBack() {
+        // Keep prompting on next show until a choice is made
+        var v = Application.getApp().rugbyView;
+        if (v != null) { v.promptedGameType = false; }
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
+ * Picker delegate for the new-game setup flow.
+ * Finalises both game type and half length, then returns to the watch face.
+ */
+class NewGameTimerPickerDelegate extends WatchUi.PickerDelegate {
+    var mModel;
+    var mIs7s;
+
+    function initialize(is7sFlag, m) {
+        PickerDelegate.initialize();
+        mIs7s = is7sFlag;
+        mModel = m;
+    }
+
+    function onAccept(values) {
+        if (values == null || values.size() < 2) { WatchUi.popView(WatchUi.SLIDE_DOWN); return true; }
+        var minutes = values[0] * 10 + values[1];
+        if (minutes < 1) { minutes = 1; }
+        mModel.setGameType(mIs7s);
+        mModel.setHalfDuration(minutes * 60);
+        // Pop picker then the game-type menu
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
+    }
+
+    function onCancel() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        return true;
     }
 }
 

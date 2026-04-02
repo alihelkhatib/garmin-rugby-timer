@@ -396,6 +396,18 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
     }
 
     function onAccept(values) {
+        if (values == null || values.size() < 2) { WatchUi.popView(WatchUi.SLIDE_DOWN); return true; }
+        var minutes = values[0] * 10 + values[1];
+        if (minutes < 1) { minutes = 1; }
+        var seconds = minutes * 60;
+        // Write to per-type key so each game type remembers its own duration independently
+        var is7s = Storage.getValue("rugby7s");
+        if (is7s == null) { is7s = false; }
+        var typeKey = is7s ? "halfDuration7s" : "halfDuration15s";
+        Storage.setValue(typeKey, seconds);
+        if (mParentItem != null) {
+            mParentItem.setSubLabel(minutes.format("%02d") + ":00");
+        }
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
             var minutes = values[0] * 10 + values[1];
