@@ -1,3 +1,45 @@
+## [2026-04-01] Reapply the two-visible-card cap and align card display rounding
+
+- The renderer now shows at most two sanction timers per team at once across both yellow and red cards. Additional timers stay hidden until one of the visible timers expires, but they continue counting in the model the whole time.
+- Card timer display now runs through the same display-rounding helper as the main countdown so yellow/red clocks do not visually drop a second early relative to the rest of the UI.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Restore simple stacked card columns and number red cards
+
+- Replaced the recent card-lane experiments with a simpler stacked-column layout again: cards now render in centered home/away columns (`width / 4` and `3 * width / 4`) using a compact card font, lower starting Y, and predictable vertical stacking. This is intended to get back to the earlier readable behavior without the center-lane overlap regressions.
+- Red cards now use the same entry/list model as yellow cards for numbering and stacking. New timed reds are appended instead of replacing the prior entry, they are labeled `R1`, `R2`, etc., and persistence now stores/restores the red label counters alongside the yellow counters.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Reserve a protected center lane for the main countdown
+
+- Tightened the sanction-card layout again so card text no longer shares the center lane with the main countdown. Home cards now right-align to the left edge of a protected center zone, away cards left-align to the right edge of that zone, and the compact Fenix targets use the same smaller font for both yellow and red entries.
+- Increased the vertical gap between the card stack and the main countdown so active sanctions sit above the clock instead of riding directly on top of it.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Anchor card timers under the team score columns
+
+- The remaining overlap was horizontal: card timers were still rendered as inward-growing edge labels, so long `Y1 9:49` / `R 19:53` strings could intrude into the center countdown area even after the vertical layout was measured.
+- Moved both teams' sanction stacks to the home/away score columns (`width * 0.25` / `width * 0.75`) and center-justified the text there. That keeps yellow/red timers visually associated with the correct team while reserving the middle of the screen for the large countdown.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Switch the main match screen to measured layout
+
+- Replaced the main-screen percentage-only vertical placement with a measured layout pass that uses actual font heights plus the live card-row count to place the card band, large countdown, state text, and hint lines. This is meant to stop the repeated overlap regressions on round Fenix screens when cards are active or the match is paused.
+- Normalized red and yellow card timer text to the same font size and derived the card row spacing from that measured font height so red sanctions no longer render smaller or collide with adjacent card lines.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Hide card timers during conversion overlays and declutter paused layout
+
+- Conversion and penalty overlays no longer draw the yellow/red card stack. The sanction timers keep running in the model, but the overlay now reserves the screen for the main match countdown, the special timer, and a short bottom control hint instead of layering cards across the conversion view.
+- Shifted the main-screen card band upward and tightened its row spacing so active cards consume less vertical space while keeping the large central countdown at full size. Also removed the extra paused-state resume hint line so the pause screen has less bottom-text overlap.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Restore absolute-time card timer updates
+
+- Root cause: `RugbyTimerTiming.updateGame()` was correctly passing the absolute `System.getTimer()` value into `RugbyTimerCards.updateYellowTimers()`, but the helper had drifted back to treating that third argument as a per-tick delta. That meant live yellow/red card entries were subtracting a huge raw timestamp from `remaining`, which made the timers expire or disappear immediately.
+- Fix: changed `RugbyTimerCards.updateYellowTimers()` back to true absolute-time semantics. Live card entries now derive their remaining time from `startTime` and the current `now` value, while paused/frozen entries still use stored `remaining`.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
 ## [2026-04-01] Fix red card timer type mismatch (Long vs Number) and sentinel refactor
 
 - Root cause: `(Number - Float).toLong()` yields `Lang.Long`; `isNumeric` only checked `Number | Float`, so the first decrement made `redHomePausedRemaining` a Long, which failed the `isNumeric` check and immediately cleared the card to null — renderer showed `R:--` after the first tick.
@@ -5,6 +47,25 @@
 - Fix 2 (`RugbyTimerRenderer.mc`): Changed `redHomeActive`/`redAwayActive` detection from `redHome > 0` (broken since `redHome` is now boolean `true`) to `redHome == true`; also added `instanceof Lang.Float` to the `redHomePausedRemaining` active detection for robustness.
 - Fix 3 (`RugbyGameModel.mc`): Removed stale `getRedRemaining(redHome, now)` fallback from `pauseGame()` — `redHome` is now `true` (not a timestamp), so this would have computed garbage. `redHomePausedRemaining` is always valid at pause time since `recordRedCard` sets it and the tick loop keeps it current.
 - Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` (warnings only, no errors).
+
+## [2026-04-01] Shorten idle guidance and make preset selection deterministic
+
+- Split the idle guidance into short centered safe-area lines instead of one long bottom-bezel sentence. The main idle screen now shows `UP/DOWN set` and `SELECT start`, which avoids the round-screen clipping shown on the Fenix screenshots.
+- Changed the preset picker again so it applies the selected profile on a short delayed callback after the picker closes, then explicitly resets the idle countdown and persists the result. This avoids device-specific selection timing issues and should make the chosen 7s/10s/15s/U19 timer visible immediately on the main screen.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Apply presets after menu close and keep suspensions live through halftime
+
+- Changed the `Match Preset` picker so profile changes are applied after the picker closes instead of during the selection callback. On-device this gives the main view a clean redraw path and forces the idle countdown to update immediately to the selected Rugby 7s / 10s / 15s / U19 preset.
+- Fixed the suspension-clock bug in `RugbyTimerTiming.mc`: yellow and timed-red timers are now updated from the current absolute timestamp, not the frame delta. That stops newly added cards from expiring instantly and also allows suspensions to continue through halftime while still freezing correctly on an explicit referee pause.
+- Cleaned up the idle screen by removing the redundant `Ready to start` state line and shortening/lifting the bottom instruction text so it no longer clips into the bezel on round Fenix layouts.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+
+## [2026-04-01] Rebalance the main timer screen layout
+
+- Reworked the main match-screen renderer for round Fenix devices so the base UI reads as a cleaner scoreboard instead of a stack of overlapping labels. Yellow/red card timers now render in left/right side columns, the large countdown is slightly smaller on compact round screens, and the bottom `PAUSED` / resume text now sits in a reserved lower status band.
+- Tightened the card stack spacing and shifted the card block upward so active cards stay readable without forcing the main countdown and paused-state labels to collide near the bottom of the display.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
 
 ## [2026-03-31] Route in-app configuration to a preset picker and stabilize card sanctions
 
@@ -1722,3 +1783,41 @@
 - Added a menu-driven Event Log that records score/card timestamps and a "Save Log" action that writes the human-readable timeline to Storage for sharing after the match.
 
 - Fixed the exit menu invocation so selecting Event Log pops the dialog before pushing the log view, ensuring the log actually appears instead of being popped immediately.
+
+- 2026-04-01: Kept the top count-up clock on `elapsedTime` so it continues running while the match countdown is paused, added a repeating pause-reminder haptic every 15 seconds, and render `PAUSED` in red with a larger font treatment.
+
+- 2026-04-01: Capped visible sanction timers to the first two active yellow/red entries per team while keeping additional cards running hidden in the background; yellow/red displays now use the same rounding path as the main countdown so they stay visually synchronized.
+
+- 2026-04-01 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-02: Reworked timer architecture so the app now advances three separate clocks: `elapsedTime` for the always-running top count-up, `gameTime` for the pauseable match countdown and special timers, and `suspensionTime` for yellow/red sanctions. Card rendering and persistence now use `suspensionTime` instead of wall-clock timestamps and cached `remaining` values, which is intended to remove the persistent drift after pause/resume and card entry during stoppages.
+
+- 2026-04-02 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-02 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-02: Fixed the sanction-clock regression after the timer-architecture split. Yellow/red cards were already moved onto `suspensionTime`, but the live remaining-time helper was still dividing by `1000` as if those values were wall-clock milliseconds. Card timers now use the same second units as `gameTime`/`suspensionTime`, so they activate and tick from the shared synchronized update pass again.
+
+- 2026-04-02 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-02 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01: Recording a yellow or red card now forces the match into the paused state first, and newly created sanction timers inherit the main countdown clock phase so their displayed second changes stay aligned with the main countdown when play resumes.
+
+- 2026-04-01: Shortened the paused reminder haptic cadence from every 15 seconds to every 5 seconds.
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01: Switched live yellow/red sanction countdowns from integer-second truncation to float-second elapsed time so card timers roll over in sync with the main match countdown instead of lagging by a partial second.
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).

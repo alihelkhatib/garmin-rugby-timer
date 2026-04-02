@@ -40,16 +40,16 @@ class RugbyTimerCards {
         return now - ((1200 - remaining) * 1000.0f);
     }
 
-    static function getEntryRemaining(entry, now) {
+    static function getEntryRemaining(entry, clockValue) {
         if (entry == null) {
             return 0;
         }
         var duration = entry["duration"];
         var startTime = entry["startTime"];
-        // Timer is live: integer division keeps result as Lang.Number (not Float),
-        // which is required for instanceof checks in clampRemaining and formatShortTime.
-        if (RugbyTimerCards.isNumeric(startTime) && RugbyTimerCards.isNumeric(duration)) {
-            var elapsedSecs = (now - startTime) / 1000;
+        // Timer is live: startTime and clockValue are both expressed in the same
+        // derived sanction-clock seconds, so no wall-clock conversion is needed.
+        if (RugbyTimerCards.isNumeric(startTime) && RugbyTimerCards.isNumeric(duration) && RugbyTimerCards.isNumeric(clockValue)) {
+            var elapsedSecs = clockValue - startTime;
             if (elapsedSecs < 0) { elapsedSecs = 0; }
             var remaining = duration - elapsedSecs;
             if (remaining < 0) { remaining = 0; }
@@ -68,13 +68,13 @@ class RugbyTimerCards {
         return 0;
     }
 
-    static function getLiveEntryRemaining(entry, now) {
-        return RugbyTimerCards.getEntryRemaining(entry, now);
+    static function getLiveEntryRemaining(entry, clockValue) {
+        return RugbyTimerCards.getEntryRemaining(entry, clockValue);
     }
 
     /**
-     * Creates a yellow card entry from a start time and other details.
-     * @param startTime The start time of the card
+     * Creates a sanction entry from the current sanction-clock position.
+     * @param startTime The `suspensionTime` clock position when the card started
      * @param duration The total duration of the card
      * @param label The label for the card (e.g., "Y1")
      * @param cardId The ID of the card
@@ -93,17 +93,17 @@ class RugbyTimerCards {
     }
 
     /**
-     * Updates the yellow card timers.
+     * Updates live yellow/red card timers from the current absolute timestamp.
      * @param model The game model
-     * @param list The list of yellow card timers
-     * @param deltaSeconds The elapsed seconds since the previous update tick
+     * @param list The list of yellow/red card timers
+     * @param now The current System.getTimer() value
      * @return A dictionary containing the updated timers plus an expiry flag
      */
-    static function updateYellowTimers(model, list, deltaSeconds) {
+    static function updateYellowTimers(model, list, now) {
         var newList = [];
         var expiredAny = false;
-        if (!RugbyTimerCards.isNumeric(deltaSeconds) || deltaSeconds < 0) {
-            deltaSeconds = 0;
+        if (!RugbyTimerCards.isNumeric(now) || now < 0) {
+            now = System.getTimer();
         }
         for (var i = 0; i < list.size(); i = i + 1) {
             var entry = list[i] as Lang.Dictionary;
@@ -121,22 +121,13 @@ class RugbyTimerCards {
             if (!RugbyTimerCards.isNumeric(duration)) {
                 continue;
             }
-            var remaining;
-            if (RugbyTimerCards.isNumeric(storedRemaining)) {
-                remaining = storedRemaining;
-            } else {
-                remaining = duration;
-            }
-
-            if (RugbyTimerCards.isNumeric(startTime)) {
-                remaining = remaining - deltaSeconds;
-            }
+            var remaining = RugbyTimerCards.getLiveEntryRemaining(entry, now);
             remaining = RugbyTimerCards.clampRemaining(remaining, duration);
 
             // Safety: never expire a card within the first 2 seconds of creation.
             if (remaining <= 0) {
                 if (startTime instanceof Lang.Number) {
-                    var ageMs = System.getTimer() - startTime;
+                    var ageMs = now - startTime;
                     if (ageMs < 2000) {
                         remaining = duration;
                     }
@@ -290,6 +281,15 @@ class RugbyTimerCards {
         return model.yellowAwayLabelCounter;
     }
 
+    static function allocateRedCardId(model, isHome) {
+        if (isHome) {
+            model.redHomeLabelCounter = model.redHomeLabelCounter + 1;
+            return model.redHomeLabelCounter;
+        }
+        model.redAwayLabelCounter = model.redAwayLabelCounter + 1;
+        return model.redAwayLabelCounter;
+    }
+
     /**
      * Clears all card timers.
      * @param model The game model
@@ -299,6 +299,8 @@ class RugbyTimerCards {
         model.yellowAwayTimes = [];
         model.yellowHomeLabelCounter = 0;
         model.yellowAwayLabelCounter = 0;
+        model.redHomeLabelCounter = 0;
+        model.redAwayLabelCounter = 0;
         model.redHomeTimes = [];
         model.redAwayTimes = [];
         model.redHomePermanent = false;

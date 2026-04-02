@@ -15,9 +15,12 @@ class RugbyTimerTiming {
         return state == STATE_PLAYING || state == STATE_CONVERSION || state == STATE_PENALTY || state == STATE_KICKOFF;
     }
 
+    static function isSuspensionClockRunning(state) {
+        return state == STATE_PLAYING || state == STATE_CONVERSION || state == STATE_PENALTY || state == STATE_HALFTIME || state == STATE_KICKOFF;
+    }
+
     const HALF_WARNING_SECONDS = 30;
     const SPECIAL_WARNING_SECONDS = 10;
-
     /**
      * This method is called periodically to update the game state.
      * @param model The game model
@@ -36,14 +39,23 @@ class RugbyTimerTiming {
             if (!RugbyTimerTiming.isNumeric(model.gameTime)) {
                 model.gameTime = 0;
             }
+            if (!RugbyTimerTiming.isNumeric(model.suspensionTime)) {
+                model.suspensionTime = 0;
+            }
             if (!RugbyTimerTiming.isNumeric(model.elapsedTime)) {
                 model.elapsedTime = 0;
             }
 
             var mainClockRunning = RugbyTimerTiming.isClockRunning(model.gameState);
+            var elapsedClockRunning = model.gameState != STATE_IDLE && model.gameState != STATE_ENDED;
+            if (elapsedClockRunning) {
+                model.elapsedTime = model.elapsedTime + deltaSeconds;
+            }
             if (mainClockRunning) {
                 model.gameTime = model.gameTime + deltaSeconds;
-                model.elapsedTime = model.elapsedTime + deltaSeconds;
+            }
+            if (RugbyTimerTiming.isSuspensionClockRunning(model.gameState)) {
+                model.suspensionTime = model.suspensionTime + deltaSeconds;
             }
 
             // Keep the half countdown locked to the canonical match clock so they cannot drift.
@@ -83,20 +95,31 @@ class RugbyTimerTiming {
                 }
             }
             
-            if (mainClockRunning) {
-                var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, deltaSeconds);
+            var suspensionClockRunning = RugbyTimerTiming.isSuspensionClockRunning(model.gameState);
+            if (suspensionClockRunning) {
+                var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, model.suspensionTime);
                 model.yellowHomeTimes = homeYellowUpdate["timers"];
-                var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, deltaSeconds);
+                var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, model.suspensionTime);
                 model.yellowAwayTimes = awayYellowUpdate["timers"];
                 if (homeYellowUpdate["expired"] == true || awayYellowUpdate["expired"] == true) {
                     RugbyTimerTiming.triggerYellowTimerExpiredVibe();
                 }
 
                 // Red card timers (same mechanism as yellow cards)
-                var homeRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redHomeTimes, deltaSeconds);
+                var homeRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redHomeTimes, model.suspensionTime);
                 model.redHomeTimes = homeRedUpdate["timers"];
-                var awayRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redAwayTimes, deltaSeconds);
+                var awayRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redAwayTimes, model.suspensionTime);
                 model.redAwayTimes = awayRedUpdate["timers"];
+            }
+
+            if (model.gameState == STATE_PAUSED) {
+                if (!(model.lastPauseReminderTime instanceof Lang.Number) && !(model.lastPauseReminderTime instanceof Lang.Float)) {
+                    model.lastPauseReminderTime = now;
+                // Keep the reminder cadence fixed and simple while paused.
+                } else if (((now - model.lastPauseReminderTime) / 1000.0f) >= 5) {
+                    model.lastPauseReminderTime = now;
+                    RugbyTimerTiming.triggerPauseReminderVibe();
+                }
             }
 
             if (mainClockRunning && model.countdownRemaining <= 0) {
@@ -164,6 +187,12 @@ class RugbyTimerTiming {
     static function triggerPauseVibe() {
         RugbyTimerTiming.vibrateSequence([
             new Attention.VibeProfile(30, 120)
+        ]);
+    }
+
+    static function triggerPauseReminderVibe() {
+        RugbyTimerTiming.vibrateSequence([
+            new Attention.VibeProfile(35, 150)
         ]);
     }
 

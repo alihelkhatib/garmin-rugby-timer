@@ -16,16 +16,23 @@ class RugbyTimerPersistence {
      */
     static function saveState(model) {
         var persistedStates = RugbyTimerPersistence.getPersistedStates(model);
+        var snapshotElapsedTime = RugbyTimerPersistence.getSnapshotElapsedTime(model);
+        var snapshotGameTime = RugbyTimerPersistence.getSnapshotGameTime(model);
+        var snapshotSuspensionTime = RugbyTimerPersistence.getSnapshotSuspensionTime(model);
+        var snapshotCountdownRemaining = model.countdownTimer - snapshotGameTime;
+        if (snapshotCountdownRemaining < 0) { snapshotCountdownRemaining = 0; }
+        var snapshotCountdownSeconds = RugbyTimerPersistence.getSnapshotCountdownSeconds(model);
         var snapshot = {
             "homeScore" => model.homeScore,
             "awayScore" => model.awayScore,
             "homeTries" => model.homeTries,
             "awayTries" => model.awayTries,
             "halfNumber" => model.halfNumber,
-            "gameTime" => RugbyTimerPersistence.getSnapshotGameTime(model),
-            "elapsedTime" => model.elapsedTime,
-            "countdownRemaining" => model.countdownRemaining,
-            "countdownSeconds" => model.countdownSeconds,
+            "gameTime" => snapshotGameTime,
+            "suspensionTime" => snapshotSuspensionTime,
+            "elapsedTime" => snapshotElapsedTime,
+            "countdownRemaining" => snapshotCountdownRemaining,
+            "countdownSeconds" => snapshotCountdownSeconds,
             "gameState" => persistedStates[:gameState],
             "pausedState" => persistedStates[:pausedState],
             "matchProfileId" => model.matchProfileId,
@@ -37,14 +44,16 @@ class RugbyTimerPersistence {
             "useConversionTimer" => model.useConversionTimer,
             "usePenaltyTimer" => model.usePenaltyTimer,
             "conversionTeam" => model.conversionTeam,
-            "yellowHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowHomeTimes),
-            "yellowAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowAwayTimes),
+            "yellowHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowHomeTimes, snapshotSuspensionTime),
+            "yellowAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowAwayTimes, snapshotSuspensionTime),
             "yellowHomeLabelCounter" => model.yellowHomeLabelCounter,
             "yellowAwayLabelCounter" => model.yellowAwayLabelCounter,
+            "redHomeLabelCounter" => model.redHomeLabelCounter,
+            "redAwayLabelCounter" => model.redAwayLabelCounter,
             "yellowHomeTotal" => model.yellowHomeTotal,
             "yellowAwayTotal" => model.yellowAwayTotal,
-            "redHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redHomeTimes),
-            "redAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redAwayTimes),
+            "redHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redHomeTimes, snapshotSuspensionTime),
+            "redAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redAwayTimes, snapshotSuspensionTime),
             "redHomePermanent" => model.redHomePermanent,
             "redAwayPermanent" => model.redAwayPermanent,
             "redHomeTotal" => model.redHomeTotal,
@@ -104,6 +113,10 @@ class RugbyTimerPersistence {
                 model.halfNumber = data["halfNumber"];
                 model.gameTime = data["gameTime"];
                 model.elapsedTime = data["elapsedTime"];
+                model.suspensionTime = data["suspensionTime"];
+                if (!(model.suspensionTime instanceof Lang.Number) && !(model.suspensionTime instanceof Lang.Float)) {
+                    model.suspensionTime = model.gameTime;
+                }
                 model.countdownRemaining = data["countdownRemaining"];
                 model.countdownSeconds = data["countdownSeconds"];
                 model.gameState = RugbyTimerPersistence.restoreGameState(data["gameState"]);
@@ -133,20 +146,24 @@ class RugbyTimerPersistence {
                 model.eventLogEntries = data["eventLogEntries"];
                 if (model.eventLogEntries == null) { model.eventLogEntries = []; }
                 
-                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowHomeTimes"], now);
-                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowAwayTimes"], now);
+                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowHomeTimes"], model.suspensionTime, now);
+                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowAwayTimes"], model.suspensionTime, now);
                 
                 model.yellowHomeLabelCounter = data["yellowHomeLabelCounter"];
                 if (model.yellowHomeLabelCounter == null) { model.yellowHomeLabelCounter = 0; }
                 model.yellowAwayLabelCounter = data["yellowAwayLabelCounter"];
                 if (model.yellowAwayLabelCounter == null) { model.yellowAwayLabelCounter = 0; }
+                model.redHomeLabelCounter = data["redHomeLabelCounter"];
+                if (model.redHomeLabelCounter == null) { model.redHomeLabelCounter = 0; }
+                model.redAwayLabelCounter = data["redAwayLabelCounter"];
+                if (model.redAwayLabelCounter == null) { model.redAwayLabelCounter = 0; }
                 
                 model.redHomePermanent = data["redHomePermanent"];
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
                 model.redAwayPermanent = data["redAwayPermanent"];
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
-                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["redHomeTimes"], now);
-                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["redAwayTimes"], now);
+                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["redHomeTimes"], model.suspensionTime, now);
+                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["redAwayTimes"], model.suspensionTime, now);
 
                 model.yellowHomeTotal = data["yellowHomeTotal"];
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
@@ -204,10 +221,63 @@ class RugbyTimerPersistence {
     }
 
     static function getSnapshotGameTime(model) {
-        return model.gameTime;
+        var snapshot = model.gameTime;
+        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
+            snapshot = 0;
+        }
+        if (RugbyTimerTiming.isClockRunning(model.gameState) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
+            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
+            if (delta > 0) {
+                snapshot = snapshot + delta;
+            }
+        }
+        return snapshot;
     }
 
-    static function serializeYellowTimers(list) {
+    static function getSnapshotElapsedTime(model) {
+        var snapshot = model.elapsedTime;
+        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
+            snapshot = 0;
+        }
+        if (model.gameState != STATE_IDLE && model.gameState != STATE_ENDED && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
+            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
+            if (delta > 0) {
+                snapshot = snapshot + delta;
+            }
+        }
+        return snapshot;
+    }
+
+    static function getSnapshotSuspensionTime(model) {
+        var snapshot = model.suspensionTime;
+        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
+            snapshot = 0;
+        }
+        if (RugbyTimerTiming.isSuspensionClockRunning(model.gameState) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
+            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
+            if (delta > 0) {
+                snapshot = snapshot + delta;
+            }
+        }
+        return snapshot;
+    }
+
+    static function getSnapshotCountdownSeconds(model) {
+        var snapshot = model.countdownSeconds;
+        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
+            snapshot = 0;
+        }
+        if ((model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
+            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
+            if (delta > 0) {
+                snapshot = snapshot - delta;
+                if (snapshot < 0) { snapshot = 0; }
+            }
+        }
+        return snapshot;
+    }
+
+    static function serializeYellowTimers(list, clockValue) {
         var serialized = [];
         if (list == null) {
             return serialized;
@@ -219,9 +289,9 @@ class RugbyTimerPersistence {
             }
             var duration = entry["duration"];
             var remaining = entry["remaining"];
-            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(entry["startTime"])) {
-                var now = System.getTimer();
-                remaining = duration - ((now - entry["startTime"]) / 1000.0f);
+            var clockStart = entry["startTime"];
+            if (RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+                remaining = duration - (clockValue - clockStart);
             }
             if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
                 duration = remaining;
@@ -235,6 +305,7 @@ class RugbyTimerPersistence {
             if (remaining > duration) { remaining = duration; }
             serialized.add({
                 "duration" => duration,
+                "clockStart" => clockStart,
                 "remaining" => remaining,
                 "label" => entry["label"],
                 "cardId" => entry["cardId"],
@@ -244,7 +315,7 @@ class RugbyTimerPersistence {
         return serialized;
     }
 
-    static function restoreYellowTimers(list, now) {
+    static function restoreYellowTimers(list, clockValue, now) {
         var restored = [];
         if (list == null) {
             return restored;
@@ -256,8 +327,16 @@ class RugbyTimerPersistence {
             }
             var duration = entry["duration"];
             var remaining = entry["remaining"];
-            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(entry["startTime"])) {
-                remaining = duration - ((now - entry["startTime"]) / 1000.0f);
+            var clockStart = entry["clockStart"];
+            if (!RugbyTimerPersistence.isNumeric(clockStart)) {
+                clockStart = entry["startTime"];
+            }
+            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+                if (entry["clockStart"] instanceof Lang.Number || entry["clockStart"] instanceof Lang.Float) {
+                    remaining = duration - (clockValue - clockStart);
+                } else {
+                    remaining = duration - ((now - clockStart) / 1000.0f);
+                }
             }
             if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
                 duration = remaining;
@@ -269,9 +348,11 @@ class RugbyTimerPersistence {
                 continue;
             }
             if (remaining > duration) { remaining = duration; }
-            var elapsed = duration - remaining;
+            if (!RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+                clockStart = clockValue - (duration - remaining);
+            }
             restored.add({
-                "startTime" => now - (elapsed * 1000.0f),
+                "startTime" => clockStart,
                 "duration" => duration,
                 "label" => entry["label"],
                 "cardId" => entry["cardId"],

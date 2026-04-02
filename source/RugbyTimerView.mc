@@ -120,12 +120,10 @@ class RugbyTimerView extends WatchUi.View {
         }
 
         var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);
-        var countdownY = RugbyTimerRenderer.calculateCountdownPosition(layout, cardInfo, height);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], countdownY);
-        var stateY = RugbyTimerRenderer.calculateStateY(countdownY, layout, height);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], stateY, height);
-        var hintY = RugbyTimerRenderer.calculateHintY(stateY, layout[:hintBaseY], height);
-        renderHint(dc, width, fonts[:hintFont], hintY);
+        var mainContentLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, isLocked);
+        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], mainContentLayout[:countdownY]);
+        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], mainContentLayout[:stateY], height);
+        renderHint(dc, width, fonts[:hintFont], mainContentLayout[:hintY], height, mainContentLayout[:hintLineGap]);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
         // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
@@ -142,21 +140,25 @@ class RugbyTimerView extends WatchUi.View {
      * @param hintFont The font to use for the hint
      * @param hintY The Y position of the hint
      */
-    function renderHint(dc, width, hintFont, hintY) {
-        var hint = "";
-        if (model.gameState == STATE_IDLE) {
-            hint = loadString(Rez.Strings.Hint_Idle_Adjust);
-        } else if (model.gameState == STATE_PLAYING) {
-            hint = loadString(Rez.Strings.Hint_Select_Pause);
-        } else if (model.gameState == STATE_PAUSED) {
-            hint = loadString(Rez.Strings.Hint_Select_Resume);
-        }
-        if (isLocked) {
-            hint = loadString(Rez.Strings.Hint_Locked);
-        }
+    function renderHint(dc, width, hintFont, hintY, height, hintLineGap) {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, hintY, hintFont, hint, Graphics.TEXT_JUSTIFY_CENTER);
+        if (isLocked) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Locked), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_IDLE) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_PLAYING) {
+            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Select_Pause), Graphics.TEXT_JUSTIFY_CENTER);
+            return;
+        }
+        if (model.gameState == STATE_PAUSED) {
+            return;
+        }
     }
 
     /**
