@@ -2,6 +2,8 @@ using Toybox.WatchUi;
 using Toybox.Application;
 using Toybox.Application.Storage;
 using Toybox.Graphics;
+using Toybox.System;
+using Toybox.Timer;
 
 /**
  * The menu for the application settings.
@@ -236,10 +238,14 @@ class MatchProfileMenu extends WatchUi.Menu2 {
 
 class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
     var menu;
+    var applyTimer;
+    var pendingProfileId;
 
     function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
         menu = settingsMenu;
+        applyTimer = null;
+        pendingProfileId = null;
     }
 
     function resolveProfileId(itemId) {
@@ -258,6 +264,38 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
         return null;
     }
 
+    function applyPendingProfile() as Void {
+        var app = Application.getApp() as RugbyTimerApp;
+        var profileId = pendingProfileId;
+        applyTimer = null;
+        pendingProfileId = null;
+        if (app == null || app.model == null || profileId == null) {
+            return;
+        }
+        if (app.model.gameState != STATE_IDLE) {
+            if (app.rugbyView != null) {
+                app.rugbyView.displaySpecialOverlayMessage("Idle only");
+                WatchUi.requestUpdate();
+            }
+            return;
+        }
+
+        app.model.setMatchProfile(profileId);
+        app.model.gameTime = 0;
+        app.model.elapsedTime = 0;
+        app.model.countdownSeconds = 0;
+        app.model.countdownRemaining = app.model.countdownTimer;
+        app.model.lastUpdate = System.getTimer();
+        app.model.persistState();
+        if (menu != null) {
+            menu.refresh();
+        }
+        if (app.rugbyView != null) {
+            app.rugbyView.displaySpecialOverlayMessage(RugbyMatchProfiles.getProfileLabel(profileId));
+        }
+        WatchUi.requestUpdate();
+    }
+
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app == null || app.model == null) {
@@ -269,18 +307,13 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             return;
         }
-        app.model.resetGame();
-        app.model.setMatchProfile(profileId);
-        if (menu != null) {
-            menu.refresh();
-        }
-        if (profileId == "custom") {
-            var customMenu = new RugbySettingsMenu();
-            WatchUi.pushView(customMenu, new RugbySettingsMenuDelegate(customMenu, true), WatchUi.SLIDE_UP);
-            return;
-        }
-        WatchUi.requestUpdate();
+        pendingProfileId = profileId;
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (applyTimer != null) {
+            applyTimer.stop();
+        }
+        applyTimer = new Timer.Timer();
+        applyTimer.start(method(:applyPendingProfile), 50, false);
     }
 
     function onBack() {

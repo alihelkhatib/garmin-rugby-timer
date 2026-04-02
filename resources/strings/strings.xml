@@ -1,7 +1,7 @@
 <strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <string id="AppName">Rugby Timer</string>
     <string id="Hint_Select_Start">SELECT: Start</string>
-    <string id="Hint_Idle_Adjust">UP/DOWN: +1m/-1m • SELECT: Start</string>
+    <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
     <string id="Hint_Select_Pause">SELECT: Pause</string>
     <string id="Hint_Select_Resume">SELECT: Resume</string>
     <string id="Hint_Locked">LOCKED</string>
@@ -16,6 +16,7 @@
     <string id="State_GameEnded">GAME ENDED</string>
     <string id="State_ReadyToStart">Ready to start</string>
     <string id="Overlay_Countdown">COUNTDOWN</string>
+    <string id="Overlay_Hint_Conversion">UP: +2   DOWN: MISS</string>
     <string id="Overlay_Hint_Penalty">UP/DOWN: Hide</string>
     <string id="Overlay_ConversionMade_Action">MENU</string>
     <string id="Overlay_ConversionMade_Result">+2</string>

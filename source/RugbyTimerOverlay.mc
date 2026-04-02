@@ -41,11 +41,10 @@ class RugbyTimerOverlay {
         dc.setColor(RugbyTimerOverlay.getSpecialStateColor(model), Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, height * 0.32, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width / 2, specialTimerY, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-        RugbyTimerOverlay.renderOverlayCardTimers(model, dc, width, height);
         var hint = RugbyTimerOverlay.getSpecialOverlayHint(model);
         if (hint != null && hint.length() > 0) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-            dc.drawText(width / 2, height * 0.80, Graphics.FONT_XTINY, hint, Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, height * 0.84, Graphics.FONT_XTINY, hint, Graphics.TEXT_JUSTIFY_CENTER);
         }
         if (view.specialOverlayMessage != null && System.getTimer() < view.specialOverlayMessageExpiry) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
@@ -62,16 +61,15 @@ class RugbyTimerOverlay {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, height * 0.08, Graphics.FONT_SMALL, label, Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(width / 2, specialTimerY, Graphics.FONT_NUMBER_HOT, countdown, Graphics.TEXT_JUSTIFY_CENTER);
-        RugbyTimerOverlay.renderOverlayCardTimers(model, dc, width, height);
+        var hint = RugbyTimerOverlay.getSpecialOverlayHint(model);
+        if (hint != null && hint.length() > 0) {
+            dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(width / 2, height * 0.84, Graphics.FONT_XTINY, hint, Graphics.TEXT_JUSTIFY_CENTER);
+        }
         if (view.specialOverlayMessage != null && System.getTimer() < view.specialOverlayMessageExpiry) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, view.specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }
-    }
-
-    static function renderOverlayCardTimers(model, dc, width, height) {
-        var cardsY = height * 0.37;
-        RugbyTimerRenderer.renderCardTimers(dc, model, width, cardsY, height);
     }
 
     static function getSpecialTimerY(model, height) {
@@ -128,7 +126,7 @@ class RugbyTimerOverlay {
      */
     static function getSpecialOverlayHint(model) {
         if (model.gameState == STATE_CONVERSION) {
-            return "UP/MENU = +2 conversion    DOWN = Miss";
+            return RugbyTimerOverlay.loadString(Rez.Strings.Overlay_Hint_Conversion);
         } else if (model.gameState == STATE_PENALTY) {
             return RugbyTimerOverlay.loadString(Rez.Strings.Overlay_Hint_Penalty);
         }
