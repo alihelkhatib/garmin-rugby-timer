@@ -84,16 +84,7 @@ class TestConversionAdjustDelegate {
     }
 }
 
-function clearCustomStorage() {
-    Storage.setValue("customHalfDuration", null);
-    Storage.setValue("customConversionTime", null);
-    Storage.setValue("customKickoffTime", null);
-    Storage.setValue("customPenaltyKickTime", null);
-    Storage.setValue("customUseConversionTimer", null);
-    Storage.setValue("customUsePenaltyTimer", null);
-    Storage.setValue("customProfileIs7s", null);
-    Storage.setValue("matchProfileId", null);
-}
+// shared helper `clearCustomStorage` moved to tests/TestHelpers.mc
 
 (:test)
 function test_ui_select_profile_7s(logger as Test.Logger) as Lang.Boolean {
