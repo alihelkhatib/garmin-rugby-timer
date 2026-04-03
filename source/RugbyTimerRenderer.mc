@@ -9,6 +9,30 @@ using Rez.Drawables;
  * This class contains static methods for drawing the various components of the UI.
  */
 class RugbyTimerRenderer {
+    // Caches to reduce per-frame layout/font recomputation
+    static var _fontsCache = {} as Lang.Dictionary;
+    static var _layoutCache = {} as Lang.Dictionary;
+    static var _mainLayoutCache = {} as Lang.Dictionary;
+
+    static function invalidateMainLayoutCache() {
+        _mainLayoutCache = {} as Lang.Dictionary;
+    }
+
+    static function getMainContentLayoutCached(dc, model, fonts, layout, cardInfo, height, isLocked) {
+        if (_mainLayoutCache == null) { _mainLayoutCache = {} as Lang.Dictionary; }
+        var rows = 0;
+        var lineStep = 0;
+        if (cardInfo != null) {
+            rows = cardInfo[:rows] as Lang.Number;
+            lineStep = cardInfo[:lineStep] as Lang.Number;
+        }
+        var key = height.toString() + ":" + rows.toString() + ":" + lineStep.toString() + ":" + (isLocked ? "1" : "0");
+        var cached = _mainLayoutCache[key] as Lang.Dictionary;
+        if (cached != null) { return cached; }
+        var computed = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, isLocked);
+        _mainLayoutCache[key] = computed;
+        return computed;
+    }
     /**
      * Central rendering helper that keeps layout math and font selection in one place so
      * the view can focus on state updates and overlays.
@@ -16,7 +40,8 @@ class RugbyTimerRenderer {
      * @return A dictionary of fonts
      */
     static function chooseFonts(width) {
-        // Use compact fonts for smaller screens and a slightly larger tries font on wide displays.
+        // Compute fonts for the given width. Caching removed in test scaffold to avoid
+        // static-init issues; we can reintroduce caching later behind a safe guard.
         var scoreFont;
         var triesFont;
         var halfFont;
@@ -49,7 +74,7 @@ class RugbyTimerRenderer {
             stateFont = Graphics.FONT_SMALL;
             hintFont = Graphics.FONT_XTINY;
         }
-        return {
+        var result = {
             :scoreFont => scoreFont,
             :triesFont => triesFont,
             :halfFont => halfFont,
@@ -58,6 +83,7 @@ class RugbyTimerRenderer {
             :stateFont => stateFont,
             :hintFont => hintFont
         };
+        return result;
     }
 
     /**
@@ -67,6 +93,12 @@ class RugbyTimerRenderer {
      * @return A dictionary of layout values
      */
     static function calculateLayout(height) {
+        // Cache by height to avoid recomputing the same layout repeatedly
+        if (_layoutCache == null) { _layoutCache = {} as Lang.Dictionary; }
+        var key = height.toString();
+        var cached = _layoutCache[key] as Lang.Dictionary;
+        if (cached != null) { return cached; }
+
         // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
         // and the state/hint section so each renders consistently across devices.
         var scoreY = height * 0.10;
@@ -77,7 +109,7 @@ class RugbyTimerRenderer {
         var stateBaseY = height * 0.86;
         var hintBaseY = height * 0.93;
         var iconY = height * 0.04;
-        return {
+        var result = {
             :scoreY => scoreY,
             :halfY => halfY,
             :gameTimerY => gameTimerY,
@@ -87,6 +119,8 @@ class RugbyTimerRenderer {
             :hintBaseY => hintBaseY,
             :iconY => iconY
         };
+        _layoutCache[key] = result;
+        return result;
     }
 
     static function getFontHeightSafe(dc, font, fallback) {
@@ -217,11 +251,10 @@ class RugbyTimerRenderer {
      * @param halfFont The font to use for the lock indicator
      * @param scoreY The Y position of the lock indicator
      */
-    static function renderLockIndicator(dc, width, height, scoreY) {
+    static function renderLockIndicator(dc, width, height, scoreY, lockIcon) {
         var iconMarginX = width * 0.08;
         var iconY = scoreY - height * 0.05;
         if (iconY < 0) { iconY = 0; }
-        var lockIcon = WatchUi.loadResource(Rez.Drawables.LockIcon) as WatchUi.BitmapResource;
         if (lockIcon != null) {
             dc.drawBitmap(width - iconMarginX, iconY, lockIcon);
         }
@@ -235,15 +268,14 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @param iconY The Y position of the icon
      */
-    static function renderPlayPauseIndicator(dc, model, width, height, iconY) {
+    static function renderPlayPauseIndicator(dc, model, width, height, iconY, playIcon, pauseIcon) {
         var iconMarginX = width * 0.08;
         var y = iconY;
         if (y < 0) { y = 0; }
-        var iconId = Rez.Drawables.PlayIcon;
+        var icon = playIcon;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_IDLE) {
-            iconId = Rez.Drawables.PauseIcon;
+            icon = pauseIcon;
         }
-        var icon = WatchUi.loadResource(iconId) as WatchUi.BitmapResource;
         if (icon != null) {
             dc.drawBitmap(iconMarginX, y, icon);
         }
@@ -259,6 +291,7 @@ class RugbyTimerRenderer {
      * @return A dictionary containing information about the rendered cards
      */
     static function renderCardTimers(dc, model, width, cardsY, height) {
+        Profiler.start("renderCardTimers");
         // Only render the first two active sanctions per team so the primary layout stays tidy while
         // extra yellow/red timers continue counting in the background.
         if (model.yellowHomeTimes == null) { model.yellowHomeTimes = []; }
@@ -390,6 +423,7 @@ class RugbyTimerRenderer {
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
+        Profiler.stop("renderCardTimers");
         return {:rows => maxCardRows, :lineStep => lineStep, :cardsY => cardsY};
     }
 
@@ -447,12 +481,14 @@ class RugbyTimerRenderer {
      * @param countdownY The Y position of the countdown timer
      */
     static function renderCountdown(dc, model, width, countdownFont, countdownY) {
+        Profiler.start("renderCountdown");
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
         var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        Profiler.stop("renderCountdown");
     }
 
     /**
