@@ -64,6 +64,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function handleInputFailure(context, ex) {
         var view = Application.getApp().rugbyView;
         System.println("Input failure (" + context + "): " + ex.getErrorMessage());
+        model.setStatusMessage("Action failed");
         if (view != null && view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }

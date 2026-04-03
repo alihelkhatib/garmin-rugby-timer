@@ -50,6 +50,8 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — verifies serialized sanction-timer wrapper roundtrip
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — verifies persisted snapshot wrapper roundtrip
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — verifies renderer/timing typed adapter construction
+- `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — verifies runtime status messages are consumed once
+- `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — verifies malformed saved matches are cleared and surfaced to the UI
 
 Detailed test purposes (file::function -> purpose):
 
@@ -87,6 +89,8 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — Verifies serialized sanction-timer adapters preserve timing/label/id fields.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — Verifies the persisted game snapshot adapter preserves key scoreboard/state fields.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — Verifies the typed render-layout/font/card-info and timer-update adapters are constructed as expected.
+- `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — Verifies the model-level runtime status channel returns one message once and then clears.
+- `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — Verifies malformed persisted snapshots are discarded and replaced with a safe idle reset plus a user-visible reset notice.
 
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 

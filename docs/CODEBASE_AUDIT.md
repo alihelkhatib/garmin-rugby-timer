@@ -19,11 +19,15 @@
 - Finalized match summaries now also use a typed wrapper (`MatchSummaryEntry`) instead of ad hoc summary-dictionary access in persistence/tests.
 - Startup/reset live state is now centralized through `RugbyGameModel.resetMatchRuntimeState()`, reducing duplicated field-reset logic.
 - Recording support/failure now surfaces through a one-shot model/view status message rather than only `System.println`.
+- Runtime save/input/restore failures now reuse that same one-shot status channel so the watch shows a short notice instead of failing silently.
+- Invalid saved-match snapshots are now self-healed by clearing the bad Storage payload and resetting the app to a safe idle state.
+- `scripts/validate-local.sh` now provides a single local validation command that builds the app target and the unit-test target together.
 
 ## Test coverage status
 - Covered well: profiles/settings rules, card numbering/timing, countdown formatting.
 - Added now: live yellow-card pause behavior, persisted live-match restore behavior, finalized summary/event-log persistence.
 - Still manual-only: simulator UI rendering/layout overlap, device GPS/session behavior, vibration pattern validation.
+- Still manual-only: visual confirmation of on-watch status-message timing/placement and full simulator end-to-end pass/fail reporting from `monkeydo`.
 
 ## Organization assessment
 - Good: `RugbyTimerRenderer`, `RugbyTimerTiming`, `RugbyTimerCards`, and `RugbyTimerPersistence` are the right extraction points.

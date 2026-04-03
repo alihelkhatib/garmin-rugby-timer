@@ -13,13 +13,13 @@ using Toybox.System;
 class RugbyRecordingService {
     static function startRecording(model) {
         if (!(Toybox has :ActivityRecording)) {
-            model.setRecordingStatusMessage("Recording unsupported");
+            model.setStatusMessage("Recording unsupported");
             return;
         }
         if (!(Activity has :SPORT_RUGBY)) {
             System.println("Activity recording unavailable: SPORT_RUGBY not supported");
             model.session = null;
-            model.setRecordingStatusMessage("Rugby recording unavailable");
+            model.setStatusMessage("Rugby sport unsupported");
             return;
         }
         try {
@@ -32,11 +32,11 @@ class RugbyRecordingService {
             if (model.session != null && !model.session.isRecording()) {
                 model.session.start();
             }
-            model.setRecordingStatusMessage(null);
+            model.setStatusMessage(null);
         } catch (ex) {
             System.println("Error starting activity recording: " + ex.getErrorMessage());
             model.session = null;
-            model.setRecordingStatusMessage("Recording failed");
+            model.setStatusMessage("Recording start failed");
         }
     }
 
@@ -51,6 +51,7 @@ class RugbyRecordingService {
             model.session.save();
         } catch (ex) {
             System.println("Error stopping activity recording: " + ex.getErrorMessage());
+            model.setStatusMessage("Recording save failed");
         }
         model.session = null;
     }

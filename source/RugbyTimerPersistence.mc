@@ -13,6 +13,28 @@ class RugbyTimerPersistence {
         return value instanceof Lang.Number || value instanceof Lang.Float;
     }
 
+    static function isSnapshotUsable(snapshot) {
+        if (snapshot == null) {
+            return false;
+        }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.homeScore)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.awayScore)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.homeTries)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.awayTries)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.halfNumber)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.gameTime)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.elapsedTime)) { return false; }
+        if (!RugbyTimerPersistence.isNumeric(snapshot.countdownTimer)) { return false; }
+        return snapshot.gameState instanceof Lang.Number;
+    }
+
+    static function clearInvalidSavedState(model, reason) {
+        System.println("Clearing invalid saved state: " + reason);
+        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        model.resetMatchRuntimeState();
+        model.setStatusMessage("Saved match reset");
+    }
+
     /**
      * Saves the current game state to storage.
      * @param model The game model
@@ -105,6 +127,10 @@ class RugbyTimerPersistence {
     static function loadSavedState(model) {
         var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
         if (snapshot != null) {
+            if (!RugbyTimerPersistence.isSnapshotUsable(snapshot)) {
+                RugbyTimerPersistence.clearInvalidSavedState(model, "missing required fields");
+                return;
+            }
             try {
                 var now = System.getTimer();
                 model.homeScore = snapshot.homeScore;
@@ -192,6 +218,8 @@ class RugbyTimerPersistence {
                 }
             } catch (ex) {
                 Toybox.System.println("Error loading saved state: " + ex.getErrorMessage());
+                RugbyTimerPersistence.clearInvalidSavedState(model, ex.getErrorMessage());
+                return;
             }
         }
         if (model.yellowHomeTimes == null) {

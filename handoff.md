@@ -34,6 +34,9 @@ This file is a checkpoint of the work, findings, constraints, and open items dis
 - Activity recording is now forced to `Activity.SPORT_RUGBY` with no generic-sport fallback. On devices/runtime environments that do not support rugby activity recording, the timer still runs but recording is skipped.
 - `RugbyGameModel` now has a canonical `resetMatchRuntimeState()` path so startup and manual reset do not duplicate live-state initialization logic.
 - Unsupported/failing rugby activity recording now surfaces a one-shot UI status message through the view instead of only printing to logs.
+- Runtime failures now use a shared one-shot status channel instead of the old recording-only path, so save/input/restore failures can surface on-watch too.
+- Malformed saved snapshots are now treated as invalid, cleared from Storage, and replaced with a safe idle reset plus a short user-visible notice.
+- Added `scripts/validate-local.sh` as the single local validation entrypoint; it builds the app target and the unit-test target and then points at the correct `monkeydo <prg> <device_id> -t` command.
 
 ## Debt Reduction Pass In Progress
 - `RugbyGameModel` is being reduced to a facade.

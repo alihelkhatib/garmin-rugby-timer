@@ -212,9 +212,9 @@ class RugbyTimerView extends WatchUi.View {
      */
     function updateGame() as Void {
         model.updateGame();
-        var recordingStatus = model.consumeRecordingStatusMessage();
-        if (recordingStatus != null) {
-            displaySpecialOverlayMessage(recordingStatus);
+        var statusMessage = model.consumeStatusMessage();
+        if (statusMessage != null) {
+            displaySpecialOverlayMessage(statusMessage);
         }
         WatchUi.requestUpdate();
     }

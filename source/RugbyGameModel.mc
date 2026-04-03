@@ -51,8 +51,8 @@ class RugbyGameModel {
     
     // The current activity recording session
     var session;
-    // One-shot UI/log status text about activity recording support/failure
-    var recordingStatusMessage;
+    // One-shot UI/log status text about runtime failures or recording support/failure
+    var statusMessage;
     // A boolean indicating if the game is a 7s or 15s match
     var is7s;
     // The selected preset/profile id
@@ -222,17 +222,25 @@ class RugbyGameModel {
         distance = 0.0;
         speed = 0.0;
         session = null;
-        recordingStatusMessage = null;
+        statusMessage = null;
+    }
+
+    function setStatusMessage(message) {
+        statusMessage = message;
+    }
+
+    function consumeStatusMessage() {
+        var message = statusMessage;
+        statusMessage = null;
+        return message;
     }
 
     function setRecordingStatusMessage(message) {
-        recordingStatusMessage = message;
+        setStatusMessage(message);
     }
 
     function consumeRecordingStatusMessage() {
-        var message = recordingStatusMessage;
-        recordingStatusMessage = null;
-        return message;
+        return consumeStatusMessage();
     }
 
     /**

@@ -13,7 +13,8 @@ class RugbySnapshotService {
             RugbyTimerPersistence.saveState(model);
             model.lastPersistTime = System.getTimer();
         } catch (ex) {
-            System.println("Error persisting state");
+            System.println("Error persisting state: " + ex.getErrorMessage());
+            model.setStatusMessage("Save failed");
         }
     }
 
@@ -32,13 +33,23 @@ class RugbySnapshotService {
     }
 
     static function saveGame(model) {
-        RugbyTimerPersistence.finalizeGameData(model);
-        RugbySnapshotService.persistState(model);
+        try {
+            RugbyTimerPersistence.finalizeGameData(model);
+            RugbySnapshotService.persistState(model);
+        } catch (ex) {
+            System.println("Error saving finished match: " + ex.getErrorMessage());
+            model.setStatusMessage("Save failed");
+        }
     }
 
     static function finalizeGame(model) {
-        RugbyTimerPersistence.finalizeGameData(model);
-        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        try {
+            RugbyTimerPersistence.finalizeGameData(model);
+            Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        } catch (ex) {
+            System.println("Error finalizing game: " + ex.getErrorMessage());
+            model.setStatusMessage("Save failed");
+        }
     }
 
     static function exportEventLog(model) {
