@@ -5,9 +5,10 @@ using Toybox.Position;
 using Toybox.System;
 
 /**
- * The main application class for the Rugby Timer.
- * This class is responsible for initializing the application,
- * creating the model, view, and delegate, and handling app-level events.
+ * Application entrypoint for the watch app.
+ *
+ * Purpose: construct and retain the shared `RugbyGameModel`, `RugbyTimerView`,
+ * and `RugbyTimerDelegate` instances, then forward app lifecycle events to them.
  */
 class RugbyTimerApp extends Application.AppBase {
     // The main view of the application

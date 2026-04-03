@@ -2,7 +2,10 @@ using Toybox.Lang;
 using Toybox.System;
 
 /**
- * A helper class for managing yellow and red card timers.
+ * Card-timer helper for yellow and red sanction stacks.
+ *
+ * Purpose: own card numbering, timer entry creation, live remaining-time
+ * updates, and team-specific card list maintenance outside the model/view.
  */
 class RugbyTimerCards {
     static function isNumeric(value) {
@@ -100,13 +103,15 @@ class RugbyTimerCards {
     static function updateYellowTimers(model, list, now) {
         var newList = [];
         var expiredAny = false;
+        if (!(list instanceof Lang.Array)) {
+            return RugbyTimerUpdateResult.create(newList, expiredAny);
+        }
+        var cardEntries = list as Lang.Array;
         if (!RugbyTimerCards.isNumeric(now) || now < 0) {
             now = System.getTimer();
         }
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var raw = list[i] as Lang.Dictionary;
-            if (raw == null) { continue; }
-            var ce = CardEntry.fromDict(raw);
+        for (var i = 0; i < cardEntries.size(); i = i + 1) {
+            var ce = CardEntry.fromDict(cardEntries[i]);
             if (ce == null) { continue; }
 
             var duration = ce.duration;
@@ -147,21 +152,17 @@ class RugbyTimerCards {
             ce.remaining = remaining;
             newList.add(ce.toDict());
         }
-        return {
-            "timers" => newList,
-            "expired" => expiredAny
-        };
+        return RugbyTimerUpdateResult.create(newList, expiredAny);
     }
 
     static function pauseYellowTimers(list, now) {
         var pausedList = [];
-        if (list == null) {
+        if (!(list instanceof Lang.Array)) {
             return pausedList;
         }
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var raw = list[i] as Lang.Dictionary;
-            if (raw == null) { continue; }
-            var ce = CardEntry.fromDict(raw);
+        var cardEntries = list as Lang.Array;
+        for (var i = 0; i < cardEntries.size(); i = i + 1) {
+            var ce = CardEntry.fromDict(cardEntries[i]);
             if (ce == null) { continue; }
             var remaining = ce.remaining;
             if (!RugbyTimerCards.isNumeric(remaining)) {
@@ -178,13 +179,12 @@ class RugbyTimerCards {
 
     static function resumeYellowTimers(list, now) {
         var resumedList = [];
-        if (list == null) {
+        if (!(list instanceof Lang.Array)) {
             return resumedList;
         }
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var raw = list[i] as Lang.Dictionary;
-            if (raw == null) { continue; }
-            var ce = CardEntry.fromDict(raw);
+        var cardEntries = list as Lang.Array;
+        for (var i = 0; i < cardEntries.size(); i = i + 1) {
+            var ce = CardEntry.fromDict(cardEntries[i]);
             if (ce == null) { continue; }
             var duration = ce.duration;
             var remaining = ce.remaining;
@@ -211,12 +211,14 @@ class RugbyTimerCards {
      */
     static function computeYellowLabelCounter(list) {
         var maxLabel = 0;
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i] as Lang.Dictionary;
-            if (entry == null) {
-                continue;
-            }
-            var cardId = entry["cardId"] as Lang.Number;
+        if (!(list instanceof Lang.Array)) {
+            return maxLabel;
+        }
+        var cardEntries = list as Lang.Array;
+        for (var i = 0; i < cardEntries.size(); i = i + 1) {
+            var entry = CardEntry.fromDict(cardEntries[i]);
+            if (entry == null) { continue; }
+            var cardId = entry.cardId as Lang.Number;
             if (cardId != null && cardId > maxLabel) {
                 maxLabel = cardId;
             }
@@ -230,16 +232,15 @@ class RugbyTimerCards {
      * @return The parsed number
      */
     static function parseLabelNumber(label) {
-        if (label == null) {
+        if (!(label instanceof Lang.String)) {
             return 0;
         }
         var digits = label as Lang.String;
-        if (digits.length() > 0 && digits[0] == "Y") {
-            var trimmed = "";
-            for (var idx = 1; idx < digits.length(); idx = idx + 1) {
-                trimmed = trimmed + digits[idx];
+        if (digits.length() > 0) {
+            var prefix = digits.substring(0, 1);
+            if (prefix == "Y" || prefix == "R") {
+                digits = digits.substring(1, digits.length());
             }
-            digits = trimmed;
         }
         if (digits.length() == 0) {
             return 0;

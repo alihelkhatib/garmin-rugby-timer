@@ -3,7 +3,10 @@ using Toybox.Lang;
 using Toybox.System;
 
 /**
- * A helper class for saving and loading the game state.
+ * Storage adapter for live match snapshots and final summaries.
+ *
+ * Purpose: isolate Storage key reads/writes, compatibility defaults, and
+ * snapshot shaping from the game model and UI code.
  */
 class RugbyTimerPersistence {
     static function isNumeric(value) {
@@ -22,48 +25,47 @@ class RugbyTimerPersistence {
         var snapshotCountdownRemaining = model.countdownTimer - snapshotGameTime;
         if (snapshotCountdownRemaining < 0) { snapshotCountdownRemaining = 0; }
         var snapshotCountdownSeconds = RugbyTimerPersistence.getSnapshotCountdownSeconds(model);
-        var snapshot = {
-            "homeScore" => model.homeScore,
-            "awayScore" => model.awayScore,
-            "homeTries" => model.homeTries,
-            "awayTries" => model.awayTries,
-            "halfNumber" => model.halfNumber,
-            "gameTime" => snapshotGameTime,
-            "suspensionTime" => snapshotSuspensionTime,
-            "elapsedTime" => snapshotElapsedTime,
-            "countdownRemaining" => snapshotCountdownRemaining,
-            "countdownSeconds" => snapshotCountdownSeconds,
-            "gameState" => persistedStates[:gameState],
-            "pausedState" => persistedStates[:pausedState],
-            "matchProfileId" => model.matchProfileId,
-            "is7s" => model.is7s,
-            "countdownTimer" => model.countdownTimer,
-            "conversionTime" => model.conversionTime,
-            "kickoffTime" => model.kickoffTime,
-            "penaltyKickTime" => model.penaltyKickTime,
-            "useConversionTimer" => model.useConversionTimer,
-            "usePenaltyTimer" => model.usePenaltyTimer,
-            "conversionTeam" => model.conversionTeam,
-            "yellowHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowHomeTimes, snapshotSuspensionTime),
-            "yellowAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.yellowAwayTimes, snapshotSuspensionTime),
-            "yellowHomeLabelCounter" => model.yellowHomeLabelCounter,
-            "yellowAwayLabelCounter" => model.yellowAwayLabelCounter,
-            "redHomeLabelCounter" => model.redHomeLabelCounter,
-            "redAwayLabelCounter" => model.redAwayLabelCounter,
-            "yellowHomeTotal" => model.yellowHomeTotal,
-            "yellowAwayTotal" => model.yellowAwayTotal,
-            "redHomeTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redHomeTimes, snapshotSuspensionTime),
-            "redAwayTimes" => RugbyTimerPersistence.serializeYellowTimers(model.redAwayTimes, snapshotSuspensionTime),
-            "redHomePermanent" => model.redHomePermanent,
-            "redAwayPermanent" => model.redAwayPermanent,
-            "redHomeTotal" => model.redHomeTotal,
-            "redAwayTotal" => model.redAwayTotal,
-            "homePenalties" => model.homePenalties,
-            "awayPenalties" => model.awayPenalties,
-            "lastEvents" => model.lastEvents,
-            "eventLogEntries" => model.eventLogEntries
-        };
-        Storage.setValue("gameStateData", snapshot);
+        var snapshot = new PersistedGameSnapshot();
+        snapshot.homeScore = model.homeScore;
+        snapshot.awayScore = model.awayScore;
+        snapshot.homeTries = model.homeTries;
+        snapshot.awayTries = model.awayTries;
+        snapshot.halfNumber = model.halfNumber;
+        snapshot.gameTime = snapshotGameTime;
+        snapshot.suspensionTime = snapshotSuspensionTime;
+        snapshot.elapsedTime = snapshotElapsedTime;
+        snapshot.countdownRemaining = snapshotCountdownRemaining;
+        snapshot.countdownSeconds = snapshotCountdownSeconds;
+        snapshot.gameState = persistedStates.gameState;
+        snapshot.pausedState = persistedStates.pausedState;
+        snapshot.matchProfileId = model.matchProfileId;
+        snapshot.is7s = model.is7s;
+        snapshot.countdownTimer = model.countdownTimer;
+        snapshot.conversionTime = model.conversionTime;
+        snapshot.kickoffTime = model.kickoffTime;
+        snapshot.penaltyKickTime = model.penaltyKickTime;
+        snapshot.useConversionTimer = model.useConversionTimer;
+        snapshot.usePenaltyTimer = model.usePenaltyTimer;
+        snapshot.conversionTeam = model.conversionTeam;
+        snapshot.yellowHomeTimes = RugbyTimerPersistence.serializeYellowTimers(model.yellowHomeTimes, snapshotSuspensionTime);
+        snapshot.yellowAwayTimes = RugbyTimerPersistence.serializeYellowTimers(model.yellowAwayTimes, snapshotSuspensionTime);
+        snapshot.yellowHomeLabelCounter = model.yellowHomeLabelCounter;
+        snapshot.yellowAwayLabelCounter = model.yellowAwayLabelCounter;
+        snapshot.redHomeLabelCounter = model.redHomeLabelCounter;
+        snapshot.redAwayLabelCounter = model.redAwayLabelCounter;
+        snapshot.yellowHomeTotal = model.yellowHomeTotal;
+        snapshot.yellowAwayTotal = model.yellowAwayTotal;
+        snapshot.redHomeTimes = RugbyTimerPersistence.serializeYellowTimers(model.redHomeTimes, snapshotSuspensionTime);
+        snapshot.redAwayTimes = RugbyTimerPersistence.serializeYellowTimers(model.redAwayTimes, snapshotSuspensionTime);
+        snapshot.redHomePermanent = model.redHomePermanent;
+        snapshot.redAwayPermanent = model.redAwayPermanent;
+        snapshot.redHomeTotal = model.redHomeTotal;
+        snapshot.redAwayTotal = model.redAwayTotal;
+        snapshot.homePenalties = model.homePenalties;
+        snapshot.awayPenalties = model.awayPenalties;
+        snapshot.lastEvents = model.lastEvents;
+        snapshot.eventLogEntries = model.eventLogEntries;
+        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, snapshot.toDict());
     }
 
     /**
@@ -71,30 +73,29 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function finalizeGameData(model) {
-        var summary = {
-            "homeScore" => model.homeScore,
-            "awayScore" => model.awayScore,
-            "homeTries" => model.homeTries,
-            "awayTries" => model.awayTries,
-            "halfNumber" => model.halfNumber,
-            "elapsedTime" => model.elapsedTime,
-            "countdownRemaining" => model.countdownRemaining,
-            "yellowHomeTimes" => model.yellowHomeTimes,
-            "yellowAwayTimes" => model.yellowAwayTimes,
-            "redHomeActive" => (model.redHomePermanent || model.redHomeTimes.size() > 0),
-            "redAwayActive" => (model.redAwayPermanent || model.redAwayTimes.size() > 0),
-            "redHomePermanent" => model.redHomePermanent,
-            "redAwayPermanent" => model.redAwayPermanent
-        };
-        summary["yellowHomeTotal"] = model.yellowHomeTotal;
-        summary["yellowAwayTotal"] = model.yellowAwayTotal;
-        summary["redHomeTotal"] = model.redHomeTotal;
-        summary["redAwayTotal"] = model.redAwayTotal;
+        var summary = new MatchSummaryEntry();
+        summary.homeScore = model.homeScore;
+        summary.awayScore = model.awayScore;
+        summary.homeTries = model.homeTries;
+        summary.awayTries = model.awayTries;
+        summary.halfNumber = model.halfNumber;
+        summary.elapsedTime = model.elapsedTime;
+        summary.countdownRemaining = model.countdownRemaining;
+        summary.yellowHomeTimes = model.yellowHomeTimes;
+        summary.yellowAwayTimes = model.yellowAwayTimes;
+        summary.redHomeActive = (model.redHomePermanent || model.redHomeTimes.size() > 0);
+        summary.redAwayActive = (model.redAwayPermanent || model.redAwayTimes.size() > 0);
+        summary.redHomePermanent = model.redHomePermanent;
+        summary.redAwayPermanent = model.redAwayPermanent;
+        summary.yellowHomeTotal = model.yellowHomeTotal;
+        summary.yellowAwayTotal = model.yellowAwayTotal;
+        summary.redHomeTotal = model.redHomeTotal;
+        summary.redAwayTotal = model.redAwayTotal;
         var eventLogText = RugbyTimerEventLog.buildEventLogText(model);
         if (eventLogText.length() > 0) {
-            summary["eventLog"] = eventLogText;
+            summary.eventLog = eventLogText;
         }
-        Storage.setValue("lastGameSummary", summary);
+        Storage.setValue(STORAGE_KEY_LAST_GAME_SUMMARY, summary.toDict());
     }
 
     /**
@@ -102,33 +103,33 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function loadSavedState(model) {
-        var data = Storage.getValue("gameStateData") as Lang.Dictionary;
-        if (data != null) {
+        var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+        if (snapshot != null) {
             try {
                 var now = System.getTimer();
-                model.homeScore = data["homeScore"];
-                model.awayScore = data["awayScore"];
-                model.homeTries = data["homeTries"];
-                model.awayTries = data["awayTries"];
-                model.halfNumber = data["halfNumber"];
-                model.gameTime = data["gameTime"];
-                model.elapsedTime = data["elapsedTime"];
-                model.suspensionTime = data["suspensionTime"];
+                model.homeScore = snapshot.homeScore;
+                model.awayScore = snapshot.awayScore;
+                model.homeTries = snapshot.homeTries;
+                model.awayTries = snapshot.awayTries;
+                model.halfNumber = snapshot.halfNumber;
+                model.gameTime = snapshot.gameTime;
+                model.elapsedTime = snapshot.elapsedTime;
+                model.suspensionTime = snapshot.suspensionTime;
                 if (!(model.suspensionTime instanceof Lang.Number) && !(model.suspensionTime instanceof Lang.Float)) {
                     model.suspensionTime = model.gameTime;
                 }
-                model.countdownRemaining = data["countdownRemaining"];
-                model.countdownSeconds = data["countdownSeconds"];
-                model.gameState = RugbyTimerPersistence.restoreGameState(data["gameState"]);
-                model.pausedState = RugbyTimerPersistence.restorePausedState(model.gameState, data["gameState"], data["pausedState"]);
-                model.matchProfileId = data["matchProfileId"];
-                model.is7s = data["is7s"];
-                model.countdownTimer = data["countdownTimer"];
-                model.conversionTime = RugbyTimerPersistence.restoreConversionTime(data);
-                model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(data["kickoffTime"], model.is7s);
-                model.penaltyKickTime = data["penaltyKickTime"];
-                model.useConversionTimer = data["useConversionTimer"];
-                model.usePenaltyTimer = data["usePenaltyTimer"];
+                model.countdownRemaining = snapshot.countdownRemaining;
+                model.countdownSeconds = snapshot.countdownSeconds;
+                model.gameState = RugbyTimerPersistence.restoreGameState(snapshot.gameState);
+                model.pausedState = RugbyTimerPersistence.restorePausedState(model.gameState, snapshot.gameState, snapshot.pausedState);
+                model.matchProfileId = snapshot.matchProfileId;
+                model.is7s = snapshot.is7s;
+                model.countdownTimer = snapshot.countdownTimer;
+                model.conversionTime = RugbyTimerPersistence.restoreConversionTime(snapshot);
+                model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(snapshot.kickoffTime, model.is7s);
+                model.penaltyKickTime = snapshot.penaltyKickTime;
+                model.useConversionTimer = snapshot.useConversionTimer;
+                model.usePenaltyTimer = snapshot.usePenaltyTimer;
                 if (model.matchProfileId == null) {
                     model.matchProfileId = RugbyMatchProfiles.inferProfileIdFromSettings(
                         model.is7s,
@@ -140,43 +141,43 @@ class RugbyTimerPersistence {
                         model.usePenaltyTimer
                     );
                 }
-                model.conversionTeam = data["conversionTeam"];
-                model.lastEvents = data["lastEvents"];
+                model.conversionTeam = snapshot.conversionTeam;
+                model.lastEvents = snapshot.lastEvents;
                 if (model.lastEvents == null) { model.lastEvents = []; }
-                model.eventLogEntries = data["eventLogEntries"];
+                model.eventLogEntries = snapshot.eventLogEntries;
                 if (model.eventLogEntries == null) { model.eventLogEntries = []; }
                 
-                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowHomeTimes"], model.suspensionTime, now);
-                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["yellowAwayTimes"], model.suspensionTime, now);
+                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowHomeTimes, model.suspensionTime, now);
+                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowAwayTimes, model.suspensionTime, now);
                 
-                model.yellowHomeLabelCounter = data["yellowHomeLabelCounter"];
+                model.yellowHomeLabelCounter = snapshot.yellowHomeLabelCounter;
                 if (model.yellowHomeLabelCounter == null) { model.yellowHomeLabelCounter = 0; }
-                model.yellowAwayLabelCounter = data["yellowAwayLabelCounter"];
+                model.yellowAwayLabelCounter = snapshot.yellowAwayLabelCounter;
                 if (model.yellowAwayLabelCounter == null) { model.yellowAwayLabelCounter = 0; }
-                model.redHomeLabelCounter = data["redHomeLabelCounter"];
+                model.redHomeLabelCounter = snapshot.redHomeLabelCounter;
                 if (model.redHomeLabelCounter == null) { model.redHomeLabelCounter = 0; }
-                model.redAwayLabelCounter = data["redAwayLabelCounter"];
+                model.redAwayLabelCounter = snapshot.redAwayLabelCounter;
                 if (model.redAwayLabelCounter == null) { model.redAwayLabelCounter = 0; }
                 
-                model.redHomePermanent = data["redHomePermanent"];
+                model.redHomePermanent = snapshot.redHomePermanent;
                 if (model.redHomePermanent == null) { model.redHomePermanent = false; }
-                model.redAwayPermanent = data["redAwayPermanent"];
+                model.redAwayPermanent = snapshot.redAwayPermanent;
                 if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
-                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(data["redHomeTimes"], model.suspensionTime, now);
-                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(data["redAwayTimes"], model.suspensionTime, now);
+                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redHomeTimes, model.suspensionTime, now);
+                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redAwayTimes, model.suspensionTime, now);
 
-                model.yellowHomeTotal = data["yellowHomeTotal"];
+                model.yellowHomeTotal = snapshot.yellowHomeTotal;
                 if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
-                model.yellowAwayTotal = data["yellowAwayTotal"];
+                model.yellowAwayTotal = snapshot.yellowAwayTotal;
                 if (model.yellowAwayTotal == null) { model.yellowAwayTotal = 0; }
-                model.redHomeTotal = data["redHomeTotal"];
+                model.redHomeTotal = snapshot.redHomeTotal;
                 if (model.redHomeTotal == null) { model.redHomeTotal = 0; }
-                model.redAwayTotal = data["redAwayTotal"];
+                model.redAwayTotal = snapshot.redAwayTotal;
                 if (model.redAwayTotal == null) { model.redAwayTotal = 0; }
                 
-                model.homePenalties = data["homePenalties"];
+                model.homePenalties = snapshot.homePenalties;
                 if (model.homePenalties == null) { model.homePenalties = 0; }
-                model.awayPenalties = data["awayPenalties"];
+                model.awayPenalties = snapshot.awayPenalties;
                 if (model.awayPenalties == null) { model.awayPenalties = 0; }
 
                 if (model.gameState != STATE_IDLE && model.gameState != STATE_ENDED) {
@@ -209,15 +210,9 @@ class RugbyTimerPersistence {
 
     static function getPersistedStates(model) {
         if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
-            return {
-                :gameState => STATE_PAUSED,
-                :pausedState => model.gameState
-            };
+            return PersistedStatePair.create(STATE_PAUSED, model.gameState);
         }
-        return {
-            :gameState => model.gameState,
-            :pausedState => model.pausedState
-        };
+        return PersistedStatePair.create(model.gameState, model.pausedState);
     }
 
     static function getSnapshotGameTime(model) {
@@ -279,17 +274,18 @@ class RugbyTimerPersistence {
 
     static function serializeYellowTimers(list, clockValue) {
         var serialized = [];
-        if (list == null) {
+        if (!(list instanceof Lang.Array)) {
             return serialized;
         }
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i] as Lang.Dictionary;
+        var entries = list as Lang.Array;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = CardEntry.fromDict(entries[i]);
             if (entry == null) {
                 continue;
             }
-            var duration = entry["duration"];
-            var remaining = entry["remaining"];
-            var clockStart = entry["startTime"];
+            var duration = entry.duration;
+            var remaining = entry.remaining;
+            var clockStart = entry.startTime;
             if (RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
                 remaining = duration - (clockValue - clockStart);
             }
@@ -303,36 +299,33 @@ class RugbyTimerPersistence {
                 continue;
             }
             if (remaining > duration) { remaining = duration; }
-            serialized.add({
-                "duration" => duration,
-                "clockStart" => clockStart,
-                "remaining" => remaining,
-                "label" => entry["label"],
-                "cardId" => entry["cardId"],
-                "vibeTriggered" => entry["vibeTriggered"] == true
-            });
+            serialized.add(PersistedCardTimerEntry.create(duration, clockStart, remaining, entry.label, entry.cardId, entry.vibeTriggered).toDict());
         }
         return serialized;
     }
 
     static function restoreYellowTimers(list, clockValue, now) {
         var restored = [];
-        if (list == null) {
+        if (!(list instanceof Lang.Array)) {
             return restored;
         }
-        for (var i = 0; i < list.size(); i = i + 1) {
-            var entry = list[i] as Lang.Dictionary;
+        var entries = list as Lang.Array;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = PersistedCardTimerEntry.fromDict(entries[i]);
             if (entry == null) {
                 continue;
             }
-            var duration = entry["duration"];
-            var remaining = entry["remaining"];
-            var clockStart = entry["clockStart"];
+            var duration = entry.duration;
+            var remaining = entry.remaining;
+            var clockStart = entry.clockStart;
             if (!RugbyTimerPersistence.isNumeric(clockStart)) {
-                clockStart = entry["startTime"];
+                var activeEntry = CardEntry.fromDict(entries[i]);
+                if (activeEntry != null) {
+                    clockStart = activeEntry.startTime;
+                }
             }
             if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
-                if (entry["clockStart"] instanceof Lang.Number || entry["clockStart"] instanceof Lang.Float) {
+                if (entry.clockStart instanceof Lang.Number || entry.clockStart instanceof Lang.Float) {
                     remaining = duration - (clockValue - clockStart);
                 } else {
                     remaining = duration - ((now - clockStart) / 1000.0f);
@@ -351,14 +344,10 @@ class RugbyTimerPersistence {
             if (!RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
                 clockStart = clockValue - (duration - remaining);
             }
-            restored.add({
-                "startTime" => clockStart,
-                "duration" => duration,
-                "label" => entry["label"],
-                "cardId" => entry["cardId"],
-                "vibeTriggered" => entry["vibeTriggered"] == true,
-                "remaining" => remaining
-            });
+            var active = CardEntry.createFromStartTime(clockStart, duration, entry.label, entry.cardId);
+            active.vibeTriggered = entry.vibeTriggered == true;
+            active.remaining = remaining;
+            restored.add(active.toDict());
         }
         return restored;
     }
@@ -400,13 +389,13 @@ class RugbyTimerPersistence {
         return now - ((1200 - remaining) * 1000.0f);
     }
 
-    static function restoreConversionTime(data) {
-        var conversionTime = data["conversionTime"];
+    static function restoreConversionTime(snapshot) {
+        var conversionTime = snapshot.conversionTime;
         if (conversionTime instanceof Lang.Number) {
             return conversionTime;
         }
-        var is7s = data["is7s"] == true;
-        conversionTime = is7s ? data["conversionTime7s"] : data["conversionTime15s"];
+        var is7s = snapshot.is7s == true;
+        conversionTime = is7s ? snapshot.conversionTime7s : snapshot.conversionTime15s;
         if (conversionTime instanceof Lang.Number) {
             return conversionTime;
         }

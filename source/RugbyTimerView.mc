@@ -5,20 +5,22 @@ using Toybox.System;
 using Toybox.Lang;
 using Toybox.Application.Storage;
 using Rez.Strings;
+using Rez.Drawables;
 
 /**
- * Represents the main view of the rugby timer application.
- * This class is responsible for rendering the UI based on the data from the model.
- * It also handles some UI-specific state, such as screen lock and overlay visibility.
+ * Primary watch view for the live match screen.
+ *
+ * Purpose: bridge the public game model to the render/timing/overlay helpers
+ * and retain view-only state such as lock and overlay visibility.
  */
 class RugbyTimerView extends WatchUi.View {
     // The game model
     var model as RugbyGameModel;
     
     // Cached font information
-    var cachedFonts as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
+    var cachedFonts;
     // Cached layout information
-    var cachedLayout as Toybox.Lang.Dictionary = {} as Toybox.Lang.Dictionary;
+    var cachedLayout;
 
     // A boolean indicating if the screen is locked
     var isLocked;
@@ -32,6 +34,12 @@ class RugbyTimerView extends WatchUi.View {
     var specialOverlayMessage;
     // The expiry timestamp for the special overlay message
     var specialOverlayMessageExpiry;
+    // Cached icons (preloaded to avoid loadResource in draw path)
+    var cachedLockIcon;
+    var cachedPlayIcon;
+    var cachedPauseIcon;
+    // Last profiler report timestamp
+    var lastProfilerReportTime;
     
     // The timer for updating the game state
     var updateTimer;
@@ -49,8 +57,19 @@ class RugbyTimerView extends WatchUi.View {
         specialTimerOverlayVisible = false;
         specialOverlayMessage = null;
         specialOverlayMessageExpiry = 0;
-        dimMode = Storage.getValue("dimMode");
+        dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
         if (dimMode == null) { dimMode = false; }
+        // Preload small bitmaps once at init
+        try {
+            cachedLockIcon = WatchUi.loadResource(Rez.Drawables.LockIcon) as WatchUi.BitmapResource;
+        } catch (ex) { cachedLockIcon = null; }
+        try {
+            cachedPlayIcon = WatchUi.loadResource(Rez.Drawables.PlayIcon) as WatchUi.BitmapResource;
+        } catch (ex) { cachedPlayIcon = null; }
+        try {
+            cachedPauseIcon = WatchUi.loadResource(Rez.Drawables.PauseIcon) as WatchUi.BitmapResource;
+        } catch (ex) { cachedPauseIcon = null; }
+        lastProfilerReportTime = 0;
     }
 
     /**
@@ -62,6 +81,7 @@ class RugbyTimerView extends WatchUi.View {
         // Calculate and cache fonts and layout once
         cachedFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
         cachedLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
+        RugbyTimerRenderer.invalidateMainLayoutCache();
     }
 
     /**
@@ -111,25 +131,35 @@ class RugbyTimerView extends WatchUi.View {
         var fonts = cachedFonts;
         var layout = cachedLayout;
 
-        RugbyTimerRenderer.renderScores(dc, model, width, fonts[:scoreFont], layout[:scoreY]);
-        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts[:timerFont], layout[:gameTimerY]);
-        RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts[:halfFont], fonts[:triesFont], layout[:halfY], layout[:triesY]);
-        RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout[:iconY]);
+        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY);
+        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY);
+        RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts.halfFont, fonts.triesFont, layout.halfY, layout.triesY);
+        RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout.iconY, cachedPlayIcon, cachedPauseIcon);
         if (isLocked) {
-            RugbyTimerRenderer.renderLockIndicator(dc, width, height, layout[:scoreY]);
+            RugbyTimerRenderer.renderLockIndicator(dc, width, height, layout.scoreY, cachedLockIcon);
         }
 
-        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout[:cardsY], height);
-        var mainContentLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, isLocked);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts[:countdownFont], mainContentLayout[:countdownY]);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts[:stateFont], mainContentLayout[:stateY], height);
-        renderHint(dc, width, fonts[:hintFont], mainContentLayout[:hintY], height, mainContentLayout[:hintLineGap]);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout.cardsY, height);
+        var mainContentLayout = RugbyTimerRenderer.getMainContentLayoutCached(dc, model, fonts, layout, cardInfo, height, isLocked);
+        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts.countdownFont, mainContentLayout.countdownY);
+        RugbyTimerRenderer.renderStateText(dc, model, width, fonts.stateFont, mainContentLayout.stateY, height);
+        renderHint(dc, width, fonts.hintFont, mainContentLayout.hintY, height, mainContentLayout.hintLineGap);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
         // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
         if (!isSpecialOverlayActive() && specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
             dc.drawText(width / 2, height * 0.62, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
+        }
+        // Periodic profiler report (debug only)
+        if (Profiler.ENABLED) {
+            var now = System.getTimer();
+            if (lastProfilerReportTime == null) { lastProfilerReportTime = now; }
+            if (now - lastProfilerReportTime > 5000) {
+                Profiler.report();
+                Profiler.reset();
+                lastProfilerReportTime = now;
+            }
         }
     }
 
@@ -182,6 +212,10 @@ class RugbyTimerView extends WatchUi.View {
      */
     function updateGame() as Void {
         model.updateGame();
+        var recordingStatus = model.consumeRecordingStatusMessage();
+        if (recordingStatus != null) {
+            displaySpecialOverlayMessage(recordingStatus);
+        }
         WatchUi.requestUpdate();
     }
 

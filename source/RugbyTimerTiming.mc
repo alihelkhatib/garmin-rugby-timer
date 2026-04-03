@@ -4,7 +4,10 @@ using Toybox.WatchUi;
 using Toybox.Lang;
 
 /**
- * A helper class for handling game timing.
+ * Shared timing loop and haptic helper for active match state.
+ *
+ * Purpose: advance the main clocks, special countdowns, and sanction timers on
+ * each update tick while emitting the match-specific vibration cues.
  */
 class RugbyTimerTiming {
         static function isNumeric(value) {
@@ -32,6 +35,7 @@ class RugbyTimerTiming {
                 model.lastUpdate = now;
                 return;
             }
+            Profiler.start("updateGame");
 
             var deltaSeconds = (now - model.lastUpdate) / 1000.0f;
             if (deltaSeconds < 0) { deltaSeconds = 0; }
@@ -98,18 +102,18 @@ class RugbyTimerTiming {
             var suspensionClockRunning = RugbyTimerTiming.isSuspensionClockRunning(model.gameState);
             if (suspensionClockRunning) {
                 var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, model.suspensionTime);
-                model.yellowHomeTimes = homeYellowUpdate["timers"];
+                model.yellowHomeTimes = homeYellowUpdate.timers;
                 var awayYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowAwayTimes, model.suspensionTime);
-                model.yellowAwayTimes = awayYellowUpdate["timers"];
-                if (homeYellowUpdate["expired"] == true || awayYellowUpdate["expired"] == true) {
+                model.yellowAwayTimes = awayYellowUpdate.timers;
+                if (homeYellowUpdate.expired == true || awayYellowUpdate.expired == true) {
                     RugbyTimerTiming.triggerYellowTimerExpiredVibe();
                 }
 
                 // Red card timers (same mechanism as yellow cards)
                 var homeRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redHomeTimes, model.suspensionTime);
-                model.redHomeTimes = homeRedUpdate["timers"];
+                model.redHomeTimes = homeRedUpdate.timers;
                 var awayRedUpdate = RugbyTimerCards.updateYellowTimers(model, model.redAwayTimes, model.suspensionTime);
-                model.redAwayTimes = awayRedUpdate["timers"];
+                model.redAwayTimes = awayRedUpdate.timers;
             }
 
             if (model.gameState == STATE_PAUSED) {
@@ -131,12 +135,14 @@ class RugbyTimerTiming {
                 }
             }
 
+            Profiler.stop("updateGame");
             model.lastUpdate = now;
             if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
                 model.persistState();
             }
-
+            
         } catch (ex) {
+            Profiler.stop("updateGame");
             System.println("Error in RugbyTimerTiming.updateGame: " + ex.getErrorMessage());
         }
     }

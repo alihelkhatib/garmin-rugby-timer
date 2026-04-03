@@ -6,7 +6,10 @@ using Toybox.WatchUi;
 using Rez.Strings;
 
 /**
- * A helper class for rendering the special timer overlay.
+ * Special overlay renderer for conversion and penalty states.
+ *
+ * Purpose: draw the dedicated overlay screen and prompts while keeping the
+ * main renderer focused on the normal match screen layout.
  */
 class RugbyTimerOverlay {
     /**

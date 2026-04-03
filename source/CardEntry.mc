@@ -16,14 +16,15 @@ class CardEntry {
     var vibeTriggered;
 
     static function fromDict(d) {
-        if (d == null) { return null; }
+        if (!(d instanceof Lang.Dictionary)) { return null; }
         var e = new CardEntry();
-        e.startTime = d["startTime"];
-        e.duration = d["duration"];
-        e.remaining = d["remaining"];
-        e.label = d["label"];
-        e.cardId = d["cardId"];
-        e.vibeTriggered = (d["vibeTriggered"] == true);
+        var dict = d as Lang.Dictionary;
+        e.startTime = dict["startTime"];
+        e.duration = dict["duration"];
+        e.remaining = dict["remaining"];
+        e.label = dict["label"];
+        e.cardId = dict["cardId"];
+        e.vibeTriggered = (dict["vibeTriggered"] == true);
         return e;
     }
 
