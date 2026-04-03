@@ -121,11 +121,7 @@ class RugbyTimerView extends WatchUi.View {
 
         // Conversion overlays should reopen automatically when a try transitions the
         // model into conversion state, even if that happened while a menu was on top.
-        if (model.gameState == STATE_CONVERSION && !specialTimerOverlayVisible) {
-            specialTimerOverlayVisible = true;
-        } else if (specialTimerOverlayVisible && model.gameState != STATE_CONVERSION && model.gameState != STATE_PENALTY) {
-            specialTimerOverlayVisible = false;
-        }
+        specialTimerOverlayVisible = RugbyTimerViewSupport.getOverlayVisibility(specialTimerOverlayVisible, model.gameState);
 
         // Use cached fonts and layout
         var fonts = cachedFonts;
@@ -147,7 +143,7 @@ class RugbyTimerView extends WatchUi.View {
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
         // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
-        if (!isSpecialOverlayActive() && specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry) {
+        if (RugbyTimerViewSupport.shouldShowToast(isSpecialOverlayActive(), specialOverlayMessage, specialOverlayMessageExpiry, System.getTimer())) {
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
             dc.drawText(width / 2, height * 0.62, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }
@@ -173,20 +169,18 @@ class RugbyTimerView extends WatchUi.View {
     function renderHint(dc, width, hintFont, hintY, height, hintLineGap) {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
-        if (isLocked) {
+        var hintMode = RugbyTimerViewSupport.getHintMode(isLocked, model.gameState);
+        if (hintMode == VIEW_HINT_MODE_LOCKED) {
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Locked), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
-        if (model.gameState == STATE_IDLE) {
+        if (hintMode == VIEW_HINT_MODE_IDLE) {
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
-        if (model.gameState == STATE_PLAYING) {
+        if (hintMode == VIEW_HINT_MODE_PLAYING) {
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Select_Pause), Graphics.TEXT_JUSTIFY_CENTER);
-            return;
-        }
-        if (model.gameState == STATE_PAUSED) {
             return;
         }
     }

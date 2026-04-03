@@ -24,3 +24,7 @@ Recommended workflow:
 - Run `monkeyc` with `--unit-test` on CI to produce a test PRG and execute it with `monkeydo` in the simulator.
 - Use `scripts/run-tests.sh` to build the test PRG, and set `RUN_SIM_TESTS=1 SIM_DEVICE_ID=<id>` when you want it to invoke `monkeydo`.
 - Use `scripts/validate-local.sh` when you want one local command that builds the app target and the unit-test target together.
+
+Integration coverage:
+- `tests/Test_RugbyIntegrationFlows.mc` holds the multi-step match-flow coverage intended for simulator-backed verification of presets, pause/resume restore, sanction persistence, and rugby-only recording startup behavior.
+- `tests/Test_RugbyTimerViewSupport.mc` covers the extracted pure presentation rules from `RugbyTimerView`, keeping the view refactor testable without a device context.

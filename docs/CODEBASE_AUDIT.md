@@ -22,12 +22,14 @@
 - Runtime save/input/restore failures now reuse that same one-shot status channel so the watch shows a short notice instead of failing silently.
 - Invalid saved-match snapshots are now self-healed by clearing the bad Storage payload and resetting the app to a safe idle state.
 - `scripts/validate-local.sh` now provides a single local validation command that builds the app target and the unit-test target together.
+- Added integration-style Garmin test coverage for multi-step match flows (`Test_RugbyIntegrationFlows`) instead of only single-method unit checks.
+- `RugbyTimerView` is now thinner: pure overlay/hint/toast decisions moved into `RugbyTimerViewSupport`, with direct tests for those rules.
 
 ## Test coverage status
 - Covered well: profiles/settings rules, card numbering/timing, countdown formatting.
 - Added now: live yellow-card pause behavior, persisted live-match restore behavior, finalized summary/event-log persistence.
 - Still manual-only: simulator UI rendering/layout overlap, device GPS/session behavior, vibration pattern validation.
-- Still manual-only: visual confirmation of on-watch status-message timing/placement and full simulator end-to-end pass/fail reporting from `monkeydo`.
+- Still manual-only: visual confirmation of on-watch status-message timing/placement and stable simulator end-to-end pass/fail reporting from `monkeydo`, because the simulator connection in this workspace remains intermittent.
 
 ## Organization assessment
 - Good: `RugbyTimerRenderer`, `RugbyTimerTiming`, `RugbyTimerCards`, and `RugbyTimerPersistence` are the right extraction points.

@@ -37,6 +37,8 @@ This file is a checkpoint of the work, findings, constraints, and open items dis
 - Runtime failures now use a shared one-shot status channel instead of the old recording-only path, so save/input/restore failures can surface on-watch too.
 - Malformed saved snapshots are now treated as invalid, cleared from Storage, and replaced with a safe idle reset plus a short user-visible notice.
 - Added `scripts/validate-local.sh` as the single local validation entrypoint; it builds the app target and the unit-test target and then points at the correct `monkeydo <prg> <device_id> -t` command.
+- Added integration-style Garmin tests for preset persistence, paused restore, sanction persistence, and strict rugby-recording startup in `tests/Test_RugbyIntegrationFlows.mc`.
+- Split the remaining pure presentation rules out of `RugbyTimerView.mc` into `RugbyTimerViewSupport.mc`, with direct tests for overlay visibility, hint routing, and toast visibility.
 
 ## Debt Reduction Pass In Progress
 - `RugbyGameModel` is being reduced to a facade.
@@ -51,7 +53,7 @@ This file is a checkpoint of the work, findings, constraints, and open items dis
 - Newly targeted in this phase:
   wrapper-level coverage for game start/pause/resume, scoring-to-conversion flow, undo, and save-game summary behavior.
 - Still not fully automated:
-  simulator UI layout assertions, real simulator test execution, GPS/session runtime behavior, vibration validation.
+  simulator UI layout assertions, stable real simulator test execution, GPS/session runtime behavior, vibration validation.
 - Verification standard used in this checkpoint:
   all non-doc code changes should have unit-test coverage added or updated; compile success of the unit-test target is verified, but runtime pass/fail is still pending simulator availability.
 

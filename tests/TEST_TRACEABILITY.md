@@ -52,6 +52,13 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — verifies renderer/timing typed adapter construction
 - `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — verifies runtime status messages are consumed once
 - `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — verifies malformed saved matches are cleared and surfaced to the UI
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_preset_change_persists_and_restores` — verifies preset switching survives full model reinitialization
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_start_pause_resume_restore_flow` — verifies start/pause/resume plus persisted paused restore
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_card_timers_survive_persist_restore` — verifies yellow/red sanction timers survive persistence with remaining time intact
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_startGame_uses_strict_rugby_recording` — verifies start flow either opens rugby recording or reports a strict rugby-only failure
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — verifies extracted view overlay visibility rules
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — verifies extracted hint-mode routing
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — verifies extracted toast visibility rules
 
 Detailed test purposes (file::function -> purpose):
 
@@ -91,6 +98,13 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — Verifies the typed render-layout/font/card-info and timer-update adapters are constructed as expected.
 - `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — Verifies the model-level runtime status channel returns one message once and then clears.
 - `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — Verifies malformed persisted snapshots are discarded and replaced with a safe idle reset plus a user-visible reset notice.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_preset_change_persists_and_restores` — Verifies preset changes persist through a fresh model initialization cycle.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_start_pause_resume_restore_flow` — Verifies the live clock flow can start, pause, persist, restore paused, and resume safely.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_card_timers_survive_persist_restore` — Verifies sanction timing remains intact after persistence/restore for both yellow and timed red cards.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_startGame_uses_strict_rugby_recording` — Verifies match start keeps the rugby-only recording contract by either opening a session or surfacing a rugby-specific failure state.
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — Verifies conversion/penalty overlay visibility decisions moved out of `RugbyTimerView`.
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — Verifies when non-overlay status toasts are allowed to render.
 
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 
