@@ -25,19 +25,7 @@ class TestMatchProfileDelegate {
     }
 
     function resolveProfileId(itemId) {
-        var idText = itemId != null ? itemId.toString() : "";
-        if (itemId == "7s" || idText == "7s" || itemId == :profile_7s || idText == "profile_7s" || idText == ":profile_7s") {
-            return "7s";
-        } else if (itemId == "10s" || idText == "10s" || itemId == :profile_10s || idText == "profile_10s" || idText == ":profile_10s") {
-            return "10s";
-        } else if (itemId == "15s" || idText == "15s" || itemId == :profile_15s || idText == "profile_15s" || idText == ":profile_15s") {
-            return "15s";
-        } else if (itemId == "u19" || idText == "u19" || itemId == :profile_u19 || idText == "profile_u19" || idText == ":profile_u19") {
-            return "u19";
-        } else if (itemId == "custom" || idText == "custom" || itemId == :profile_custom || idText == "profile_custom" || idText == ":profile_custom") {
-            return "custom";
-        }
-        return null;
+        return RugbySettingsSupport.resolveProfileId(itemId);
     }
 
     function onSelect(item) {
@@ -64,8 +52,7 @@ class TestTimerPickerDelegate {
     var model;
     function initialize(m) { model = m; }
     function onAccept(values) {
-        var minutes = values[0] * 10 + values[1];
-        if (minutes < 1) { minutes = 1; }
+        var minutes = RugbySettingsSupport.getMinutesFromDigits(values);
         model.setHalfDuration(minutes * 60);
         return true;
     }
@@ -75,11 +62,7 @@ class TestConversionAdjustDelegate {
     var model;
     function initialize(m) { model = m; }
     function onSelect(item) {
-        var val = 30;
-        var id = item.getId();
-        if (id == "t60" || id == :t60) { val = 60; }
-        else if (id == "t90" || id == :t90) { val = 90; }
-        else if (id == "t120" || id == :t120) { val = 120; }
+        var val = RugbySettingsSupport.getConversionSelectionSeconds(item.getId());
         model.setConversionTime(val);
     }
 }
@@ -151,5 +134,13 @@ function test_ui_toggle_format_promotes_to_custom(logger as Test.Logger) as Lang
     if (model.matchProfileId == "custom") { return false; }
 
     model.setFormatFamily(true);
-    return (model.matchProfileId == "custom") && (Storage.getValue("matchProfileId") == "custom");
+    return (model.matchProfileId == "custom") && (Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID) == "custom");
+}
+
+(:test)
+function test_settings_support_profile_resolution_and_clamp(logger as Test.Logger) as Lang.Boolean {
+    if (RugbySettingsSupport.resolveProfileId("profile_u19") != "u19") { logger.error("profile resolution failed"); return false; }
+    if (RugbySettingsSupport.clampMinutes(0) != 1) { logger.error("minutes clamp low failed"); return false; }
+    if (RugbySettingsSupport.clampMinutes(120) != 99) { logger.error("minutes clamp high failed"); return false; }
+    return RugbySettingsSupport.getMinutesFromDigits([0, 5]) == 5;
 }

@@ -41,11 +41,14 @@ function test_yellow_multiple_ordering_and_numbering(logger as Test.Logger) as L
     }
 
     // Labels should increment per-team. First home label Y1, second Y2; away first label Y1.
-    var h0 = model.yellowHomeTimes[0]["label"] as Lang.String;
-    var h1 = model.yellowHomeTimes[1]["label"] as Lang.String;
-    var a0 = model.yellowAwayTimes[0]["label"] as Lang.String;
-    logger.debug("home labels: " + h0 + ", " + h1 + " away: " + a0);
-    return (h0 == "Y1") && (h1 == "Y2") && (a0 == "Y1");
+    var homeTimes = model.yellowHomeTimes;
+    var awayTimes = model.yellowAwayTimes;
+    var h0 = CardEntry.fromDict(homeTimes.remove(0));
+    var h1 = CardEntry.fromDict(homeTimes.remove(0));
+    var a0 = CardEntry.fromDict(awayTimes.remove(0));
+    if (h0 == null || h1 == null || a0 == null) { logger.error("yellow entries missing"); return false; }
+    logger.debug("home labels: " + h0.label + ", " + h1.label + " away: " + a0.label);
+    return (h0.label == "Y1") && (h1.label == "Y2") && (a0.label == "Y1");
 }
 
 (:test)
@@ -76,15 +79,19 @@ function test_red_numbering_and_timed_entries(logger as Test.Logger) as Lang.Boo
         return false;
     }
 
-    var rh = model.redHomeTimes[0]["label"] as Lang.String;
-    var ra = model.redAwayTimes[0]["label"] as Lang.String;
-    logger.debug("red labels home/away: " + rh + ", " + ra);
+    var redHomeTimes = model.redHomeTimes;
+    var redAwayTimes = model.redAwayTimes;
+    var rh = CardEntry.fromDict(redHomeTimes.remove(0));
+    var ra = CardEntry.fromDict(redAwayTimes.remove(0));
+    if (rh == null || ra == null) { logger.error("red entries missing"); return false; }
+    logger.debug("red labels home/away: " + rh.label + ", " + ra.label);
 
     // Add another home red and expect label R2 for the second entry.
     model.recordRedCard(true);
     if (model.redHomeTimes.size() != 2) { return false; }
-    var rh2 = model.redHomeTimes[1]["label"] as Lang.String;
-    return (rh == "R1") && (ra == "R1") && (rh2 == "R2");
+    var rh2 = CardEntry.fromDict(redHomeTimes.remove(0));
+    if (rh2 == null) { logger.error("second red entry missing"); return false; }
+    return (rh.label == "R1") && (ra.label == "R1") && (rh2.label == "R2");
 }
 
 (:test)
@@ -98,15 +105,17 @@ function test_yellow_timer_sync_with_suspension(logger as Test.Logger) as Lang.B
     model.suspensionTime = 100;
 
     model.recordYellowCard(true);
-    var entry = model.yellowHomeTimes[0];
-    var before = entry["remaining"] as Lang.Number;
+    var yellowTimes = model.yellowHomeTimes;
+    var entry = CardEntry.fromDict(yellowTimes.remove(0));
+    var before = entry.remaining as Lang.Number;
 
     // Advance suspension clock by 30s and update timers using the same clock units.
     model.suspensionTime = 130;
     var out = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, model.suspensionTime);
-    var timers = out["timers"] as Lang.Array;
+    var timers = out.timers as Lang.Array;
     if (timers.size() != 1) { logger.error("unexpected timers size"); return false; }
-    var after = timers[0]["remaining"] as Lang.Number;
+    var updatedEntry = CardEntry.fromDict(timers[0]);
+    var after = updatedEntry.remaining as Lang.Number;
     logger.debug("remaining before=" + before.toString() + " after=" + after.toString());
 
     // Allow 1-second rounding tolerance when comparing to integer seconds.

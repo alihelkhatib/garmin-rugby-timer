@@ -1,9 +1,13 @@
-// Tests for RugbyTimerTiming
-// Each test below includes a short purpose comment describing intent and expectations.
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Test;
 
+/*
+Unit tests for `RugbyTimerTiming`.
+
+Purpose: verify shared countdown formatting and timing helpers that are used by
+the main update loop and multiple UI surfaces.
+*/
 // Purpose: verifies `formatTime` formats seconds into MM:SS correctly (65 -> "01:05").
 (:test)
 function test_formatTime_65(logger as Test.Logger) as Lang.Boolean {

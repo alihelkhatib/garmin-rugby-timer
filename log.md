@@ -1,8 +1,72 @@
-## [2026-04-01] Reapply the two-visible-card cap and align card display rounding
+## [2026-04-03] Centralize storage keys and force rugby activity recording
 
-- The renderer now shows at most two sanction timers per team at once across both yellow and red cards. Additional timers stay hidden until one of the visible timers expires, but they continue counting in the model the whole time.
-- Card timer display now runs through the same display-rounding helper as the main countdown so yellow/red clocks do not visually drop a second early relative to the rest of the UI.
-- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed; existing container-analysis/type warnings remain).
+- Added `source/RugbyStorageKeys.mc` and rewired active persistence/profile/settings/test helpers to use centralized Storage key names instead of repeating string literals.
+- Removed the generic-sport activity fallback from `source/RugbyRecordingService.mc`. The app now attempts `Activity.SPORT_RUGBY` only; if rugby activity recording is unavailable in the runtime, the match still works but no recording session is created.
+- Also cleaned the remaining card-label parsing path and removed the stale `ScoreEvent` state-pair helper that no longer matched the persistence architecture.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (both passed).
+- Residual production warnings are now limited to `source/Profiler.mc` and a few `source/RugbyTimerRenderer.mc` cache accesses. Test-only container warnings remain in older tests.
+
+## [2026-04-03] Centralize live-state reset and expand regression coverage
+
+- Added `source/MatchSummaryEntry.mc` so finalized `lastGameSummary` payloads are handled through a typed wrapper instead of repeated raw-dictionary access.
+- Centralized live-state initialization/reset through `RugbyGameModel.resetMatchRuntimeState()`, and updated `RugbySnapshotService.resetGame()` to use that canonical path.
+- Added one-shot recording-status feedback: unsupported/failing rugby activity recording now sets a model status message that `RugbyTimerView` surfaces briefly in the UI instead of only printing to logs.
+- Reduced test warning noise by converting the older profile/summary tests to typed wrappers and added regression coverage for stored profile restore, preset switching, and custom settings mutation order.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (both passed).
+- Current warning state: no production warnings on the app build; remaining warnings are limited to a few test-only container accesses in `tests/Test_RugbyTimerCards_advanced.mc`, `tests/Test_RugbyTimerPersistence.mc`, and `tests/Test_RugbyTypedEntries.mc`.
+
+## [2026-04-03] Simulator runtime test invocation reached app but not test execution
+
+- Built the runtime test PRG with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o bin/tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (passed).
+- `monkeydo` from the sandbox still failed with `Unable to connect to simulator`.
+- Re-ran `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" /t` with elevated access against the running simulator. This time the simulator launched the PRG and printed `TestRunnerApp started. Use SDK unit-test runner to execute tests.`
+- Current conclusion: simulator reachability is improved, but the runtime path is still not executing the `(:test)` suite. The current test harness/manifest entrypoint is launching the app shell rather than reporting test-case results.
+
+## [2026-04-03] Correct monkeydo syntax discovered for this SDK build
+
+- `monkeydo --help` in this SDK reports usage as `monkeydo executable device_id ... [-t]`, so the earlier `monkeydo <prg> /t` guidance was incomplete for this tool version.
+- `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" 1 /t` still failed because this macOS build rejects `/t` and expects `-t`.
+- `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" 1 -t` is accepted by the CLI and stays attached to the simulator, but it did not emit test-case results back to this terminal during the observed run window.
+- Current conclusion: the CLI shape is now known (`device_id` plus `-t`), but this environment still does not provide a reliable terminal-visible pass/fail report from the running simulator.
+
+## [2026-04-03] Clear remaining test-build warnings
+
+- Replaced the last warning-heavy test array/dictionary indexing paths in `tests/Test_RugbyTimerCards_advanced.mc`, `tests/Test_RugbyTimerPersistence.mc`, and `tests/Test_RugbyTypedEntries.mc` with wrapper-based assertions and non-indexing access patterns.
+- Rebuilt the unit-test target with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test"` and it now completes with `BUILD SUCCESSFUL` and no compiler warnings.
+
+## [2026-04-03] Fix preset picker applying the wrong match format
+
+- Root cause: `MatchProfileDelegate` was deferring preset application through a short timer after popping the picker view and was using symbol-style menu ids. On the real runtime this made the selection path more fragile than the headless tests suggested, and the chosen preset could fail to stick while the menu stack unwound.
+- Fix: changed `MatchProfileMenu` to use stable string ids (`"7s"`, `"10s"`, `"15s"`, `"u19"`, `"custom"`) and changed `MatchProfileDelegate` to apply the selected profile synchronously before closing the picker.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (both passed).
+
+## [2026-04-03] Remove production warning noise and harden startup path
+
+- Replaced the class-based storage-key access with plain top-level constants in `source/RugbyStorageKeys.mc` to avoid startup-time static initialization risk.
+- Removed `RugbyTimerRenderer` layout caches to eliminate the remaining production container-analysis warnings.
+- Converted `source/Profiler.mc` into an explicit no-op stub so disabled profiling cannot emit unreachable-statement warnings or affect runtime behavior.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (both passed).
+- Current state: no production warnings on the app build; remaining warnings are test-only dictionary-access warnings in older tests.
+
+## [2026-04-03] Documentation preambles and naming review
+
+- Added top-of-file purpose preambles across the remaining source and test `.mc` files so each module/test file now states why it exists before the implementation begins.
+- Re-reviewed file necessity and naming consistency. No current source file appears dead or worth deleting; the small wrapper files remain justified because they reduce repeated raw-dictionary access and keep tests more focused.
+- Captured the naming/file-necessity assessment in `handoff.md`, `docs/CODEBASE_AUDIT.md`, `project_technical_document.md`, and `tests/TEST_TRACEABILITY.md`.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` (both passed).
+- Residual production warnings remain limited to `Profiler.mc`, `RugbyTimerCards.mc`, and `RugbyTimerRenderer.mc`; older test-only container warnings remain in some legacy test files.
+
+## [2026-04-02] Release: Improved timing, overlays, export reliability, and polish
+
+- Improved timer accuracy: fixed pause/resume desynchronization and reduced countdown drift so half and card timers stay accurate after pauses and long sessions.
+- Overlay fixes: resolved stacking and display glitches for conversion, kickoff, and penalty overlays; overlays now show and dismiss predictably.
+- Event-log export: fixed CSV formatting and edge-case failures—exports and sharing are more reliable.
+- Compatibility: updated launcher icon to required 40×40 and adjusted layouts to prevent clipping on more devices.
+- Performance & stability: reduced CPU usage during active timing and fixed intermittent slowdowns.
+- Minor UI polish and general bug fixes.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` (builds passed).
+
+## [2026-04-01] Reapply the two-visible-card cap and align card display rounding
 
 ## [2026-04-01] Restore simple stacked card columns and number red cards
 
@@ -1795,6 +1859,56 @@
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
 
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+
+- 2026-04-03: Fixed the Garmin unit-test workflow so `scripts/run-tests.sh` now compiles with `--unit-test`, added persistence/model transition coverage in `tests/Test_RugbyTimerPersistence.mc`, persisted custom profile labels, disabled the debug profiler by default for smoother runtime behavior, and added `docs/CODEBASE_AUDIT.md` with organization/refactor/performance guidance.
+
+- 2026-04-03 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / pre-existing unreachable-statement warnings).
+
+- 2026-04-03 test build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / pre-existing unreachable-statement warnings).
+
+- 2026-04-03: Added `handoff.md` as the running checkpoint for this effort and completed the first `RugbyGameModel` debt-reduction pass by extracting clock, scoring, discipline, recording, and snapshot orchestration into focused helper services while keeping `RugbyGameModel` as the public facade. Added wrapper-level unit tests to confirm the facade still preserves start/pause/resume, try-to-conversion, undo, and save-summary behavior.
+
+- 2026-04-03 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / pre-existing unreachable-statement warnings).
+
+- 2026-04-03 test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / pre-existing unreachable-statement warnings).
+
+- 2026-04-03 runtime test attempt: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" /tmp/rugbytimer-tests.prg /t` -> FAILED in this environment with `Unable to connect to simulator`. Attempting to launch the bundled `connectiq` app also failed, so unit tests are compile-verified but not simulator-executed here.
+
+- 2026-04-03: Added typed wrappers for match profiles and score events (`MatchProfileEntry`, `ScoreEvent`) to reduce raw-dictionary access in the newly touched service/model paths, added unit tests for those wrappers, and documented the remaining naming/overlap hotspots in `handoff.md` and `docs/CODEBASE_AUDIT.md`.
+
+- 2026-04-03 warning-reduction rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warning set reduced in the touched profile/scoring paths; remaining warnings are still concentrated in older dictionary-heavy modules and pre-existing unreachable branches).
+
+- 2026-04-03 warning-reduction test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (same caveat: compile-verified only; simulator execution still unavailable in this environment).
+
+- 2026-04-03: Added `EventLogEntry` and `RugbySettingsSupport` to pull pure event-log/settings parsing away from the larger UI files, and added direct unit coverage for the new helper layer (`Test_RugbyEventLogEntry`, expanded `Test_RugbyTypedEntries`, expanded `Test_RugbySettings_UI`).
+
+- 2026-04-03 warning-reduction rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings reduced again; newly touched settings/profile/event-log paths are clean, remaining warnings are concentrated in older persistence/renderer/timing code plus the intentionally disabled profiler path).
+
+- 2026-04-03 warning-reduction test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (compile-verified only; simulator execution is still blocked by the local `monkeydo` connection failure).
+
+- 2026-04-03: Split `RugbySettings` into focused modules (`RugbySettingsMenu`, `RugbySettingsNavigation`, `RugbySettingsPickers`) and moved the menu/dialog classes out of `RugbyTimerDelegate` into `RugbyTimerMenus` so the remaining delegate file is centered on hardware input behavior.
+
+- 2026-04-03 structural cleanup rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (same remaining warnings: older persistence/renderer/timing modules, one low-risk card-label parsing warning, and the intentionally disabled profiler branch).
+
+- 2026-04-03 structural cleanup test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (compile-verified only; simulator execution is still blocked by the local `monkeydo` connection failure).
+
+- 2026-04-03: Added concise maintainability documentation to the newly extracted settings/menu modules and the typed wrapper/helper files so each module now documents its responsibility boundary and any non-obvious compatibility behavior.
+
+- 2026-04-03 documentation-pass rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (same remaining warnings: older persistence/renderer/timing modules, one low-risk card-label parsing warning, and the intentionally disabled profiler branch).
+
+- 2026-04-03 documentation-pass test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (compile-verified only; simulator execution is still blocked by the local `monkeydo` connection failure).
+
+- 2026-04-03: Extracted pure `RugbyTimerDelegate` rules into `RugbyTimerInputSupport` and added direct unit coverage for idle-minute adjustment, overlay key routing, and hold-to-preset gating.
+
+- 2026-04-03 delegate-helper rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (same remaining warnings: older persistence/renderer/timing modules, one low-risk card-label parsing warning, and the intentionally disabled profiler branch).
+
+- 2026-04-03 delegate-helper test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (compile-verified only; simulator execution is still blocked by the local `monkeydo` connection failure).
+
+- 2026-04-03: Added typed adapters for persisted snapshots, serialized sanction timers, timer-update results, and renderer layout/font/card-info values (`PersistedGameSnapshot`, `PersistedCardTimerEntry`, `PersistedStatePair`, `RugbyTimerRenderTypes`) and rewired persistence/render/timing/view code to use them.
+
+- 2026-04-03 persistence-render cleanup rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warning set reduced again; remaining production warnings are limited to `Profiler`, a small `RugbyTimerCards` parsing path, and a few renderer cache accesses).
+
+- 2026-04-03 persistence-render cleanup test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL (compile-verified only; simulator execution is still blocked by the local `monkeydo` connection failure).
 
 - 2026-04-02: Reworked timer architecture so the app now advances three separate clocks: `elapsedTime` for the always-running top count-up, `gameTime` for the pauseable match countdown and special timers, and `suspensionTime` for yellow/red sanctions. Card rendering and persistence now use `suspensionTime` instead of wall-clock timestamps and cached `remaining` values, which is intended to remove the persistent drift after pause/resume and card entry during stoppages.
 

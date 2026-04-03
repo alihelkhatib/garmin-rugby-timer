@@ -4,6 +4,9 @@ using Toybox.WatchUi;
 
 /**
  * Test runner application entrypoint for CI/local tests.
+ *
+ * Purpose: provide the minimal app shell required by the Garmin unit-test
+ * target without dragging the full runtime UI into test builds.
  */
 class TestRunnerApp extends Application.AppBase {
     // Keep the same public fields referenced by other modules to satisfy compile-time checks
@@ -15,12 +18,8 @@ class TestRunnerApp extends Application.AppBase {
     }
 
     function onStart(state) {
-        // Run tests immediately on start
-        try {
-            TestRunner.runAll();
-        } catch (ex) {
-            System.println("Error while running tests: " + ex.getErrorMessage());
-        }
+        // Tests are executed via the SDK unit test runner (use --unit-test and monkeydo /t)
+        System.println("TestRunnerApp started. Use SDK unit-test runner to execute tests.");
     }
 
     function getInitialView() {

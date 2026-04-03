@@ -22,14 +22,15 @@ function test_store_and_retrieve_custom_profile(logger as Test.Logger) as Lang.B
     var profile = RugbyMatchProfiles.createProfile("custom", "Custom", true, 420, 30, 30, 60, true, false);
     RugbyMatchProfiles.storeCustomProfile(profile);
 
-    var stored = RugbyMatchProfiles.getStoredCustomProfile();
-    logger.debug("stored halfDuration -> " + stored["halfDuration"].toString());
+    var stored = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    if (stored == null) { logger.error("stored profile missing"); return false; }
+    logger.debug("stored halfDuration -> " + stored.halfDuration.toString());
 
     // Restore previous values
     Storage.setValue("customHalfDuration", prevHalf);
     Storage.setValue("customProfileIs7s", prevIs7s);
 
-    return stored["halfDuration"] == 420 && stored["is7s"] == true;
+    return stored.halfDuration == 420 && stored.is7s == true;
 }
 
 // Purpose: verify legacy migration falls back to defaults and returns a built-in profile id when no legacy keys exist.
@@ -51,4 +52,16 @@ function test_migrateLegacyProfile_defaults(logger as Test.Logger) as Lang.Boole
     logger.debug("migrateLegacyProfile -> " + inferred);
 
     return inferred == "15s";
+}
+
+// Purpose: verify the explicitly stored profile id is respected on the next model initialization.
+(:test)
+function test_model_initialize_restores_stored_profile_id(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, "u19");
+
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    return model.matchProfileId == "u19" && model.halfDuration == 2100;
 }

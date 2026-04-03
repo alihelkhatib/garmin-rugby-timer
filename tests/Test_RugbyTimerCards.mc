@@ -2,6 +2,12 @@ using Toybox.System;
 using Toybox.Lang;
 using Toybox.Test;
 
+/*
+Unit tests for sanction-card timer helpers.
+
+Purpose: cover live/stored remaining-time calculations and low-level card
+timer behaviors used by the discipline and timing layers.
+*/
 // Purpose: verify live remaining calculation for an actively running card entry.
 (:test)
 function test_getEntryRemaining_live(logger as Test.Logger) as Lang.Boolean {
@@ -26,10 +32,12 @@ function test_updateYellowTimers_basic(logger as Test.Logger) as Lang.Boolean {
     var list = [];
     list.add({ "startTime" => 0, "duration" => 60 } as Lang.Dictionary);
     var res = RugbyTimerCards.updateYellowTimers(null, list, 10);
-    var timers = res["timers"] as Lang.Array;
+    var timers = res.timers as Lang.Array;
     logger.debug("updateYellowTimers timers size: " + timers.size().toString());
     if (timers.size() != 1) { return false; }
-    var rem3 = timers[0]["remaining"];
+    var entry = CardEntry.fromDict(timers[0]);
+    if (entry == null) { return false; }
+    var rem3 = entry.remaining;
     logger.debug("updateYellowTimers remaining[0] -> " + rem3.toString());
     return rem3 > 0;
 }

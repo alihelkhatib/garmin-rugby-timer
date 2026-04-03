@@ -5,9 +5,10 @@ set -euo pipefail
 SDK="${CONNECTIQ_SDK:-/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b}"
 KEY="${DEVELOPER_KEY:-/Users/600171959/developer_key}"
 OUT="bin/tests.prg"
+DEVICE="${TEST_DEVICE:-fenix6}"
 
 echo "Building test PRG..."
-"$SDK/bin/monkeyc" -f test_monkey.jungle -o "$OUT" -d fenix6 -y "$KEY" -w
+"$SDK/bin/monkeyc" -f test_monkey.jungle -o "$OUT" -d "$DEVICE" -y "$KEY" -w --unit-test
 echo "Built $OUT"
 
-echo "Run the PRG on the simulator or device. When launched the test runner prints TESTS PASSED or TESTS FAILED to stdout/logs."
+echo "Run with: \"$SDK/bin/monkeydo\" \"$OUT\" /t"

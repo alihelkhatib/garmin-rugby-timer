@@ -14,19 +14,21 @@ promotion-to-custom behavior, and card/red/yellow duration semantics.
 (:test)
 function test_builtin_profiles_values(logger as Test.Logger) as Lang.Boolean {
     // Purpose: built-in profiles expose expected timing defaults.
-    var p7 = RugbyMatchProfiles.getBuiltInProfile("7s");
-    if (p7["halfDuration"] != 420) { logger.error("7s halfDuration!=420"); return false; }
-    if (p7["conversionTime"] != 30) { logger.error("7s conversionTime!=30"); return false; }
-    if (p7["kickoffTime"] != 30) { logger.error("7s kickoffTime!=30"); return false; }
-    if (p7["penaltyKickTime"] != 60) { logger.error("7s penaltyKickTime!=60"); return false; }
-    if (p7["is7s"] != true) { logger.error("7s is7s flag not true"); return false; }
+    var p7 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("7s"));
+    if (p7 == null) { logger.error("7s profile missing"); return false; }
+    if (p7.halfDuration != 420) { logger.error("7s halfDuration!=420"); return false; }
+    if (p7.conversionTime != 30) { logger.error("7s conversionTime!=30"); return false; }
+    if (p7.kickoffTime != 30) { logger.error("7s kickoffTime!=30"); return false; }
+    if (p7.penaltyKickTime != 60) { logger.error("7s penaltyKickTime!=60"); return false; }
+    if (p7.is7s != true) { logger.error("7s is7s flag not true"); return false; }
 
-    var p15 = RugbyMatchProfiles.getBuiltInProfile("15s");
-    if (p15["halfDuration"] != 2400) { logger.error("15s halfDuration!=2400"); return false; }
-    if (p15["conversionTime"] != 90) { logger.error("15s conversionTime!=90"); return false; }
-    if (p15["kickoffTime"] != 60) { logger.error("15s kickoffTime!=60"); return false; }
-    if (p15["penaltyKickTime"] != 60) { logger.error("15s penaltyKickTime!=60"); return false; }
-    if (p15["is7s"] == true) { logger.error("15s is7s flag unexpectedly true"); return false; }
+    var p15 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("15s"));
+    if (p15 == null) { logger.error("15s profile missing"); return false; }
+    if (p15.halfDuration != 2400) { logger.error("15s halfDuration!=2400"); return false; }
+    if (p15.conversionTime != 90) { logger.error("15s conversionTime!=90"); return false; }
+    if (p15.kickoffTime != 60) { logger.error("15s kickoffTime!=60"); return false; }
+    if (p15.penaltyKickTime != 60) { logger.error("15s penaltyKickTime!=60"); return false; }
+    if (p15.is7s == true) { logger.error("15s is7s flag unexpectedly true"); return false; }
 
     return true;
 }
@@ -34,21 +36,24 @@ function test_builtin_profiles_values(logger as Test.Logger) as Lang.Boolean {
 (:test)
 function test_infer_profile_id_from_builtins(logger as Test.Logger) as Lang.Boolean {
     // Purpose: settings that exactly match built-ins should infer the built-in id.
-    var p7 = RugbyMatchProfiles.getBuiltInProfile("7s");
+    var p7 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("7s"));
+    if (p7 == null) { logger.error("7s profile missing"); return false; }
     var id7 = RugbyMatchProfiles.inferProfileIdFromSettings(
-        p7["is7s"], p7["halfDuration"], p7["conversionTime"], p7["kickoffTime"], p7["penaltyKickTime"], p7["useConversionTimer"], p7["usePenaltyTimer"]
+        p7.is7s, p7.halfDuration, p7.conversionTime, p7.kickoffTime, p7.penaltyKickTime, p7.useConversionTimer, p7.usePenaltyTimer
     );
     if (id7 != "7s") { logger.error("inferProfileIdFromSettings did not return 7s for 7s settings: " + id7); return false; }
 
-    var p10 = RugbyMatchProfiles.getBuiltInProfile("10s");
+    var p10 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("10s"));
+    if (p10 == null) { logger.error("10s profile missing"); return false; }
     var id10 = RugbyMatchProfiles.inferProfileIdFromSettings(
-        p10["is7s"], p10["halfDuration"], p10["conversionTime"], p10["kickoffTime"], p10["penaltyKickTime"], p10["useConversionTimer"], p10["usePenaltyTimer"]
+        p10.is7s, p10.halfDuration, p10.conversionTime, p10.kickoffTime, p10.penaltyKickTime, p10.useConversionTimer, p10.usePenaltyTimer
     );
     if (id10 != "10s") { logger.error("inferProfileIdFromSettings did not return 10s for 10s settings: " + id10); return false; }
 
-    var pu19 = RugbyMatchProfiles.getBuiltInProfile("u19");
+    var pu19 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("u19"));
+    if (pu19 == null) { logger.error("u19 profile missing"); return false; }
     var idu19 = RugbyMatchProfiles.inferProfileIdFromSettings(
-        pu19["is7s"], pu19["halfDuration"], pu19["conversionTime"], pu19["kickoffTime"], pu19["penaltyKickTime"], pu19["useConversionTimer"], pu19["usePenaltyTimer"]
+        pu19.is7s, pu19.halfDuration, pu19.conversionTime, pu19.kickoffTime, pu19.penaltyKickTime, pu19.useConversionTimer, pu19.usePenaltyTimer
     );
     if (idu19 != "u19") { logger.error("inferProfileIdFromSettings did not return u19 for u19 settings: " + idu19); return false; }
 
@@ -63,13 +68,14 @@ function test_store_and_get_custom_profile(logger as Test.Logger) as Lang.Boolea
     var custom = RugbyMatchProfiles.createProfile("custom", "MyVariant", false, 1800, 45, 50, 70, false, true);
     RugbyMatchProfiles.storeCustomProfile(custom);
 
-    var s = RugbyMatchProfiles.getStoredCustomProfile();
-    if (s["halfDuration"] != 1800) { logger.error("stored halfDuration mismatch: " + s["halfDuration"].toString()); return false; }
-    if (s["conversionTime"] != 45) { logger.error("stored conversionTime mismatch: " + s["conversionTime"].toString()); return false; }
-    if (s["kickoffTime"] != 50) { logger.error("stored kickoffTime mismatch: " + s["kickoffTime"].toString()); return false; }
-    if (s["penaltyKickTime"] != 70) { logger.error("stored penaltyKickTime mismatch: " + s["penaltyKickTime"].toString()); return false; }
-    if (s["useConversionTimer"] != false) { logger.error("stored useConversionTimer mismatch"); return false; }
-    if (s["usePenaltyTimer"] != true) { logger.error("stored usePenaltyTimer mismatch"); return false; }
+    var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    if (s == null) { logger.error("stored custom missing"); return false; }
+    if (s.halfDuration != 1800) { logger.error("stored halfDuration mismatch: " + s.halfDuration.toString()); return false; }
+    if (s.conversionTime != 45) { logger.error("stored conversionTime mismatch: " + s.conversionTime.toString()); return false; }
+    if (s.kickoffTime != 50) { logger.error("stored kickoffTime mismatch: " + s.kickoffTime.toString()); return false; }
+    if (s.penaltyKickTime != 70) { logger.error("stored penaltyKickTime mismatch: " + s.penaltyKickTime.toString()); return false; }
+    if (s.useConversionTimer != false) { logger.error("stored useConversionTimer mismatch"); return false; }
+    if (s.usePenaltyTimer != true) { logger.error("stored usePenaltyTimer mismatch"); return false; }
 
     return true;
 }
@@ -99,9 +105,10 @@ function test_setMatchProfile_creates_custom_when_missing(logger as Test.Logger)
     model.setMatchProfile("custom");
 
     if (!RugbyMatchProfiles.hasStoredCustomProfile()) { logger.error("custom profile was not created"); return false; }
-    var s = RugbyMatchProfiles.getStoredCustomProfile();
-    if (s["halfDuration"] != 1234) { logger.error("stored halfDuration mismatch after setMatchProfile: " + s["halfDuration"].toString()); return false; }
-    if (s["conversionTime"] != 44) { logger.error("stored conversionTime mismatch after setMatchProfile"); return false; }
+    var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    if (s == null) { logger.error("stored custom missing after setMatchProfile"); return false; }
+    if (s.halfDuration != 1234) { logger.error("stored halfDuration mismatch after setMatchProfile: " + s.halfDuration.toString()); return false; }
+    if (s.conversionTime != 44) { logger.error("stored conversionTime mismatch after setMatchProfile"); return false; }
 
     return true;
 }
@@ -119,7 +126,7 @@ function test_promote_to_custom_on_change(logger as Test.Logger) as Lang.Boolean
 
     model.setHalfDuration(999);
     if (model.matchProfileId != "custom") { logger.error("matchProfileId not promoted to custom"); return false; }
-    var stored = Storage.getValue("matchProfileId");
+    var stored = Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID);
     if (stored != "custom") { logger.error("matchProfileId not written to Storage"); return false; }
 
     return true;
@@ -156,6 +163,6 @@ function test_custom_profile_label_intent(logger as Test.Logger) as Lang.Boolean
     clearCustomStorage();
     var custom = RugbyMatchProfiles.createProfile("custom", "MyCoolVariant", false, 1500, 40, 50, 60, true, false);
     RugbyMatchProfiles.storeCustomProfile(custom);
-    var s = RugbyMatchProfiles.getStoredCustomProfile();
-    return (s["label"] == "MyCoolVariant");
+    var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    return s != null && s.label == "MyCoolVariant";
 }
