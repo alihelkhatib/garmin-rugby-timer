@@ -34,6 +34,25 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTimerCards.mc::test_getEntryRemaining_stored` — verifies stored remaining path
 - `tests/Test_RugbyTimerCards.mc::test_updateYellowTimers_basic` — verifies update/remaining calculation and structure
 
+Detailed test purposes (file::function -> purpose):
+
+- `tests/Test_RugbyTimerTiming.mc::test_formatTime_65` — Verifies MM:SS formatting for a typical value (65 -> "01:05").
+- `tests/Test_RugbyTimerTiming.mc::test_formatTime_negative` — Verifies negative inputs produce "00:00".
+- `tests/Test_RugbyTimerTiming.mc::test_getDisplayCountdownSeconds_nonnull` — Verifies display normalization for numeric inputs (>= input).
+- `tests/Test_RugbyTimerTiming.mc::test_getDisplayCountdownSeconds_null` — Verifies null/negative input returns 0.
+
+- `tests/Test_RugbyTimerCards.mc::test_getEntryRemaining_live` — Verifies live remaining calculation when `startTime` and `clockValue` are present.
+- `tests/Test_RugbyTimerCards.mc::test_getEntryRemaining_stored` — Verifies stored `remaining` is used when live values are absent.
+- `tests/Test_RugbyTimerCards.mc::test_updateYellowTimers_basic` — Verifies update path produces one timer with positive remaining.
+
+- `tests/Test_RugbyMatchProfiles.mc::test_store_and_retrieve_custom_profile` — Verifies storing a custom profile persists expected fields.
+- `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults` — Verifies legacy migration returns a safe default profile id when legacy keys are absent.
+
+- `tests/Test_RugbyTimerCards_advanced.mc::test_yellow_multiple_ordering_and_numbering` — Verifies multiple yellow cards append and label numbering increments per-team.
+- `tests/Test_RugbyTimerCards_advanced.mc::test_red_numbering_and_timed_entries` — Verifies red card numbering and timed entry creation under 15s rules.
+- `tests/Test_RugbyTimerCards_advanced.mc::test_yellow_timer_sync_with_suspension` — Verifies card remaining time decreases with model suspension clock.
+- `tests/Test_RugbyTimerCards_advanced.mc::test_red_permanent_in_7s_sets_flag_and_increments_counter` — Verifies 7s red is permanent, sets flag, and increments counter.
+
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 
 Next steps:
