@@ -11,7 +11,7 @@ Quick steps to build and run the unit tests in the simulator.
 2. Launch the simulator and run the tests with `monkeydo` (or use the Monkey C extension Test Explorer in VS Code):
 
 ```bash
-"<SDK_BIN>/monkeydo" bin/rugbytimer-test.prg /t
+"<SDK_BIN>/monkeydo" bin/rugbytimer-test.prg 1 -t
 ```
 
 Notes:
@@ -22,4 +22,5 @@ Notes:
 Recommended workflow:
 - Use the VS Code Monkey C Test Explorer to run and iterate tests quickly.
 - Run `monkeyc` with `--unit-test` on CI to produce a test PRG and execute it with `monkeydo` in the simulator.
-- Or use `scripts/run-tests.sh`, which now builds the test PRG with `--unit-test`.
+- Use `scripts/run-tests.sh` to build the test PRG, and set `RUN_SIM_TESTS=1 SIM_DEVICE_ID=<id>` when you want it to invoke `monkeydo`.
+- Use `scripts/validate-local.sh` when you want one local command that builds the app target and the unit-test target together.
