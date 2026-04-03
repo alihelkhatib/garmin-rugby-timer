@@ -1880,6 +1880,12 @@
 
 - 2026-04-03 simulator test rerun: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" 1 -t` -> FAILED again in this environment with `Unable to connect to simulator`, so simulator-backed runtime verification remains environment-limited even though the command shape and test PRG are correct.
 
+- 2026-04-03: Fixed a settings/profile lifecycle bug in `RugbyTimerApp`: the app was creating a fresh `RugbyGameModel` in `getInitialView()` without calling `initialize()`, which could discard preset/custom-profile changes made before the main view path. The app now uses one initialized shared model across settings and the main match screen. Added regression coverage in `tests/Test_RugbyTimerApp.mc`.
+
+- 2026-04-03 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL.
+
+- 2026-04-03 test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL.
+
 - 2026-04-03: Fixed the Garmin unit-test workflow so `scripts/run-tests.sh` now compiles with `--unit-test`, added persistence/model transition coverage in `tests/Test_RugbyTimerPersistence.mc`, persisted custom profile labels, disabled the debug profiler by default for smoother runtime behavior, and added `docs/CODEBASE_AUDIT.md` with organization/refactor/performance guidance.
 
 - 2026-04-03 build: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / pre-existing unreachable-statement warnings).

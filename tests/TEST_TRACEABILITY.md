@@ -59,6 +59,7 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — verifies extracted view overlay visibility rules
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — verifies extracted hint-mode routing
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — verifies extracted toast visibility rules
+- `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — verifies settings-driven profile changes are not lost when the main view is created
 
 Detailed test purposes (file::function -> purpose):
 
@@ -105,6 +106,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — Verifies conversion/penalty overlay visibility decisions moved out of `RugbyTimerView`.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — Verifies when non-overlay status toasts are allowed to render.
+- `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — Verifies preset changes made through the shared app model survive the later `getInitialView()` path instead of being reset by a new `RugbyGameModel`.
 
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 

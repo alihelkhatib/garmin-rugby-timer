@@ -8,6 +8,7 @@
 
 ## Architecture
 - `RugbyTimerApp.mc`: App entry point and provider for the main view/delegate pair.
+- `RugbyTimerApp.mc`: App entry point and provider for the main view/delegate pair. It now ensures the shared `RugbyGameModel` is initialized once and reused across both the settings entrypoint and the main match screen so preset/custom-profile changes are not lost during app/view startup.
 - `RugbyTimerDelegate.mc`: Handles button presses and menu entries, including idle half-length adjustments on UP/DOWN, a held `UP/MENU` shortcut into the preset picker, BACK/LAP menu items (`Event Log`, `Save Game`, `Reset Game`), and delegating to the overlay/timing helpers.
 - `RugbyTimerView.mc`: Central orchestrator that wires the helper modules, triggers UI updates, and keeps gameplay state (scores, conversions, card timers, GPS tracking, persisted summaries) in sync without showing a startup game-type prompt.
 - `RugbyTimerViewSupport.mc`: Pure presentation-rule helper for `RugbyTimerView`; it owns overlay visibility reconciliation, main-screen hint-mode selection, and toast visibility rules so those decisions are testable outside WatchUi.

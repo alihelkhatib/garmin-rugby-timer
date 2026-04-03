@@ -53,13 +53,27 @@ class RugbyTimerApp extends Application.AppBase {
     }
 
     /**
+     * Ensure the shared game model exists and has loaded persisted settings/state.
+     *
+     * Purpose: settings and the main view must operate on the same initialized
+     * model so preset changes immediately affect the active countdown/profile.
+     */
+    function ensureModelReady() {
+        if (model == null) {
+            model = new RugbyGameModel();
+            model.initialize();
+        }
+        return model;
+    }
+
+    /**
      * This method returns the initial view and delegate of the application.
      * @return An array containing the view and delegate
      */
     function getInitialView() {
-        model = new RugbyGameModel();
-        rugbyView = new RugbyTimerView(model);
-        rugbyDelegate = new RugbyTimerDelegate(model);
+        var activeModel = ensureModelReady();
+        rugbyView = new RugbyTimerView(activeModel);
+        rugbyDelegate = new RugbyTimerDelegate(activeModel);
         return [rugbyView, rugbyDelegate];
     }
 
@@ -78,6 +92,7 @@ class RugbyTimerApp extends Application.AppBase {
      * @return An array containing the settings view and delegate
      */
     function getSettingsView() {
+        ensureModelReady();
         var menu = new RugbySettingsMenu();
         return [menu, new RugbySettingsMenuDelegate(menu, false)];
     }
