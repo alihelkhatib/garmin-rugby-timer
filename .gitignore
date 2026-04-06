@@ -1,7 +1,40 @@
-/bin
+# Garmin / Monkey C build outputs
+/bin/
+/build/
+/dist/
+/out/
+*.prg
+*.iq
+*.iqa
+*.iqt
+*.fit
+
+# Secrets and local signing material
 /developer_key
+*.der
+*.key
+*.p12
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE local state
+.idea/
+.vscode/*.log
+.vscode/launch.json
+.vscode/tasks.json
+
+# Legacy project-specific artifacts
 monkeyc - Shortcut.lnk
-build_output.log
 rugby-timer.iq
 resources/drawables/icon-small.png
-.DS_Store
