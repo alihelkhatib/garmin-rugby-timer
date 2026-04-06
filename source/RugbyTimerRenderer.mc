@@ -109,7 +109,9 @@ class RugbyTimerRenderer {
         if (isLocked) {
             hintLines = 1;
         } else if (model.gameState == STATE_IDLE) {
-            hintLines = 2;
+            // Keep the idle countdown anchored at the same vertical position as
+            // live play so the main clock does not jump when the match starts.
+            hintLines = 1;
         } else if (model.gameState == STATE_PLAYING) {
             hintLines = 1;
         }
