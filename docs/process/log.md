@@ -1,3 +1,71 @@
+## [2026-04-06] Remove settings-root rebuilds from submenu selections
+
+- Simplified the settings interaction flow so match-format changes, team-label selections, and conversion/penalty timer picks now update the live model, pop only the submenu, refresh the same root settings menu in place, and restore focus to the launching row.
+- This removes the old root-menu rebuild path entirely for those selections, which was the most likely cause of the stale on-device settings display.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Switch settings submenus to plain string item ids
+
+- Changed the match-format chooser, team-label chooser, and conversion/penalty timer picker rows to use plain string item identifiers instead of symbol ids.
+- This targets the on-device failure mode where submenu selections appeared to return but did not actually change the active format, timer, or team-label state.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Bind settings-row display directly to the live model
+
+- Reworked the settings root so its visible subtitles now read from the active `RugbyGameModel` when the app is running, instead of relying on a reconstructed profile snapshot that could drift behind the actual live state.
+- This change targets the specific on-watch issue where `Match Format`, timer values, and team-label mode could remain visually stale even after the underlying selection changed.
+- Simplified the score-lane team-label rendering to draw compact labels directly above each score column on smaller devices, removing the earlier over-aggressive suppression path.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Keep match-format display tied to the chosen match structure
+
+- Relaxed the `Match Format` display logic so the settings menu now derives `7s`, `10s`, `15s`, or `U19s` primarily from the active half length and sevens flag instead of requiring an exact full preset match.
+- This keeps the selected format visible after related customizations, rather than falling back to `Custom` too aggressively.
+- Expanded regression coverage around stale-label and post-customization format display cases.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Resolve displayed match format from live rules and loosen score-label fit
+
+- Changed the settings `Match Format` row and chooser-current marker to resolve from the active half/conversion/kickoff/penalty values instead of trusting whichever profile label happened to be stored, which fixes cases where the menu still displayed `Rugby 15s` after selecting `7s` or another preset.
+- Moved the optional score-lane team-label anchors inward inside the circular safe lanes so compact non-default labels have a better chance to render on round devices instead of being suppressed unnecessarily.
+- Added regression coverage for the live-rules format-label resolution path.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Fix top-center header text overlap on round watches
+
+- Reworked the `Half 1` and tries-row spacing in the scoreboard header to use measured font heights instead of only fixed percentage offsets.
+- This keeps the restored `Half 1` and `0T / 0T` display readable on round devices like the fēnix 6 without reintroducing the earlier shorthand regression.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Keep settings focus in place during inline toggle changes
+
+- Reworked the settings root menu so inline rows such as `Conversion Overlay`, `Penalty Overlay`, `Lock on Start`, and `Dim Theme` update their visible `On`/`Off` subtitles in place instead of rebuilding the whole menu and jumping focus back to the top.
+- Submenu-driven edits (`Match Format`, conversion timer, penalty timer, and `Team Labels`) now rebuild the settings root with focus restored to the row that launched the submenu, which makes it much easier to confirm the changed value on-watch.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Make the top score band round-watch safe
+
+- Added circular safe-area layout logic to the scoreboard header so team labels are no longer drawn against the clipped shoulders of round watch faces.
+- Non-default team-label presets now follow a fit policy in the top band: try the full label first, then a compact alias, and hide the label entirely if neither version fits safely.
+- Compacted the center header cluster by shortening `Half 1` to `H1`, shortening tries to `home-awayT`, and suppressing the tries row automatically on tighter layouts when the side labels are already consuming the available top-band space.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Simplify settings UX for format and team-label changes
+
+- Reworked `Format Family` from a silent one-tap toggle into an explicit chooser with `7s-style` and `15s-style` entries so the watch presents a clear decision instead of appearing unresponsive.
+- Removed the redundant `Half Timer` settings row because half length is already adjusted directly from the idle main screen with the hardware buttons.
+- Rebuilt the `Team Labels` chooser with explicit menu item ids/titles after watch testing showed the earlier generic list could render ambiguously on-device.
+- Expanded the format chooser into a real `Match Format` selector with `Rugby 7s`, `Rugby 10s`, `Rugby 15s`, and `U19`. Updated the built-in `10s` preset to use official 10-minute halves while keeping the existing non-7s conversion/penalty timers because the World Rugby variation page specifies match duration but not different shot-clock values for 10s/U19 in this app’s timer model.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-06] Add preset-based team labels for five-button watches
+
+- Implemented Phase 1 of team identity customization with a new idle-only `Team Labels` setting backed by preset pairs instead of free-form text entry, keeping setup practical on devices like the Garmin fēnix 6.
+- Added `source/support/RugbyTeamIdentitySupport.mc` and wired the selected label mode through custom-profile persistence, settings navigation, the main score renderer, event-log wording, and finalized match summaries.
+- Extended automated coverage for label-mode normalization/resolution, custom-profile persistence, custom-profile promotion when changing team labels, and finalized summary/event-log labeling.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+- Attempted runtime execution with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" "1" -t`, but this environment still returned `Unable to connect to simulator`, so simulator-backed execution remains a manual follow-up.
+
 ## [2026-04-03] Centralize storage keys and force rugby activity recording
 
 - Added `source/RugbyStorageKeys.mc` and rewired active persistence/profile/settings/test helpers to use centralized Storage key names instead of repeating string literals.
