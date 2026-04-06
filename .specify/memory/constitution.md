@@ -62,7 +62,7 @@ Before any release (GitHub release, Connect IQ Store upload, or sharing a `.prg`
 - GPS session: `SPORT_RUGBY` recording starts on match start and stops cleanly on game end.
 - 10-second yellow-card warning: haptic fires at ≤10 s remaining on any visible yellow card timer.
 
-Results MUST be noted in `log.md` referencing the build entry. The GitHub Action (`build_and_publish.yml`) handles automated build and upload; manual verification is a human gate that MUST precede triggering a store upload.
+Results MUST be noted in `log.md` referencing the build entry. There is no configured repository CI workflow; builds and uploads are performed manually using the scripts in `scripts/` unless an automated process is explicitly added and documented. Manual verification remains a required human gate that MUST precede any store upload.
 
 **Rationale**: No automated test harness exists for Connect IQ at this time. Manual verification against the simulator (and hardware where possible) is the only means of protecting against regressions in timing math, layout positioning, and haptic behavior.
 
@@ -114,7 +114,7 @@ The end-to-end development cycle for any change MUST follow these steps in order
 4. **Verify** — Run the applicable manual test flows from Principle III. Record results in `log.md`.
 5. **Document** — Update `project_technical_document.md` if architecture, layout, behaviors, or persistence changed (Principle IV).
 6. **Commit** — One logical change per commit, present-tense message (Principle IV).
-7. **Release** — Tag a GitHub release only after all manual verification passes. The GitHub Action uploads to the Connect IQ Store when `CONNECTIQ_STORE_TOKEN` is set.
+7. **Release** — Tag a GitHub release only after all manual verification passes. There is no configured repository CI workflow to automatically upload artifacts; builds and uploads must be performed manually or through a CI process that is added and documented in the project notes.
 
 ## Governance
 

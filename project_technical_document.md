@@ -73,4 +73,5 @@
 - Every change touching gameplay logic must be committed separately, and the release flow includes documentation updates in `log.md` + `project_technical_document.md`.
 - `bin/rugbytimer.prg` should be rebuilt via `monkeyc` after every source change, and the path to `monkeyc.exe` (shown in `AGENTS.md`) must be captured in `log.md`.
 - Local validation can now run through `scripts/validate-local.sh`, which builds the app PRG and the unit-test PRG in one step before printing or invoking the correct `monkeydo <prg> <device_id> -t` command.
-- Release automation runs through `.github/workflows/build_and_publish.yml`, which downloads the same SDK, invokes `monkeybrains.jar`, creates a GitHub release, and uploads the PRG to the Connect IQ Store whenever `CONNECTIQ_STORE_TOKEN` is set.
+- Local validation can now run through `scripts/validate-local.sh`, which builds the app PRG and the unit-test PRG in one step before printing or invoking the correct `monkeydo <prg> <device_id> -t` command.
+- There is no configured repository CI workflow. For reproducible builds and automated runs maintainers should use the local scripts in `scripts/` or adapt the recommended CI outline in `specs/003-ci/spec.md` to their chosen CI provider.

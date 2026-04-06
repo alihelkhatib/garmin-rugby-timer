@@ -1,62 +1,30 @@
-# CI spec (GitHub Actions)
+# CI spec (recommended)
 
 ## Purpose
-Define CI jobs to build the app, produce test artifacts, and surface build/test results for PRs.
+Provide a platform-agnostic recommendation for CI jobs that can build the app, produce test artifacts, and surface build/test results for PRs. This repository does not include an active CI workflow; the guidance below may be adapted to your chosen CI provider.
 
 ## Goals
-- Compile the project on push and pull-request
-- Produce and upload the test PRG as a CI artifact
-- Run unit-test compilation (and runtime test steps where headless execution is supported)
-- Publish signed PRG and optionally upload to Connect IQ Store on release events
+- Compile the app and test targets
+- Produce the test PRG artifact for review
+- Run the unit-test compilation step (simulator-driven E2E tests require a runner with the Connect IQ Simulator)
 
-## Required secrets
-- `CONNECTIQ_SDK_URL` or preinstalled SDK on the runner
-- `DEVELOPER_KEY` (path or file contents; keep secure)
-- `CONNECTIQ_STORE_TOKEN` (optional — used only for store uploads)
+## Runner requirements
+- Java 11+
+- Connect IQ SDK installed and accessible on the runner
+- Secure handling of the developer key for signed builds (store secrets securely)
 
-## Example workflow (outline)
+## Example steps (platform-agnostic)
+1. Checkout the repository
+2. Install Java 11 on the runner
+3. Install or restore the Connect IQ SDK and make it available via `CONNECTIQ_SDK`
+4. Build the test PRG:
 
-```yaml
-name: CI
-on: [push, pull_request]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-      - name: Download Connect IQ SDK
-        run: |
-          # download or restore SDK to $HOME/connectiq
-          echo "Install or restore Connect IQ SDK here"
-      - name: Build test PRG
-        run: |
-          java -Xms1g -Dfile.encoding=UTF-8 -jar "$HOME/connectiq/bin/monkeybrains.jar" \
-            --unit-test -o bin/garminrugbytimer-test.prg -f monkey.jungle -y developer_key -d fenix6_sim -w
-      - name: Upload test artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: garmin-test-prg
-          path: bin/garminrugbytimer-test.prg
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build signed PRG
-        run: |
-          java -Xms1g -Dfile.encoding=UTF-8 -jar "$HOME/connectiq/bin/monkeybrains.jar" \
-            -o bin/garminrugbytimer.prg -f monkey.jungle -y developer_key -d fenix6
-      - name: Upload to Connect IQ Store (optional)
-        if: ${{ secrets.CONNECTIQ_STORE_TOKEN }}
-        run: |
-          echo "Upload step using CONNECTIQ_STORE_TOKEN"
+```bash
+"$CONNECTIQ_SDK/bin/monkeyc" -f test_monkey.jungle -o bin/garminrugbytimer-test.prg -d fenix6 -y developer_key -w --unit-test
 ```
 
-Notes:
-- CI runners typically cannot run the full GUI simulator; prefer headless compilation and unit-test generation. If you require simulator-driven E2E runs, use developer machines or a self-hosted runner with the Connect IQ Simulator installed.
+5. Persist `bin/garminrugbytimer-test.prg` as an artifact in the CI system or upload to your artifact storage.
+
+## Notes
+- Many hosted runners cannot run the full GUI simulator; prefer headless compilation and artifact creation in CI. If you require simulator-driven E2E runs, run them on developer machines or a self-hosted runner with the Connect IQ Simulator installed.
+- If a CI workflow is added, document its behavior and secrets usage in `log.md` and the project docs.
