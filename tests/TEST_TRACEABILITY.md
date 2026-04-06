@@ -64,6 +64,12 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — verifies extracted hint-mode routing
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — verifies extracted toast visibility rules
 - `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — verifies settings-driven profile changes are not lost when the main view is created
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_normalizes_invalid_mode` — verifies unknown team-label modes fall back safely
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_resolves_labels_for_preset` — verifies preset pair resolution for score/event-log labels
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_builds_event_description_from_model` — verifies event-log wording uses the active resolved team label
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_compact_scoreBand_labels` — verifies compact score-band aliases for tight round-watch layouts
+- `tests/Test_RugbyMatchProfiles_Settings.mc::test_setTeamLabelMode_promotes_to_custom_and_persists` — verifies team-label edits promote the active preset to `Custom` and persist across reloads
+- `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderer_topBand_safeBounds_and_fit` — verifies round-watch safe bounds and label-fit decisions for the top score band
 
 Detailed test purposes (file::function -> purpose):
 
@@ -115,6 +121,12 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — Verifies when non-overlay status toasts are allowed to render.
 - `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — Verifies preset changes made through the shared app model survive the later `getInitialView()` path instead of being reset by a new `RugbyGameModel`.
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_normalizes_invalid_mode` — Verifies invalid team-label modes normalize back to the default `Home / Away` preset.
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_resolves_labels_for_preset` — Verifies the preset lookup returns the expected short home/away labels.
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_builds_event_description_from_model` — Verifies score/card event descriptions use the resolved active team label.
+- `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_compact_scoreBand_labels` — Verifies the compact label aliases used when the round-watch top band cannot safely fit the full team labels.
+- `tests/Test_RugbyMatchProfiles_Settings.mc::test_setTeamLabelMode_promotes_to_custom_and_persists` — Verifies changing the team-label preset promotes a built-in profile to the persisted `Custom` profile and keeps the selected mode.
+- `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderer_topBand_safeBounds_and_fit` — Verifies the renderer’s circular safe-area helper and label-fit guard suppress clipping-prone top-band labels.
 
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 

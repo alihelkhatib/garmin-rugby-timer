@@ -14,6 +14,7 @@ function clearCustomStorage() {
     Storage.setValue(STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME, null);
     Storage.setValue(STORAGE_KEY_CUSTOM_USE_CONVERSION_TIMER, null);
     Storage.setValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER, null);
+    Storage.setValue(STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE, null);
     Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, null);
     Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, null);
 }

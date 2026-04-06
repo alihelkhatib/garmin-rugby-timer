@@ -37,3 +37,11 @@ function test_renderTypes_and_timerUpdateResult(logger as Test.Logger) as Lang.B
     var update = RugbyTimerUpdateResult.create([], true);
     return fonts.countdownFont == 5 && layout.cardsY == 50 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
 }
+
+(:test)
+function test_renderer_topBand_safeBounds_and_fit(logger as Test.Logger) as Lang.Boolean {
+    var safe = RugbyTimerRenderer.getCircleSafeBounds(260, 260, 18, 12);
+    if (safe.left >= safe.right) { logger.error("safe bounds should be ordered"); return false; }
+    if (!RugbyTimerRenderer.canFitScoreLabel("A", 65, safe.left, 105, true)) { logger.error("single-char label should fit"); return false; }
+    return !RugbyTimerRenderer.canFitScoreLabel("VeryLongLabel", 65, safe.left, 105, false);
+}

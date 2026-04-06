@@ -9,13 +9,18 @@ legacy dictionary shapes expected by the rest of the app.
 */
 (:test)
 function test_matchProfileEntry_roundtrip(logger as Test.Logger) as Lang.Boolean {
-    var raw = RugbyMatchProfiles.createProfile("custom", "League X", true, 600, 45, 30, 60, false, true);
+    var raw = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "League X", true, 600, 45, 30, 60, false, true),
+        TEAM_LABEL_MODE_LIGHT_DARK
+    );
     var entry = MatchProfileEntry.fromDict(raw);
     if (entry == null) { logger.error("MatchProfileEntry.fromDict returned null"); return false; }
     if (entry.label != "League X") { logger.error("label mismatch"); return false; }
     var roundtrip = MatchProfileEntry.fromDict(entry.toDict());
     if (roundtrip == null) { logger.error("roundtrip profile missing"); return false; }
-    return roundtrip.halfDuration == 600 && roundtrip.usePenaltyTimer == true;
+    return roundtrip.halfDuration == 600
+        && roundtrip.usePenaltyTimer == true
+        && roundtrip.teamLabelMode == TEAM_LABEL_MODE_LIGHT_DARK;
 }
 
 (:test)

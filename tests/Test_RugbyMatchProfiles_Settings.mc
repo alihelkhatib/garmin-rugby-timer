@@ -45,6 +45,7 @@ function test_infer_profile_id_from_builtins(logger as Test.Logger) as Lang.Bool
 
     var p10 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("10s"));
     if (p10 == null) { logger.error("10s profile missing"); return false; }
+    if (p10.halfDuration != 600) { logger.error("10s halfDuration!=600"); return false; }
     var id10 = RugbyMatchProfiles.inferProfileIdFromSettings(
         p10.is7s, p10.halfDuration, p10.conversionTime, p10.kickoffTime, p10.penaltyKickTime, p10.useConversionTimer, p10.usePenaltyTimer
     );
@@ -52,6 +53,7 @@ function test_infer_profile_id_from_builtins(logger as Test.Logger) as Lang.Bool
 
     var pu19 = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("u19"));
     if (pu19 == null) { logger.error("u19 profile missing"); return false; }
+    if (pu19.halfDuration != 2100) { logger.error("u19 halfDuration!=2100"); return false; }
     var idu19 = RugbyMatchProfiles.inferProfileIdFromSettings(
         pu19.is7s, pu19.halfDuration, pu19.conversionTime, pu19.kickoffTime, pu19.penaltyKickTime, pu19.useConversionTimer, pu19.usePenaltyTimer
     );
@@ -65,7 +67,10 @@ function test_store_and_get_custom_profile(logger as Test.Logger) as Lang.Boolea
     // Purpose: storeCustomProfile should persist custom timing fields and getStoredCustomProfile should read them back.
     clearCustomStorage();
 
-    var custom = RugbyMatchProfiles.createProfile("custom", "MyVariant", false, 1800, 45, 50, 70, false, true);
+    var custom = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "MyVariant", false, 1800, 45, 50, 70, false, true),
+        TEAM_LABEL_MODE_RED_BLUE
+    );
     RugbyMatchProfiles.storeCustomProfile(custom);
 
     var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
@@ -76,6 +81,7 @@ function test_store_and_get_custom_profile(logger as Test.Logger) as Lang.Boolea
     if (s.penaltyKickTime != 70) { logger.error("stored penaltyKickTime mismatch: " + s.penaltyKickTime.toString()); return false; }
     if (s.useConversionTimer != false) { logger.error("stored useConversionTimer mismatch"); return false; }
     if (s.usePenaltyTimer != true) { logger.error("stored usePenaltyTimer mismatch"); return false; }
+    if (s.teamLabelMode != TEAM_LABEL_MODE_RED_BLUE) { logger.error("stored teamLabelMode mismatch"); return false; }
 
     return true;
 }
@@ -95,6 +101,7 @@ function test_setMatchProfile_creates_custom_when_missing(logger as Test.Logger)
     model.penaltyKickTime = 66;
     model.useConversionTimer = false;
     model.usePenaltyTimer = true;
+    model.teamLabelMode = TEAM_LABEL_MODE_TEAM_A_B;
 
     // Ensure no custom exists
     if (RugbyMatchProfiles.hasStoredCustomProfile()) {
@@ -109,6 +116,7 @@ function test_setMatchProfile_creates_custom_when_missing(logger as Test.Logger)
     if (s == null) { logger.error("stored custom missing after setMatchProfile"); return false; }
     if (s.halfDuration != 1234) { logger.error("stored halfDuration mismatch after setMatchProfile: " + s.halfDuration.toString()); return false; }
     if (s.conversionTime != 44) { logger.error("stored conversionTime mismatch after setMatchProfile"); return false; }
+    if (s.teamLabelMode != TEAM_LABEL_MODE_TEAM_A_B) { logger.error("stored teamLabelMode mismatch after setMatchProfile"); return false; }
 
     return true;
 }
@@ -161,8 +169,59 @@ function test_custom_profile_label_intent(logger as Test.Logger) as Lang.Boolean
     // Purpose: intended feature — custom profile should preserve user-provided label.
     // NOTE: current implementation may not persist label; this test encodes the expectation.
     clearCustomStorage();
-    var custom = RugbyMatchProfiles.createProfile("custom", "MyCoolVariant", false, 1500, 40, 50, 60, true, false);
+    var custom = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "MyCoolVariant", false, 1500, 40, 50, 60, true, false),
+        RugbyTeamIdentitySupport.getDefaultLabelMode()
+    );
     RugbyMatchProfiles.storeCustomProfile(custom);
     var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
     return s != null && s.label == "MyCoolVariant";
+}
+
+(:test)
+function test_match_format_label_prefers_live_rules_over_stale_profile_label(logger as Test.Logger) as Lang.Boolean {
+    var customLike7s = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "Rugby 15s", true, 420, 30, 30, 60, true, false),
+        RugbyTeamIdentitySupport.getDefaultLabelMode()
+    );
+    if (RugbySettingsSupport.getMatchFormatLabel(customLike7s) != "7s") {
+        logger.error("custom-like 7s rules should render as 7s");
+        return false;
+    }
+
+    var customLikeU19 = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "Rugby 15s", false, 2100, 90, 60, 60, true, false),
+        RugbyTeamIdentitySupport.getDefaultLabelMode()
+    );
+    if (RugbySettingsSupport.getMatchFormatLabel(customLikeU19) != "U19s") {
+        logger.error("custom-like U19 rules should render as U19s");
+        return false;
+    }
+
+    var customLike15s = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "Custom", false, 2400, 75, 60, 60, true, false),
+        TEAM_LABEL_MODE_RED_BLUE
+    );
+    if (RugbySettingsSupport.getMatchFormatLabel(customLike15s) != "15s") {
+        logger.error("15s half length should still render as 15s after related custom edits");
+        return false;
+    }
+
+    return true;
+}
+
+(:test)
+function test_setTeamLabelMode_promotes_to_custom_and_persists(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    model.applyProfile(RugbyMatchProfiles.getBuiltInProfile("15s"), false);
+    model.setTeamLabelMode(TEAM_LABEL_MODE_VARSITY_JV);
+
+    if (model.matchProfileId != "custom") { logger.error("team label mode should promote to custom"); return false; }
+    if (model.teamLabelMode != TEAM_LABEL_MODE_VARSITY_JV) { logger.error("model teamLabelMode mismatch"); return false; }
+
+    var stored = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    return stored != null && stored.teamLabelMode == TEAM_LABEL_MODE_VARSITY_JV;
 }

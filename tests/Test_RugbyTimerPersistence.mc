@@ -121,10 +121,11 @@ function test_finalizeGameData_writes_summary_and_event_log(logger as Test.Logge
     model.initialize();
     model.homeScore = 21;
     model.awayScore = 14;
+    model.teamLabelMode = TEAM_LABEL_MODE_LIGHT_DARK;
     model.yellowHomeTotal = 1;
     model.redAwayTotal = 1;
     model.eventLogEntries = [
-        { "time" => "00:10", "description" => "Home Try" } as Lang.Dictionary
+        { "time" => "00:10", "description" => "Light Try" } as Lang.Dictionary
     ];
 
     RugbyTimerPersistence.finalizeGameData(model);
@@ -133,7 +134,8 @@ function test_finalizeGameData_writes_summary_and_event_log(logger as Test.Logge
     if (summary == null) { logger.error("lastGameSummary not written"); return false; }
     if (summary.homeScore != 21 || summary.awayScore != 14) { logger.error("summary scores mismatch"); return false; }
     if (summary.yellowHomeTotal != 1 || summary.redAwayTotal != 1) { logger.error("summary totals mismatch"); return false; }
+    if (summary.homeTeamLabel != "Light" || summary.awayTeamLabel != "Dark") { logger.error("summary team labels mismatch"); return false; }
 
     var eventLog = summary.eventLog as Lang.String;
-    return eventLog != null && eventLog.find("Home Try") != null;
+    return eventLog != null && eventLog.find("Light Try") != null;
 }

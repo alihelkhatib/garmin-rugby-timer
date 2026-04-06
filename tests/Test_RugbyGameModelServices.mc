@@ -70,7 +70,7 @@ function test_preset_switching_updates_selected_profile_and_timer(logger as Test
     if (model.matchProfileId != "7s" || model.halfDuration != 420) { logger.error("7s preset not applied"); return false; }
 
     model.setMatchProfile("10s");
-    if (model.matchProfileId != "10s" || model.halfDuration != 2400 || model.conversionTime != 90) { logger.error("10s preset not applied"); return false; }
+    if (model.matchProfileId != "10s" || model.halfDuration != 600 || model.conversionTime != 90) { logger.error("10s preset not applied"); return false; }
 
     model.setMatchProfile("u19");
     return model.matchProfileId == "u19" && model.halfDuration == 2100;

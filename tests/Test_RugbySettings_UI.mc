@@ -83,3 +83,21 @@ function test_settings_support_minutes_and_timer_mapping(logger as Test.Logger) 
     if (RugbySettingsSupport.getMinutesFromDigits([0, 5]) != 5) { logger.error("digits mapping failed"); return false; }
     return RugbySettingsSupport.getConversionSelectionSeconds("t120") == 120;
 }
+
+(:test)
+function test_settings_support_choice_resolution(logger as Test.Logger) as Lang.Boolean {
+    if (RugbySettingsSupport.resolveFormatFamily(:format_7s) != true) { logger.error("format 7s resolution failed"); return false; }
+    if (RugbySettingsSupport.resolveFormatFamily(:format_15s) != false) { logger.error("format 15s resolution failed"); return false; }
+    if (RugbySettingsSupport.resolveMatchFormatId(:match_format_10s) != "10s") { logger.error("match format 10s resolution failed"); return false; }
+    if (RugbySettingsSupport.resolveMatchFormatId(:match_format_u19) != "u19") { logger.error("match format u19 resolution failed"); return false; }
+    return RugbySettingsSupport.resolveTeamLabelMode(:team_label_red_blue) == TEAM_LABEL_MODE_RED_BLUE;
+}
+
+(:test)
+function test_settings_match_format_label_from_live_values(logger as Test.Logger) as Lang.Boolean {
+    if (RugbySettingsSupport.getMatchFormatLabelForValues(true, 420) != "7s") { logger.error("420 / sevens should show 7s"); return false; }
+    if (RugbySettingsSupport.getMatchFormatLabelForValues(false, 600) != "10s") { logger.error("600 should show 10s"); return false; }
+    if (RugbySettingsSupport.getMatchFormatLabelForValues(false, 2400) != "15s") { logger.error("2400 should show 15s"); return false; }
+    if (RugbySettingsSupport.getMatchFormatLabelForValues(false, 2100) != "U19s") { logger.error("2100 should show U19s"); return false; }
+    return RugbySettingsSupport.getMatchFormatLabelForValues(false, 1500) == "Custom";
+}

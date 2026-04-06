@@ -19,7 +19,10 @@ function test_store_and_retrieve_custom_profile(logger as Test.Logger) as Lang.B
     Storage.setValue("customHalfDuration", null);
     Storage.setValue("customProfileIs7s", null);
 
-    var profile = RugbyMatchProfiles.createProfile("custom", "Custom", true, 420, 30, 30, 60, true, false);
+    var profile = RugbyMatchProfiles.withTeamLabelMode(
+        RugbyMatchProfiles.createProfile("custom", "Custom", true, 420, 30, 30, 60, true, false),
+        RugbyTeamIdentitySupport.getDefaultLabelMode()
+    );
     RugbyMatchProfiles.storeCustomProfile(profile);
 
     var stored = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
