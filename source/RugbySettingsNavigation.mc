@@ -2,8 +2,6 @@ using Toybox.WatchUi;
 using Toybox.Application;
 using Toybox.Application.Storage;
 using Toybox.Graphics;
-using Toybox.System;
-using Toybox.Timer;
 
 /**
  * Settings navigation host and delegate implementations.
@@ -87,15 +85,13 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
 
-        var isIdleOnlyRow = item.getId() == :profile || item.getId() == :format_family || item.getId() == :countdown_timer;
+        var isIdleOnlyRow = item.getId() == :format_family || item.getId() == :countdown_timer;
         if (isIdleOnlyRow && menu.isInGame()) {
             handleIdleOnlySelection();
             return;
         }
 
-        if (item.getId() == :profile) {
-            WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(menu), WatchUi.SLIDE_UP);
-        } else if (item.getId() == :format_family) {
+        if (item.getId() == :format_family) {
             app.model.setFormatFamily(!(app.model.is7s == true));
             menu.refresh();
             WatchUi.requestUpdate();
@@ -142,84 +138,5 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     function onBack() {
         closeSettingsRoot();
-    }
-}
-
-/**
- * Menu for choosing one of the built-in match presets or the saved custom profile.
- */
-class MatchProfileMenu extends WatchUi.Menu2 {
-    function initialize() {
-        Menu2.initialize({:title=>"Match Preset"});
-        addItem(new WatchUi.MenuItem("Rugby 7s", null, "7s", null));
-        addItem(new WatchUi.MenuItem("Rugby 10s", null, "10s", null));
-        addItem(new WatchUi.MenuItem("Rugby 15s", null, "15s", null));
-        addItem(new WatchUi.MenuItem("U19", null, "u19", null));
-        addItem(new WatchUi.MenuItem("Custom", null, "custom", null));
-    }
-}
-
-/**
- * Applies profile changes after the picker closes so the idle screen can redraw
- * cleanly before model state is mutated.
- */
-class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
-    var menu;
-
-    function initialize(settingsMenu) {
-        Menu2InputDelegate.initialize();
-        menu = settingsMenu;
-    }
-
-    function resolveProfileId(itemId) {
-        return RugbySettingsSupport.resolveProfileId(itemId);
-    }
-
-    function applyProfileSelection(profileId) as Void {
-        var app = Application.getApp() as RugbyTimerApp;
-        if (app == null || app.model == null || profileId == null) {
-            return;
-        }
-        if (app.model.gameState != STATE_IDLE) {
-            if (app.rugbyView != null) {
-                app.rugbyView.displaySpecialOverlayMessage("Idle only");
-                WatchUi.requestUpdate();
-            }
-            return;
-        }
-
-        app.model.setMatchProfile(profileId);
-        app.model.gameTime = 0;
-        app.model.elapsedTime = 0;
-        app.model.countdownSeconds = 0;
-        app.model.countdownRemaining = app.model.countdownTimer;
-        app.model.lastUpdate = System.getTimer();
-        app.model.persistState();
-        if (menu != null) {
-            menu.refresh();
-        }
-        if (app.rugbyView != null) {
-            app.rugbyView.displaySpecialOverlayMessage(RugbyMatchProfiles.getProfileLabel(profileId));
-        }
-        WatchUi.requestUpdate();
-    }
-
-    function onSelect(item) {
-        var app = Application.getApp() as RugbyTimerApp;
-        if (app == null || app.model == null) {
-            return;
-        }
-
-        var profileId = resolveProfileId(item.getId());
-        if (profileId == null) {
-            WatchUi.popView(WatchUi.SLIDE_DOWN);
-            return;
-        }
-        applyProfileSelection(profileId);
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
-    }
-
-    function onBack() {
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
     }
 }

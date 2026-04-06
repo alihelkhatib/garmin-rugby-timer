@@ -10,7 +10,6 @@ using Toybox.Application.Storage;
  * leaving navigation and side effects to the settings delegates.
  */
 class RugbySettingsMenu extends WatchUi.Menu2 {
-    var profileItem;
     var formatItem;
     var halfTimerItem;
     var conversionItem;
@@ -24,16 +23,12 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         Menu2.initialize({:title=>"Rugby Settings"});
         var profile = getActiveProfile();
         var entry = RugbySettingsSupport.getProfileEntry(profile);
-        var profileLabel = RugbySettingsSupport.getProfileLabel(profile);
         var formatLabel = RugbySettingsSupport.getFormatLabel(profile);
         var halfLabel = RugbySettingsSupport.getHalfLabel(profile, self);
         var conversionLabel = RugbySettingsSupport.getConversionLabel(profile, self);
         var penaltyLabel = RugbySettingsSupport.getPenaltyLabel(profile, self);
         var useConvLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.useConversionTimer);
         var usePenLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.usePenaltyTimer);
-
-        profileItem = new WatchUi.MenuItem("Profile", profileLabel, :profile, null);
-        addItem(profileItem);
 
         formatItem = new WatchUi.MenuItem("Format Family", formatLabel, :format_family, null);
         addItem(formatItem);
