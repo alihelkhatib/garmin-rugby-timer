@@ -15,39 +15,6 @@ class TestMenuItem {
     function getId() { return id; }
 }
 
-class TestMatchProfileDelegate {
-    var model;
-    var pendingProfileId;
-
-    function initialize(m) {
-        model = m;
-        pendingProfileId = null;
-    }
-
-    function resolveProfileId(itemId) {
-        return RugbySettingsSupport.resolveProfileId(itemId);
-    }
-
-    function onSelect(item) {
-        var profileId = resolveProfileId(item.getId());
-        if (profileId == null) { return; }
-        pendingProfileId = profileId;
-        // Simulate timer callback immediately in headless tests
-        applyPendingProfile();
-    }
-
-    function applyPendingProfile() {
-        var profileId = pendingProfileId;
-        pendingProfileId = null;
-        if (model == null || profileId == null) { return; }
-        if (model.gameState != STATE_IDLE) {
-            // Idle-only enforcement — do nothing when in-game
-            return;
-        }
-        model.setMatchProfile(profileId);
-    }
-}
-
 class TestTimerPickerDelegate {
     var model;
     function initialize(m) { model = m; }
@@ -70,35 +37,6 @@ class TestConversionAdjustDelegate {
 // shared helper `clearCustomStorage` moved to tests/TestHelpers.mc
 
 (:test)
-function test_ui_select_profile_7s(logger as Test.Logger) as Lang.Boolean {
-    // Purpose: selecting 'Rugby 7s' from the profile menu applies the 7s preset.
-    clearCustomStorage();
-    var model = new RugbyGameModel();
-    model.initialize();
-
-    var d = new TestMatchProfileDelegate(model);
-    var item = new TestMenuItem("profile_7s");
-    d.onSelect(item);
-
-    return (model.matchProfileId == "7s") && (model.halfDuration == 420) && (model.conversionTime == 30);
-}
-
-(:test)
-function test_ui_select_profile_while_playing_is_blocked(logger as Test.Logger) as Lang.Boolean {
-    // Purpose: selecting a preset while a match is active should be ignored.
-    var model = new RugbyGameModel();
-    model.initialize();
-    model.gameState = STATE_PLAYING;
-
-    var original = model.matchProfileId;
-    var d = new TestMatchProfileDelegate(model);
-    var item = new TestMenuItem("profile_15s");
-    d.onSelect(item);
-
-    return (model.matchProfileId == original);
-}
-
-(:test)
 function test_ui_minutes_picker_sets_half_duration(logger as Test.Logger) as Lang.Boolean {
     // Purpose: MinutesPicker acceptance should set the model half duration (minutes*60).
     var model = new RugbyGameModel();
@@ -107,7 +45,7 @@ function test_ui_minutes_picker_sets_half_duration(logger as Test.Logger) as Lan
     var p = new TestTimerPickerDelegate(model);
     var ok = p.onAccept([2,5]); // 25 minutes
     if (!ok) { return false; }
-    return (model.halfDuration == 25 * 60) && (model.matchProfileId == "custom");
+    return model.halfDuration == 25 * 60 && model.countdownTimer == 25 * 60;
 }
 
 (:test)
@@ -119,28 +57,29 @@ function test_ui_conversion_adjust_changes_value(logger as Test.Logger) as Lang.
     var c = new TestConversionAdjustDelegate(model);
     var item = new TestMenuItem("t120");
     c.onSelect(item);
-    return (model.conversionTime == 120) && (model.matchProfileId == "custom");
+    return model.conversionTime == 120;
 }
 
 (:test)
-function test_ui_toggle_format_promotes_to_custom(logger as Test.Logger) as Lang.Boolean {
-    // Purpose: toggling Format Family should promote current settings to the custom profile.
+function test_ui_toggle_format_updates_live_ruleset(logger as Test.Logger) as Lang.Boolean {
+    // Purpose: toggling Format Family should directly update the active ruleset.
     clearCustomStorage();
     var model = new RugbyGameModel();
     model.initialize();
 
-    // Start with a built-in
-    model.applyProfile(RugbyMatchProfiles.getBuiltInProfile("15s"), false);
-    if (model.matchProfileId == "custom") { return false; }
-
     model.setFormatFamily(true);
-    return (model.matchProfileId == "custom") && (Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID) == "custom");
+    if (!model.usesSevensCardRules() || model.halfDuration != 420 || model.conversionTime != 30) {
+        return false;
+    }
+
+    model.setFormatFamily(false);
+    return !model.usesSevensCardRules() && model.halfDuration == 2400 && model.conversionTime == 90;
 }
 
 (:test)
-function test_settings_support_profile_resolution_and_clamp(logger as Test.Logger) as Lang.Boolean {
-    if (RugbySettingsSupport.resolveProfileId("profile_u19") != "u19") { logger.error("profile resolution failed"); return false; }
+function test_settings_support_minutes_and_timer_mapping(logger as Test.Logger) as Lang.Boolean {
     if (RugbySettingsSupport.clampMinutes(0) != 1) { logger.error("minutes clamp low failed"); return false; }
     if (RugbySettingsSupport.clampMinutes(120) != 99) { logger.error("minutes clamp high failed"); return false; }
-    return RugbySettingsSupport.getMinutesFromDigits([0, 5]) == 5;
+    if (RugbySettingsSupport.getMinutesFromDigits([0, 5]) != 5) { logger.error("digits mapping failed"); return false; }
+    return RugbySettingsSupport.getConversionSelectionSeconds("t120") == 120;
 }
