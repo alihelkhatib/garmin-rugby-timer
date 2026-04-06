@@ -54,6 +54,7 @@ Compiler-validated manifest targets currently cover the Fenix 6/7/8/E families p
 - The project maintenance roadmap lives in [`docs/MAINTENANCE_ROADMAP.md`](docs/MAINTENANCE_ROADMAP.md).
 - The watch-facing manual regression checklist lives in [`tests/README.md`](tests/README.md) alongside the automated test instructions.
 - Source design/reference PNG assets that are not consumed by the app build live under [`docs/assets/`](docs/assets/) so the project root stays focused on build inputs and repo-level docs.
+- Architecture notes live under [`docs/architecture/`](docs/architecture/), process/history docs live under [`docs/process/`](docs/process/), and archived checkpoint material lives under [`docs/archive/`](docs/archive/).
 
 ---
 

@@ -78,8 +78,8 @@
 ## Persistence & Release Notes
 - `resources/drawables/` now includes a 40×40 launcher icon referenced in `resources/drawables/drawables.xml` and the manifest; replace it only with same-size assets to avoid scaling warnings.
 - Non-runtime reference PNG assets that are not consumed by the Connect IQ build now live under `docs/assets/` instead of the repo root so the top-level tree stays focused on source, tests, resources, and release docs.
-- Every change touching gameplay logic must be committed separately, and the release flow includes documentation updates in `log.md` + `project_technical_document.md`.
-- `bin/rugbytimer.prg` should be rebuilt via `monkeyc` after every source change, and the path to `monkeyc.exe` (shown in `AGENTS.md`) must be captured in `log.md`.
+- Every change touching gameplay logic must be committed separately, and the release flow includes documentation updates in `docs/process/log.md` + `docs/architecture/project_technical_document.md`.
+- `bin/rugbytimer.prg` should be rebuilt via `monkeyc` after every source change, and the path to `monkeyc.exe` (shown in `AGENTS.md`) must be captured in `docs/process/log.md`.
 - Local validation can now run through `scripts/validate-local.sh`, which builds the app PRG and the unit-test PRG in one step before printing or invoking the correct `monkeydo <prg> <device_id> -t` command.
 - Release automation runs through `.github/workflows/build_and_publish.yml`, which downloads the same SDK, invokes `monkeybrains.jar`, creates a GitHub release, and uploads the PRG to the Connect IQ Store whenever `CONNECTIQ_STORE_TOKEN` is set.
 - The current maintenance plan is documented in `docs/MAINTENANCE_ROADMAP.md`, and the manual release/regression checklist is kept in `tests/README.md` so automated and manual validation stay close together.

@@ -17,7 +17,7 @@ targeted tests, and release readiness instead of more broad refactoring.
 - Prioritize overlay rendering, lock behavior, haptics, GPS recording, and exit/save flows.
 
 3. Do one release-readiness pass on docs and simulator flow
-- Confirm `README.md`, `project_technical_document.md`, and `tests/README.md` still match the actual behavior.
+- Confirm `README.md`, `docs/architecture/project_technical_document.md`, and `tests/README.md` still match the actual behavior.
 - Run the simulator-backed test path when the local `monkeydo` connection is available.
 
 4. Add small integration tests only where the watch runtime is still risky
