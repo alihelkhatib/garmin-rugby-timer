@@ -2,7 +2,6 @@ using Toybox.WatchUi;
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Graphics;
-using Toybox.Timer;
 
 /**
  * The main delegate for the application.
@@ -15,9 +14,6 @@ using Toybox.Timer;
 class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     var model;
     var overlayActionHandledUntil;
-    var upMenuHoldTimer;
-    var upMenuKeyPressed;
-    var suppressNextUpMenuAction;
 
     /**
      * Initializes the delegate.
@@ -27,32 +23,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         BehaviorDelegate.initialize();
         model = m;
         overlayActionHandledUntil = 0;
-        upMenuHoldTimer = null;
-        upMenuKeyPressed = false;
-        suppressNextUpMenuAction = false;
-    }
-
-    function cancelUpMenuHoldTimer() {
-        upMenuKeyPressed = false;
-        if (upMenuHoldTimer != null) {
-            upMenuHoldTimer.stop();
-            upMenuHoldTimer = null;
-        }
-    }
-
-    function showPresetMenu() as Void {
-        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
-        WatchUi.requestUpdate();
-    }
-
-    function handleUpMenuHoldTimer() as Void {
-        var view = Application.getApp().rugbyView;
-        if (!upMenuKeyPressed || view == null || view.isLocked || view.isSpecialOverlayActive()) {
-            return;
-        }
-        suppressNextUpMenuAction = true;
-        cancelUpMenuHoldTimer();
-        showPresetMenu();
     }
 
     /**
@@ -152,36 +122,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         }
     }
 
-    function onKeyPressed(evt) {
-        try {
-            var view = Application.getApp().rugbyView;
-            if (view == null || view.isLocked || view.isSpecialOverlayActive()) {
-                return false;
-            }
-            if (RugbyTimerInputSupport.shouldStartPresetHold(evt.getKey())) {
-                cancelUpMenuHoldTimer();
-                upMenuKeyPressed = true;
-                upMenuHoldTimer = new Timer.Timer();
-                upMenuHoldTimer.start(method(:handleUpMenuHoldTimer), 700, false);
-            }
-            return false;
-        } catch (ex) {
-            return handleInputFailure("key_pressed", ex);
-        }
-    }
-
-    function onKeyReleased(evt) {
-        try {
-            if (evt.getKey() == WatchUi.KEY_MENU || evt.getKey() == WatchUi.KEY_UP) {
-                cancelUpMenuHoldTimer();
-                return suppressNextUpMenuAction;
-            }
-            return false;
-        } catch (ex) {
-            return handleInputFailure("key_released", ex);
-        }
-    }
-
     /**
      * This method is called when the menu button is pressed.
      * @return true if the event is handled, false otherwise
@@ -189,11 +129,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onMenu() {
         try {
             var view = Application.getApp().rugbyView;
-            cancelUpMenuHoldTimer();
-            if (suppressNextUpMenuAction) {
-                suppressNextUpMenuAction = false;
-                return true;
-            }
             if (view.isLocked) {
                 return true;
             }
@@ -328,11 +263,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onPreviousPage() {
         try {
             var view = Application.getApp().rugbyView;
-            cancelUpMenuHoldTimer();
-            if (suppressNextUpMenuAction) {
-                suppressNextUpMenuAction = false;
-                return true;
-            }
             if (view.isLocked || !view.isActionAllowed()) {
                 return true;
             }

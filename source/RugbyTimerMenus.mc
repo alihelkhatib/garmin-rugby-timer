@@ -29,26 +29,26 @@ class RugbyMenuSupport {
  */
 class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
     var model;
-    var presetOpenTimer;
+    var settingsOpenTimer;
 
     function initialize(m) {
         Menu2InputDelegate.initialize();
         model = m;
-        presetOpenTimer = null;
+        settingsOpenTimer = null;
     }
 
-    function showPresetAfterMenuClose() as Void {
-        presetOpenTimer = null;
-        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
+    function showSettingsAfterMenuClose() as Void {
+        settingsOpenTimer = null;
+        WatchUi.pushView(new RugbySettingsHostView(), new RugbySettingsHostDelegate(), WatchUi.SLIDE_UP);
         WatchUi.requestUpdate();
     }
 
-    function openPresetFromMenu() {
-        if (presetOpenTimer != null) {
-            presetOpenTimer.stop();
+    function openSettingsFromMenu() {
+        if (settingsOpenTimer != null) {
+            settingsOpenTimer.stop();
         }
-        presetOpenTimer = new Timer.Timer();
-        presetOpenTimer.start(method(:showPresetAfterMenuClose) as Method() as Void, 50, false);
+        settingsOpenTimer = new Timer.Timer();
+        settingsOpenTimer.start(method(:showSettingsAfterMenuClose) as Method() as Void, 50, false);
     }
 
     function onSelect(item) {
@@ -72,7 +72,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
                 model.undoLastEvent();
             } else if (item.getId() == :settings) {
                 WatchUi.popView(WatchUi.SLIDE_DOWN);
-                openPresetFromMenu();
+                openSettingsFromMenu();
                 return;
             } else if (item.getId() == :toggle_lock) {
                 view.toggleLock();
