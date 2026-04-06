@@ -1866,6 +1866,12 @@
 
 - 2026-04-03 test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL.
 
+- 2026-04-03: Removed the live preset/profile picker from the UI flow, changed the in-match `Settings` action to open the real settings stack, and kept the idle countdown anchored at the same vertical level used during live play so the main timer no longer drops when the match starts.
+
+- 2026-04-03 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL.
+
+- 2026-04-03 test rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test` -> BUILD SUCCESSFUL.
+
 - 2026-04-03 local validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app target and test target; script now prints the correct simulator command shape: `monkeydo bin/tests.prg 1 -t`.
 
 - 2026-04-03: Added integration-style Garmin tests in `tests/Test_RugbyIntegrationFlows.mc` for preset persistence, start/pause/resume restore, sanction persistence, and rugby-only recording startup, and extracted the pure overlay/hint/toast decisions from `RugbyTimerView.mc` into `source/RugbyTimerViewSupport.mc` with direct coverage in `tests/Test_RugbyTimerViewSupport.mc`.
