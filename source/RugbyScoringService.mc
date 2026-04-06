@@ -25,7 +25,7 @@ class RugbyScoringService {
         }
         RugbyScoringService.addEvent(model, :try, isHome);
         RugbyScoringService.trimEvents(model);
-        if (model.gameState == STATE_PLAYING && model.useConversionTimer) {
+        if (RugbyMatchStateSupport.shouldStartConversionAfterTry(model.gameState, model.useConversionTimer)) {
             model.conversionTeam = isHome;
             RugbyClockService.startConversionCountdown(model);
         }
@@ -60,7 +60,7 @@ class RugbyScoringService {
         }
         RugbyScoringService.addEvent(model, :penalty, isHome);
         RugbyScoringService.trimEvents(model);
-        if (model.gameState == STATE_PLAYING && model.usePenaltyTimer) {
+        if (RugbyMatchStateSupport.shouldStartPenaltyAfterKick(model.gameState, model.usePenaltyTimer)) {
             RugbyClockService.startPenaltyCountdown(model);
         }
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Penalty Goal");

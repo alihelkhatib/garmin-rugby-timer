@@ -132,3 +132,124 @@ function test_integration_startGame_uses_strict_rugby_recording(logger as Test.L
         || status == "Rugby sport unsupported"
         || status == "Recording start failed";
 }
+
+(:test)
+function test_integration_conversion_made_returns_to_play_and_scores(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.useConversionTimer = true;
+
+    model.recordTry(true);
+    if (model.gameState != STATE_CONVERSION) {
+        logger.error("try should enter conversion state");
+        return false;
+    }
+    if (model.conversionTeam != true) {
+        logger.error("conversionTeam should track home");
+        return false;
+    }
+
+    model.handleConversionSuccess();
+
+    if (model.gameState != STATE_PLAYING) {
+        logger.error("made conversion should resume play");
+        return false;
+    }
+    if (model.homeScore != 7) {
+        logger.error("home score should include try + conversion");
+        return false;
+    }
+    return model.conversionTeam == null;
+}
+
+(:test)
+function test_integration_conversion_miss_returns_to_play_without_extra_score(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.useConversionTimer = true;
+
+    model.recordTry(false);
+    if (model.gameState != STATE_CONVERSION) {
+        logger.error("try should enter conversion state");
+        return false;
+    }
+
+    model.handleConversionMiss();
+
+    if (model.gameState != STATE_PLAYING) {
+        logger.error("missed conversion should resume play");
+        return false;
+    }
+    if (model.awayScore != 5) {
+        logger.error("away score should remain try-only after miss");
+        return false;
+    }
+    return model.conversionTeam == null;
+}
+
+(:test)
+function test_integration_penalty_timer_starts_and_expiry_resumes_play(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.usePenaltyTimer = true;
+    model.penaltyKickTime = 5;
+
+    model.recordPenalty(true);
+
+    if (model.gameState != STATE_PENALTY) {
+        logger.error("penalty goal should enter penalty timer state when enabled");
+        return false;
+    }
+    if (model.homeScore != 3 || model.homePenalties != 1) {
+        logger.error("penalty scoring totals mismatch");
+        return false;
+    }
+
+    model.lastUpdate = System.getTimer() - 6000;
+    RugbyTimerTiming.updateGame(model);
+
+    return model.gameState == STATE_PLAYING && model.countdownSeconds == 0;
+}
+
+(:test)
+function test_integration_second_half_then_end_game(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_HALFTIME;
+    model.halfNumber = 1;
+    model.countdownTimer = 600;
+    model.countdownRemaining = 0;
+
+    model.startSecondHalf();
+
+    if (model.gameState != STATE_PLAYING) {
+        logger.error("second half should start from halftime");
+        return false;
+    }
+    if (model.halfNumber != 2) {
+        logger.error("half number should advance to 2");
+        return false;
+    }
+
+    model.gameTime = model.countdownTimer;
+    model.countdownRemaining = 0;
+    model.lastUpdate = System.getTimer();
+    model.endGame();
+
+    return model.gameState == STATE_ENDED && model.lastUpdate == null;
+}

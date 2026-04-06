@@ -10,16 +10,12 @@ using Toybox.Lang;
  * each update tick while emitting the match-specific vibration cues.
  */
 class RugbyTimerTiming {
-        static function isNumeric(value) {
-            return value instanceof Lang.Number || value instanceof Lang.Float;
-        }
-
     static function isClockRunning(state) {
-        return state == STATE_PLAYING || state == STATE_CONVERSION || state == STATE_PENALTY || state == STATE_KICKOFF;
+        return RugbyMatchStateSupport.isMainClockRunning(state);
     }
 
     static function isSuspensionClockRunning(state) {
-        return state == STATE_PLAYING || state == STATE_CONVERSION || state == STATE_PENALTY || state == STATE_HALFTIME || state == STATE_KICKOFF;
+        return RugbyMatchStateSupport.isSuspensionClockRunning(state);
     }
 
     const HALF_WARNING_SECONDS = 30;
@@ -37,35 +33,15 @@ class RugbyTimerTiming {
             }
             Profiler.start("updateGame");
 
-            var deltaSeconds = (now - model.lastUpdate) / 1000.0f;
-            if (deltaSeconds < 0) { deltaSeconds = 0; }
-
-            if (!RugbyTimerTiming.isNumeric(model.gameTime)) {
-                model.gameTime = 0;
-            }
-            if (!RugbyTimerTiming.isNumeric(model.suspensionTime)) {
-                model.suspensionTime = 0;
-            }
-            if (!RugbyTimerTiming.isNumeric(model.elapsedTime)) {
-                model.elapsedTime = 0;
-            }
+            var deltaSeconds = RugbyTimeMath.getDeltaSeconds(model.lastUpdate, now);
 
             var mainClockRunning = RugbyTimerTiming.isClockRunning(model.gameState);
             var elapsedClockRunning = model.gameState != STATE_IDLE && model.gameState != STATE_ENDED;
-            if (elapsedClockRunning) {
-                model.elapsedTime = model.elapsedTime + deltaSeconds;
-            }
-            if (mainClockRunning) {
-                model.gameTime = model.gameTime + deltaSeconds;
-            }
-            if (RugbyTimerTiming.isSuspensionClockRunning(model.gameState)) {
-                model.suspensionTime = model.suspensionTime + deltaSeconds;
-            }
+            var suspensionClockRunning = RugbyTimerTiming.isSuspensionClockRunning(model.gameState);
+            RugbyTimeMath.applyCoreClockDelta(model, deltaSeconds, elapsedClockRunning, mainClockRunning, suspensionClockRunning);
 
             // Keep the half countdown locked to the canonical match clock so they cannot drift.
             if (mainClockRunning) {
-                model.countdownRemaining = model.countdownTimer - model.gameTime;
-                if (model.countdownRemaining < 0) { model.countdownRemaining = 0; }
                 if (model.countdownRemaining <= 30 && model.countdownRemaining > 0 && !model.thirtySecondAlerted) {
                     model.thirtySecondAlerted = true;
                     RugbyTimerTiming.triggerHalfEndingSoonVibe();
@@ -99,7 +75,6 @@ class RugbyTimerTiming {
                 }
             }
             
-            var suspensionClockRunning = RugbyTimerTiming.isSuspensionClockRunning(model.gameState);
             if (suspensionClockRunning) {
                 var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, model.suspensionTime);
                 model.yellowHomeTimes = homeYellowUpdate.timers;

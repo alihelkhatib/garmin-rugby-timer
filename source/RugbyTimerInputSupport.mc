@@ -39,4 +39,5 @@ class RugbyTimerInputSupport {
     static function shouldStartPresetHold(key) {
         return key == WatchUi.KEY_MENU || key == WatchUi.KEY_UP;
     }
+
 }

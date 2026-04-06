@@ -69,6 +69,50 @@ function test_saveState_restores_playing_match_as_paused_snapshot(logger as Test
 }
 
 (:test)
+function test_buildSnapshot_and_applySnapshot_roundtrip_core_fields(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.homeScore = 17;
+    model.awayScore = 10;
+    model.homeTries = 3;
+    model.awayTries = 2;
+    model.gameState = STATE_PLAYING;
+    model.pausedState = null;
+    model.countdownTimer = 2400;
+    model.gameTime = 300;
+    model.elapsedTime = 320;
+    model.suspensionTime = 330;
+    model.countdownSeconds = 25;
+    model.lastUpdate = System.getTimer();
+    model.matchProfileId = "15s";
+    model.useConversionTimer = true;
+    model.usePenaltyTimer = true;
+    model.yellowHomeTimes = [
+        RugbyTimerCards.createYellowCardEntryFromStartTime(100, 600, "Y1", 1)
+    ];
+    model.yellowHomeLabelCounter = 1;
+    model.yellowHomeTotal = 1;
+
+    var snapshot = RugbyTimerPersistence.buildSnapshot(model);
+    if (snapshot == null) { logger.error("buildSnapshot should return a snapshot"); return false; }
+
+    var restored = new RugbyGameModel();
+    restored.initialize();
+    restored.resetMatchRuntimeState();
+    RugbyTimerPersistence.applySnapshot(restored, snapshot, System.getTimer());
+
+    if (restored.homeScore != 17 || restored.awayScore != 10) { logger.error("scores did not roundtrip"); return false; }
+    if (restored.homeTries != 3 || restored.awayTries != 2) { logger.error("tries did not roundtrip"); return false; }
+    if (restored.gameState != STATE_PAUSED) { logger.error("live snapshot should restore as paused"); return false; }
+    if (restored.pausedState != STATE_PLAYING) { logger.error("pausedState should preserve playing"); return false; }
+    if (restored.yellowHomeTimes.size() != 1) { logger.error("yellow card timers did not roundtrip"); return false; }
+    return restored.yellowHomeLabelCounter == 1 && restored.yellowHomeTotal == 1;
+}
+
+(:test)
 function test_finalizeGameData_writes_summary_and_event_log(logger as Test.Logger) as Lang.Boolean {
     clearCustomStorage();
     clearSavedGameStorage();

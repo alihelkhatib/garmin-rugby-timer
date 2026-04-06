@@ -69,11 +69,7 @@ class RugbyClockService {
     static function resumeClock(model) {
         if (model.gameState == STATE_PAUSED) {
             var now = System.getTimer();
-            if (model.pausedState != null) {
-                model.gameState = model.pausedState;
-            } else {
-                model.gameState = STATE_PLAYING;
-            }
+            model.gameState = RugbyMatchStateSupport.getResumeState(model.pausedState);
             model.lastPauseReminderTime = null;
             model.pausedState = null;
             model.lastUpdate = now;
@@ -85,7 +81,7 @@ class RugbyClockService {
             } else if (model.gameState == STATE_PENALTY) {
                 model.penaltyStartTime = now;
             }
-            if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
+            if (RugbyMatchStateSupport.shouldStartRecordingForState(model.gameState)) {
                 RugbyRecordingService.startRecording(model);
             }
             RugbyTimerTiming.triggerResumeVibe();

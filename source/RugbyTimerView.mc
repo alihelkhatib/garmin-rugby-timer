@@ -214,20 +214,6 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     /**
-     * Helper that displays a short M:SS string for cards while hiding zeros.
-     * @param seconds The number of seconds to format
-     * @return A formatted string in M:SS format
-     */
-    function formatShortTime(seconds) {
-        if (seconds <= 0) {
-            return "--";
-        }
-        var mins = (seconds.toLong() / 60);
-        var secs = (seconds.toLong() % 60);
-        return mins.toString() + ":" + secs.format("%02d");
-    }
-
-    /**
      * Launches the score dialog stack; respects the locked state.
      */
     function showScoreDialog() {

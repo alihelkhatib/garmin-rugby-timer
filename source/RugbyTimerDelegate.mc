@@ -169,16 +169,17 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 return true;
             }
             // Start/pause/resume game with select button
-            if (model.gameState == STATE_IDLE) {
+            var selectAction = RugbyMatchStateSupport.getSelectAction(model.gameState);
+            if (selectAction == :start_game) {
                 model.startGame();
                 if (model.lockOnStart && !view.isLocked) {
                     view.toggleLock();
                 }
-            } else if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
+            } else if (selectAction == :pause_clock) {
                 model.pauseClock();
-            } else if (model.gameState == STATE_PAUSED) {
+            } else if (selectAction == :resume_clock) {
                 model.resumeClock();
-            } else if (model.gameState == STATE_HALFTIME) {
+            } else if (selectAction == :start_half2) {
                 model.startSecondHalf();
                 if (model.lockOnStart && !view.isLocked) {
                     view.toggleLock();

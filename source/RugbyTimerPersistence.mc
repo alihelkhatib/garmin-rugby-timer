@@ -9,22 +9,18 @@ using Toybox.System;
  * snapshot shaping from the game model and UI code.
  */
 class RugbyTimerPersistence {
-    static function isNumeric(value) {
-        return value instanceof Lang.Number || value instanceof Lang.Float;
-    }
-
     static function isSnapshotUsable(snapshot) {
         if (snapshot == null) {
             return false;
         }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.homeScore)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.awayScore)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.homeTries)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.awayTries)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.halfNumber)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.gameTime)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.elapsedTime)) { return false; }
-        if (!RugbyTimerPersistence.isNumeric(snapshot.countdownTimer)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.homeScore)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.awayScore)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.homeTries)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.awayTries)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.halfNumber)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.gameTime)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.elapsedTime)) { return false; }
+        if (!RugbyTimeMath.isNumeric(snapshot.countdownTimer)) { return false; }
         return snapshot.gameState instanceof Lang.Number;
     }
 
@@ -40,12 +36,16 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function saveState(model) {
+        var snapshot = RugbyTimerPersistence.buildSnapshot(model);
+        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, snapshot.toDict());
+    }
+
+    static function buildSnapshot(model) {
         var persistedStates = RugbyTimerPersistence.getPersistedStates(model);
         var snapshotElapsedTime = RugbyTimerPersistence.getSnapshotElapsedTime(model);
         var snapshotGameTime = RugbyTimerPersistence.getSnapshotGameTime(model);
         var snapshotSuspensionTime = RugbyTimerPersistence.getSnapshotSuspensionTime(model);
-        var snapshotCountdownRemaining = model.countdownTimer - snapshotGameTime;
-        if (snapshotCountdownRemaining < 0) { snapshotCountdownRemaining = 0; }
+        var snapshotCountdownRemaining = RugbyTimeMath.getCountdownRemaining(model.countdownTimer, snapshotGameTime);
         var snapshotCountdownSeconds = RugbyTimerPersistence.getSnapshotCountdownSeconds(model);
         var snapshot = new PersistedGameSnapshot();
         snapshot.homeScore = model.homeScore;
@@ -87,7 +87,7 @@ class RugbyTimerPersistence {
         snapshot.awayPenalties = model.awayPenalties;
         snapshot.lastEvents = model.lastEvents;
         snapshot.eventLogEntries = model.eventLogEntries;
-        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, snapshot.toDict());
+        return snapshot;
     }
 
     /**
@@ -132,90 +132,7 @@ class RugbyTimerPersistence {
                 return;
             }
             try {
-                var now = System.getTimer();
-                model.homeScore = snapshot.homeScore;
-                model.awayScore = snapshot.awayScore;
-                model.homeTries = snapshot.homeTries;
-                model.awayTries = snapshot.awayTries;
-                model.halfNumber = snapshot.halfNumber;
-                model.gameTime = snapshot.gameTime;
-                model.elapsedTime = snapshot.elapsedTime;
-                model.suspensionTime = snapshot.suspensionTime;
-                if (!(model.suspensionTime instanceof Lang.Number) && !(model.suspensionTime instanceof Lang.Float)) {
-                    model.suspensionTime = model.gameTime;
-                }
-                model.countdownRemaining = snapshot.countdownRemaining;
-                model.countdownSeconds = snapshot.countdownSeconds;
-                model.gameState = RugbyTimerPersistence.restoreGameState(snapshot.gameState);
-                model.pausedState = RugbyTimerPersistence.restorePausedState(model.gameState, snapshot.gameState, snapshot.pausedState);
-                model.matchProfileId = snapshot.matchProfileId;
-                model.is7s = snapshot.is7s;
-                model.countdownTimer = snapshot.countdownTimer;
-                model.conversionTime = RugbyTimerPersistence.restoreConversionTime(snapshot);
-                model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(snapshot.kickoffTime, model.is7s);
-                model.penaltyKickTime = snapshot.penaltyKickTime;
-                model.useConversionTimer = snapshot.useConversionTimer;
-                model.usePenaltyTimer = snapshot.usePenaltyTimer;
-                if (model.matchProfileId == null) {
-                    model.matchProfileId = RugbyMatchProfiles.inferProfileIdFromSettings(
-                        model.is7s,
-                        model.countdownTimer,
-                        model.conversionTime,
-                        model.kickoffTime,
-                        model.penaltyKickTime,
-                        model.useConversionTimer,
-                        model.usePenaltyTimer
-                    );
-                }
-                model.conversionTeam = snapshot.conversionTeam;
-                model.lastEvents = snapshot.lastEvents;
-                if (model.lastEvents == null) { model.lastEvents = []; }
-                model.eventLogEntries = snapshot.eventLogEntries;
-                if (model.eventLogEntries == null) { model.eventLogEntries = []; }
-                
-                model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowHomeTimes, model.suspensionTime, now);
-                model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowAwayTimes, model.suspensionTime, now);
-                
-                model.yellowHomeLabelCounter = snapshot.yellowHomeLabelCounter;
-                if (model.yellowHomeLabelCounter == null) { model.yellowHomeLabelCounter = 0; }
-                model.yellowAwayLabelCounter = snapshot.yellowAwayLabelCounter;
-                if (model.yellowAwayLabelCounter == null) { model.yellowAwayLabelCounter = 0; }
-                model.redHomeLabelCounter = snapshot.redHomeLabelCounter;
-                if (model.redHomeLabelCounter == null) { model.redHomeLabelCounter = 0; }
-                model.redAwayLabelCounter = snapshot.redAwayLabelCounter;
-                if (model.redAwayLabelCounter == null) { model.redAwayLabelCounter = 0; }
-                
-                model.redHomePermanent = snapshot.redHomePermanent;
-                if (model.redHomePermanent == null) { model.redHomePermanent = false; }
-                model.redAwayPermanent = snapshot.redAwayPermanent;
-                if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
-                model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redHomeTimes, model.suspensionTime, now);
-                model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redAwayTimes, model.suspensionTime, now);
-
-                model.yellowHomeTotal = snapshot.yellowHomeTotal;
-                if (model.yellowHomeTotal == null) { model.yellowHomeTotal = 0; }
-                model.yellowAwayTotal = snapshot.yellowAwayTotal;
-                if (model.yellowAwayTotal == null) { model.yellowAwayTotal = 0; }
-                model.redHomeTotal = snapshot.redHomeTotal;
-                if (model.redHomeTotal == null) { model.redHomeTotal = 0; }
-                model.redAwayTotal = snapshot.redAwayTotal;
-                if (model.redAwayTotal == null) { model.redAwayTotal = 0; }
-                
-                model.homePenalties = snapshot.homePenalties;
-                if (model.homePenalties == null) { model.homePenalties = 0; }
-                model.awayPenalties = snapshot.awayPenalties;
-                if (model.awayPenalties == null) { model.awayPenalties = 0; }
-
-                if (model.gameState != STATE_IDLE && model.gameState != STATE_ENDED) {
-                    if (!(model.gameTime instanceof Lang.Number)) { model.gameTime = 0; }
-                    if (model.gameState == STATE_PAUSED || model.gameState == STATE_HALFTIME) {
-                        model.gameStartTime = null;
-                        model.lastUpdate = null;
-                    } else {
-                        model.gameStartTime = now - (model.gameTime * 1000.0f);
-                        model.lastUpdate = now;
-                    }
-                }
+                RugbyTimerPersistence.applySnapshot(model, snapshot, System.getTimer());
             } catch (ex) {
                 Toybox.System.println("Error loading saved state: " + ex.getErrorMessage());
                 RugbyTimerPersistence.clearInvalidSavedState(model, ex.getErrorMessage());
@@ -236,68 +153,129 @@ class RugbyTimerPersistence {
         }
     }
 
+    static function applySnapshot(model, snapshot, now) {
+        RugbyTimerPersistence.applyCoreSnapshotFields(model, snapshot);
+        RugbyTimerPersistence.applyProfileSnapshotFields(model, snapshot);
+        RugbyTimerPersistence.applyHistorySnapshotFields(model, snapshot);
+        RugbyTimerPersistence.applyCardSnapshotFields(model, snapshot, now);
+        RugbyTimerPersistence.applyCounterSnapshotFields(model, snapshot);
+        RugbyTimerPersistence.applyRestoredClockAnchors(model, now);
+    }
+
+    static function applyCoreSnapshotFields(model, snapshot) {
+        model.homeScore = snapshot.homeScore;
+        model.awayScore = snapshot.awayScore;
+        model.homeTries = snapshot.homeTries;
+        model.awayTries = snapshot.awayTries;
+        model.halfNumber = snapshot.halfNumber;
+        model.gameTime = snapshot.gameTime;
+        model.elapsedTime = snapshot.elapsedTime;
+        model.suspensionTime = snapshot.suspensionTime;
+        if (!RugbyTimeMath.isNumeric(model.suspensionTime)) {
+            model.suspensionTime = model.gameTime;
+        }
+        model.countdownRemaining = snapshot.countdownRemaining;
+        model.countdownSeconds = snapshot.countdownSeconds;
+        model.gameState = RugbyTimerPersistence.restoreGameState(snapshot.gameState);
+        model.pausedState = RugbyTimerPersistence.restorePausedState(model.gameState, snapshot.gameState, snapshot.pausedState);
+        model.conversionTeam = snapshot.conversionTeam;
+    }
+
+    static function applyProfileSnapshotFields(model, snapshot) {
+        model.matchProfileId = snapshot.matchProfileId;
+        model.is7s = snapshot.is7s;
+        model.countdownTimer = snapshot.countdownTimer;
+        model.conversionTime = RugbyTimerPersistence.restoreConversionTime(snapshot);
+        model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(snapshot.kickoffTime, model.is7s);
+        model.penaltyKickTime = snapshot.penaltyKickTime;
+        model.useConversionTimer = snapshot.useConversionTimer;
+        model.usePenaltyTimer = snapshot.usePenaltyTimer;
+        if (model.matchProfileId == null) {
+            model.matchProfileId = RugbyMatchProfiles.inferProfileIdFromSettings(
+                model.is7s,
+                model.countdownTimer,
+                model.conversionTime,
+                model.kickoffTime,
+                model.penaltyKickTime,
+                model.useConversionTimer,
+                model.usePenaltyTimer
+            );
+        }
+    }
+
+    static function applyHistorySnapshotFields(model, snapshot) {
+        model.lastEvents = snapshot.lastEvents;
+        if (model.lastEvents == null) { model.lastEvents = []; }
+        model.eventLogEntries = snapshot.eventLogEntries;
+        if (model.eventLogEntries == null) { model.eventLogEntries = []; }
+    }
+
+    static function applyCardSnapshotFields(model, snapshot, now) {
+        model.yellowHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowHomeTimes, model.suspensionTime, now);
+        model.yellowAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.yellowAwayTimes, model.suspensionTime, now);
+        model.redHomeTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redHomeTimes, model.suspensionTime, now);
+        model.redAwayTimes = RugbyTimerPersistence.restoreYellowTimers(snapshot.redAwayTimes, model.suspensionTime, now);
+        model.redHomePermanent = snapshot.redHomePermanent;
+        if (model.redHomePermanent == null) { model.redHomePermanent = false; }
+        model.redAwayPermanent = snapshot.redAwayPermanent;
+        if (model.redAwayPermanent == null) { model.redAwayPermanent = false; }
+    }
+
+    static function applyCounterSnapshotFields(model, snapshot) {
+        model.yellowHomeLabelCounter = RugbyTimerPersistence.orZero(snapshot.yellowHomeLabelCounter);
+        model.yellowAwayLabelCounter = RugbyTimerPersistence.orZero(snapshot.yellowAwayLabelCounter);
+        model.redHomeLabelCounter = RugbyTimerPersistence.orZero(snapshot.redHomeLabelCounter);
+        model.redAwayLabelCounter = RugbyTimerPersistence.orZero(snapshot.redAwayLabelCounter);
+        model.yellowHomeTotal = RugbyTimerPersistence.orZero(snapshot.yellowHomeTotal);
+        model.yellowAwayTotal = RugbyTimerPersistence.orZero(snapshot.yellowAwayTotal);
+        model.redHomeTotal = RugbyTimerPersistence.orZero(snapshot.redHomeTotal);
+        model.redAwayTotal = RugbyTimerPersistence.orZero(snapshot.redAwayTotal);
+        model.homePenalties = RugbyTimerPersistence.orZero(snapshot.homePenalties);
+        model.awayPenalties = RugbyTimerPersistence.orZero(snapshot.awayPenalties);
+    }
+
+    static function applyRestoredClockAnchors(model, now) {
+        if (model.gameState == STATE_IDLE || model.gameState == STATE_ENDED) {
+            return;
+        }
+        if (!RugbyTimeMath.isNumeric(model.gameTime)) { model.gameTime = 0; }
+        if (model.gameState == STATE_PAUSED || model.gameState == STATE_HALFTIME) {
+            model.gameStartTime = null;
+            model.lastUpdate = null;
+            return;
+        }
+        model.gameStartTime = now - (model.gameTime * 1000.0f);
+        model.lastUpdate = now;
+    }
+
+    static function orZero(value) {
+        if (value == null) {
+            return 0;
+        }
+        return value;
+    }
+
     static function getPersistedStates(model) {
-        if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+        if (RugbyMatchStateSupport.shouldRestoreAsPaused(model.gameState)) {
             return PersistedStatePair.create(STATE_PAUSED, model.gameState);
         }
         return PersistedStatePair.create(model.gameState, model.pausedState);
     }
 
     static function getSnapshotGameTime(model) {
-        var snapshot = model.gameTime;
-        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
-            snapshot = 0;
-        }
-        if (RugbyTimerTiming.isClockRunning(model.gameState) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
-            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
-            if (delta > 0) {
-                snapshot = snapshot + delta;
-            }
-        }
-        return snapshot;
+        return RugbyTimeMath.snapshotForwardClock(model.gameTime, model.lastUpdate, System.getTimer(), RugbyTimerTiming.isClockRunning(model.gameState));
     }
 
     static function getSnapshotElapsedTime(model) {
-        var snapshot = model.elapsedTime;
-        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
-            snapshot = 0;
-        }
-        if (model.gameState != STATE_IDLE && model.gameState != STATE_ENDED && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
-            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
-            if (delta > 0) {
-                snapshot = snapshot + delta;
-            }
-        }
-        return snapshot;
+        return RugbyTimeMath.snapshotForwardClock(model.elapsedTime, model.lastUpdate, System.getTimer(), model.gameState != STATE_IDLE && model.gameState != STATE_ENDED);
     }
 
     static function getSnapshotSuspensionTime(model) {
-        var snapshot = model.suspensionTime;
-        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
-            snapshot = 0;
-        }
-        if (RugbyTimerTiming.isSuspensionClockRunning(model.gameState) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
-            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
-            if (delta > 0) {
-                snapshot = snapshot + delta;
-            }
-        }
-        return snapshot;
+        return RugbyTimeMath.snapshotForwardClock(model.suspensionTime, model.lastUpdate, System.getTimer(), RugbyTimerTiming.isSuspensionClockRunning(model.gameState));
     }
 
     static function getSnapshotCountdownSeconds(model) {
-        var snapshot = model.countdownSeconds;
-        if (!RugbyTimerPersistence.isNumeric(snapshot)) {
-            snapshot = 0;
-        }
-        if ((model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) && RugbyTimerPersistence.isNumeric(model.lastUpdate)) {
-            var delta = (System.getTimer() - model.lastUpdate) / 1000.0f;
-            if (delta > 0) {
-                snapshot = snapshot - delta;
-                if (snapshot < 0) { snapshot = 0; }
-            }
-        }
-        return snapshot;
+        return RugbyTimeMath.snapshotReverseClock(model.countdownSeconds, model.lastUpdate, System.getTimer(), model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY);
     }
 
     static function serializeYellowTimers(list, clockValue) {
@@ -314,13 +292,13 @@ class RugbyTimerPersistence {
             var duration = entry.duration;
             var remaining = entry.remaining;
             var clockStart = entry.startTime;
-            if (RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+            if (RugbyTimeMath.isNumeric(duration) && RugbyTimeMath.isNumeric(clockStart) && RugbyTimeMath.isNumeric(clockValue)) {
                 remaining = duration - (clockValue - clockStart);
             }
-            if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
+            if (!RugbyTimeMath.isNumeric(duration) && RugbyTimeMath.isNumeric(remaining)) {
                 duration = remaining;
             }
-            if (!RugbyTimerPersistence.isNumeric(remaining) || !RugbyTimerPersistence.isNumeric(duration)) {
+            if (!RugbyTimeMath.isNumeric(remaining) || !RugbyTimeMath.isNumeric(duration)) {
                 continue;
             }
             if (remaining <= 0) {
@@ -346,30 +324,30 @@ class RugbyTimerPersistence {
             var duration = entry.duration;
             var remaining = entry.remaining;
             var clockStart = entry.clockStart;
-            if (!RugbyTimerPersistence.isNumeric(clockStart)) {
+            if (!RugbyTimeMath.isNumeric(clockStart)) {
                 var activeEntry = CardEntry.fromDict(entries[i]);
                 if (activeEntry != null) {
                     clockStart = activeEntry.startTime;
                 }
             }
-            if (!RugbyTimerPersistence.isNumeric(remaining) && RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+            if (!RugbyTimeMath.isNumeric(remaining) && RugbyTimeMath.isNumeric(duration) && RugbyTimeMath.isNumeric(clockStart) && RugbyTimeMath.isNumeric(clockValue)) {
                 if (entry.clockStart instanceof Lang.Number || entry.clockStart instanceof Lang.Float) {
                     remaining = duration - (clockValue - clockStart);
                 } else {
                     remaining = duration - ((now - clockStart) / 1000.0f);
                 }
             }
-            if (!RugbyTimerPersistence.isNumeric(duration) && RugbyTimerPersistence.isNumeric(remaining)) {
+            if (!RugbyTimeMath.isNumeric(duration) && RugbyTimeMath.isNumeric(remaining)) {
                 duration = remaining;
             }
-            if (!RugbyTimerPersistence.isNumeric(remaining) || !RugbyTimerPersistence.isNumeric(duration)) {
+            if (!RugbyTimeMath.isNumeric(remaining) || !RugbyTimeMath.isNumeric(duration)) {
                 continue;
             }
             if (remaining <= 0) {
                 continue;
             }
             if (remaining > duration) { remaining = duration; }
-            if (!RugbyTimerPersistence.isNumeric(clockStart) && RugbyTimerPersistence.isNumeric(clockValue)) {
+            if (!RugbyTimeMath.isNumeric(clockStart) && RugbyTimeMath.isNumeric(clockValue)) {
                 clockStart = clockValue - (duration - remaining);
             }
             var active = CardEntry.createFromStartTime(clockStart, duration, entry.label, entry.cardId);
@@ -378,43 +356,6 @@ class RugbyTimerPersistence {
             restored.add(active.toDict());
         }
         return restored;
-    }
-
-    static function serializeRedRemaining(startTime, pausedRemaining, isPermanent) {
-        if (isPermanent) {
-            return 0;
-        }
-        if (pausedRemaining instanceof Lang.Number) {
-            if (pausedRemaining <= 0) {
-                return null;
-            }
-            if (pausedRemaining > 1200) { pausedRemaining = 1200; }
-            return pausedRemaining;
-        }
-        if (!(startTime instanceof Lang.Number)) {
-            return null;
-        }
-        var remaining = 1200 - ((System.getTimer() - startTime) / 1000.0f);
-        if (remaining <= 0) {
-            return null;
-        }
-        if (remaining > 1200) { remaining = 1200; }
-        return remaining;
-    }
-
-    static function restoreRedStartTime(savedRemaining, legacyStartTime, isPermanent, now) {
-        if (isPermanent) {
-            return 0;
-        }
-        var remaining = savedRemaining;
-        if (!(remaining instanceof Lang.Number) && legacyStartTime instanceof Lang.Number) {
-            remaining = 1200 - ((now - legacyStartTime) / 1000.0f);
-        }
-        if (!(remaining instanceof Lang.Number) || remaining <= 0) {
-            return null;
-        }
-        if (remaining > 1200) { remaining = 1200; }
-        return now - ((1200 - remaining) * 1000.0f);
     }
 
     static function restoreConversionTime(snapshot) {
@@ -438,10 +379,7 @@ class RugbyTimerPersistence {
     }
 
     static function restoreGameState(savedGameState) {
-        if (savedGameState == STATE_KICKOFF) {
-            return STATE_PAUSED;
-        }
-        if (savedGameState == STATE_PLAYING || savedGameState == STATE_CONVERSION || savedGameState == STATE_PENALTY) {
+        if (RugbyMatchStateSupport.shouldRestoreAsPaused(savedGameState)) {
             return STATE_PAUSED;
         }
         return savedGameState;
@@ -449,19 +387,7 @@ class RugbyTimerPersistence {
 
     static function restorePausedState(restoredGameState, savedGameState, savedPausedState) {
         if (restoredGameState == STATE_PAUSED) {
-            if (savedPausedState == STATE_KICKOFF) {
-                savedPausedState = STATE_PLAYING;
-            }
-            if (savedPausedState != null) {
-                return savedPausedState;
-            }
-            if (savedGameState == STATE_KICKOFF) {
-                return STATE_PLAYING;
-            }
-            if (savedGameState == STATE_PLAYING || savedGameState == STATE_CONVERSION || savedGameState == STATE_PENALTY) {
-                return savedGameState;
-            }
-            return STATE_PLAYING;
+            return RugbyMatchStateSupport.getRestoredPausedState(savedGameState, savedPausedState);
         }
         return savedPausedState;
     }

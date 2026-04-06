@@ -235,14 +235,6 @@ class RugbyGameModel {
         return message;
     }
 
-    function setRecordingStatusMessage(message) {
-        setStatusMessage(message);
-    }
-
-    function consumeRecordingStatusMessage() {
-        return consumeStatusMessage();
-    }
-
     /**
      * This method is called periodically to update the game state.
      */
@@ -273,12 +265,7 @@ class RugbyGameModel {
      * @return A formatted string in M:SS format
      */
     function formatShortTime(seconds) {
-        if (seconds <= 0) {
-            return "--";
-        }
-        var mins = (seconds.toLong() / 60);
-        var secs = (seconds.toLong() % 60);
-        return mins.toString() + ":" + secs.format("%02d");
+        return RugbyTimeMath.formatShortTime(seconds);
     }
 
     /**
@@ -286,32 +273,26 @@ class RugbyGameModel {
      * similar transition so every rendered timer freezes on the same boundary.
      */
     function syncLiveClocksToNow(now) {
-        if (!(now instanceof Lang.Number) && !(now instanceof Lang.Float)) {
+        if (!RugbyTimeMath.isNumeric(now)) {
             return;
         }
-        if (!(lastUpdate instanceof Lang.Number) && !(lastUpdate instanceof Lang.Float)) {
+        if (!RugbyTimeMath.isNumeric(lastUpdate)) {
             lastUpdate = now;
             return;
         }
-        var deltaSeconds = (now - lastUpdate) / 1000.0f;
+        var deltaSeconds = RugbyTimeMath.getDeltaSeconds(lastUpdate, now);
         if (deltaSeconds <= 0) {
             lastUpdate = now;
             return;
         }
 
-        if (gameState != STATE_IDLE && gameState != STATE_ENDED) {
-            elapsedTime = elapsedTime + deltaSeconds;
-        }
-
-        if (gameState == STATE_PLAYING || gameState == STATE_CONVERSION || gameState == STATE_PENALTY || gameState == STATE_KICKOFF) {
-            gameTime = gameTime + deltaSeconds;
-            countdownRemaining = countdownTimer - gameTime;
-            if (countdownRemaining < 0) { countdownRemaining = 0; }
-        }
-
-        if (RugbyTimerTiming.isSuspensionClockRunning(gameState)) {
-            suspensionTime = suspensionTime + deltaSeconds;
-        }
+        RugbyTimeMath.applyCoreClockDelta(
+            self,
+            deltaSeconds,
+            gameState != STATE_IDLE && gameState != STATE_ENDED,
+            RugbyTimerTiming.isClockRunning(gameState),
+            RugbyTimerTiming.isSuspensionClockRunning(gameState)
+        );
 
         if (gameState == STATE_CONVERSION || gameState == STATE_PENALTY) {
             countdownSeconds = countdownSeconds - deltaSeconds;

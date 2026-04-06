@@ -89,6 +89,36 @@ class RugbyRenderedCardInfo {
     }
 }
 
+class RugbyCardRenderState {
+    var visibleCount;
+    var lineIndex;
+
+    static function create(visibleCount, lineIndex) {
+        var state = new RugbyCardRenderState();
+        state.visibleCount = visibleCount;
+        state.lineIndex = lineIndex;
+        return state;
+    }
+}
+
+class RugbyCardRenderStyle {
+    var limit;
+    var color;
+    var labelPrefix;
+    var font;
+    var lineStep;
+
+    static function create(limit, color, labelPrefix, font, lineStep) {
+        var style = new RugbyCardRenderStyle();
+        style.limit = limit;
+        style.color = color;
+        style.labelPrefix = labelPrefix;
+        style.font = font;
+        style.lineStep = lineStep;
+        return style;
+    }
+}
+
 class RugbyMainContentLayout {
     var countdownY;
     var stateY;

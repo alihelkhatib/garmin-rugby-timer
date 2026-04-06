@@ -23,26 +23,6 @@ class RugbyTimerCards {
         return remaining;
     }
 
-    static function getRedRemaining(startTime, now) {
-        if (!(startTime instanceof Lang.Number)) {
-            return null;
-        }
-        var remaining = 1200 - ((now - startTime) / 1000.0f);
-        if (remaining <= 0) {
-            return null;
-        }
-        if (remaining > 1200) { remaining = 1200; }
-        return remaining;
-    }
-
-    static function restoreRedStartTime(remaining, now) {
-        if (!(remaining instanceof Lang.Number) || remaining <= 0) {
-            return null;
-        }
-        if (remaining > 1200) { remaining = 1200; }
-        return now - ((1200 - remaining) * 1000.0f);
-    }
-
     static function getEntryRemaining(entry, clockValue) {
         if (entry == null) { return 0; }
         var ce = entry;
@@ -154,55 +134,6 @@ class RugbyTimerCards {
         }
         return RugbyTimerUpdateResult.create(newList, expiredAny);
     }
-
-    static function pauseYellowTimers(list, now) {
-        var pausedList = [];
-        if (!(list instanceof Lang.Array)) {
-            return pausedList;
-        }
-        var cardEntries = list as Lang.Array;
-        for (var i = 0; i < cardEntries.size(); i = i + 1) {
-            var ce = CardEntry.fromDict(cardEntries[i]);
-            if (ce == null) { continue; }
-            var remaining = ce.remaining;
-            if (!RugbyTimerCards.isNumeric(remaining)) {
-                remaining = RugbyTimerCards.getLiveEntryRemaining(ce, now);
-            }
-            if (remaining <= 0) { continue; }
-            var paused = CardEntry.createFromStartTime(null, ce.duration, ce.label, ce.cardId);
-            paused.vibeTriggered = (ce.vibeTriggered == true);
-            paused.remaining = remaining;
-            pausedList.add(paused.toDict());
-        }
-        return pausedList;
-    }
-
-    static function resumeYellowTimers(list, now) {
-        var resumedList = [];
-        if (!(list instanceof Lang.Array)) {
-            return resumedList;
-        }
-        var cardEntries = list as Lang.Array;
-        for (var i = 0; i < cardEntries.size(); i = i + 1) {
-            var ce = CardEntry.fromDict(cardEntries[i]);
-            if (ce == null) { continue; }
-            var duration = ce.duration;
-            var remaining = ce.remaining;
-            if (!RugbyTimerCards.isNumeric(remaining)) {
-                remaining = RugbyTimerCards.getEntryRemaining(ce, now);
-            }
-            if (!RugbyTimerCards.isNumeric(duration) || remaining <= 0) { continue; }
-            if (remaining > duration) { remaining = duration; }
-            var elapsed = duration - remaining;
-            var resumed = CardEntry.createFromStartTime(now - (elapsed * 1000), duration, ce.label, ce.cardId);
-            resumed.vibeTriggered = (ce.vibeTriggered == true);
-            resumed.remaining = remaining;
-            resumedList.add(resumed.toDict());
-        }
-        return resumedList;
-    }
-
-
 
     /**
      * Computes the highest yellow card label number in a list.
