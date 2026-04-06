@@ -140,6 +140,7 @@ class RugbyGameModel {
     var distance;
     // The current speed
     var speed;
+    var teamLabelMode;
     
     // Timers
     const PENALTY_KICK_TIME = 60;    // 60 seconds for penalty kicks
@@ -326,6 +327,7 @@ class RugbyGameModel {
         penaltyKickTime = entry.penaltyKickTime;
         useConversionTimer = entry.useConversionTimer;
         usePenaltyTimer = entry.usePenaltyTimer;
+        teamLabelMode = RugbyTeamIdentitySupport.normalizeLabelMode(entry.teamLabelMode);
         // Always update countdownRemaining to match the new profile timer
         countdownRemaining = countdownTimer;
         if (persist) {
@@ -422,6 +424,12 @@ class RugbyGameModel {
         saveCurrentSettingsAsCustomProfile();
     }
 
+    function setTeamLabelMode(mode) {
+        promoteToCustomProfile();
+        teamLabelMode = RugbyTeamIdentitySupport.normalizeLabelMode(mode);
+        saveCurrentSettingsAsCustomProfile();
+    }
+
     function promoteToCustomProfile() {
         if (matchProfileId != "custom") {
             saveCurrentSettingsAsCustomProfile();
@@ -435,7 +443,7 @@ class RugbyGameModel {
     }
 
     function buildCurrentProfile(profileId) {
-        return RugbyMatchProfiles.createProfile(
+        return RugbyMatchProfiles.withTeamLabelMode(RugbyMatchProfiles.createProfile(
             profileId,
             RugbyMatchProfiles.getProfileLabel(profileId),
             is7s,
@@ -445,7 +453,7 @@ class RugbyGameModel {
             penaltyKickTime,
             useConversionTimer,
             usePenaltyTimer
-        );
+        ), teamLabelMode);
     }
 
     function usesSevensCardRules() {
@@ -479,7 +487,7 @@ class RugbyGameModel {
             return;
         }
         if (conversionTeam != null) {
-            RugbyTimerEventLog.appendEntry(self, (conversionTeam ? "Home" : "Away") + " Conversion Miss");
+            RugbyTimerEventLog.appendEntry(self, RugbyTeamIdentitySupport.buildEventDescription(self, conversionTeam, "Conversion Miss"));
         }
         endConversionWithoutScore();
     }

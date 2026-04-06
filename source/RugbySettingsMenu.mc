@@ -10,31 +10,37 @@ using Toybox.Application.Storage;
  * leaving navigation and side effects to the settings delegates.
  */
 class RugbySettingsMenu extends WatchUi.Menu2 {
+    const ROW_MATCH_FORMAT = 0;
+    const ROW_CONVERSION_TIMER = 1;
+    const ROW_PENALTY_TIMER = 2;
+    const ROW_USE_CONVERSION = 3;
+    const ROW_USE_PENALTY = 4;
+    const ROW_TEAM_LABELS = 5;
+    const ROW_LOCK_ON_START = 6;
+    const ROW_DIM_THEME = 7;
+
     var formatItem;
-    var halfTimerItem;
     var conversionItem;
     var penaltyItem;
     var useConvItem;
     var usePenItem;
+    var teamLabelsItem;
     var lockStartItem;
     var dimModeItem;
 
     function initialize() {
         Menu2.initialize({:title=>"Rugby Settings"});
+        var model = getModel();
         var profile = getActiveProfile();
-        var entry = RugbySettingsSupport.getProfileEntry(profile);
-        var formatLabel = RugbySettingsSupport.getFormatLabel(profile);
-        var halfLabel = RugbySettingsSupport.getHalfLabel(profile, self);
-        var conversionLabel = RugbySettingsSupport.getConversionLabel(profile, self);
-        var penaltyLabel = RugbySettingsSupport.getPenaltyLabel(profile, self);
-        var useConvLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.useConversionTimer);
-        var usePenLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.usePenaltyTimer);
+        var matchFormatLabel = getMatchFormatLabel();
+        var conversionLabel = getConversionLabel();
+        var penaltyLabel = getPenaltyLabel();
+        var useConvLabel = RugbySettingsSupport.getOnOffLabel(model != null ? model.useConversionTimer : RugbySettingsSupport.getProfileEntry(profile) != null && RugbySettingsSupport.getProfileEntry(profile).useConversionTimer);
+        var usePenLabel = RugbySettingsSupport.getOnOffLabel(model != null ? model.usePenaltyTimer : RugbySettingsSupport.getProfileEntry(profile) != null && RugbySettingsSupport.getProfileEntry(profile).usePenaltyTimer);
+        var teamLabelsLabel = getTeamLabelModeLabel();
 
-        formatItem = new WatchUi.MenuItem("Format Family", formatLabel, :format_family, null);
+        formatItem = new WatchUi.MenuItem("Match Format", matchFormatLabel, :format_family, null);
         addItem(formatItem);
-
-        halfTimerItem = new WatchUi.MenuItem("Half Timer", halfLabel, :countdown_timer, null);
-        addItem(halfTimerItem);
 
         conversionItem = new WatchUi.MenuItem("Conversion Timer", conversionLabel, :conv_time, null);
         addItem(conversionItem);
@@ -47,6 +53,9 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
 
         usePenItem = new WatchUi.MenuItem("Penalty Overlay", usePenLabel, :use_pen, null);
         addItem(usePenItem);
+
+        teamLabelsItem = new WatchUi.MenuItem("Team Labels", teamLabelsLabel, :team_labels, null);
+        addItem(teamLabelsItem);
 
         var lockStart = Storage.getValue(STORAGE_KEY_LOCK_ON_START);
         if (lockStart == null) { lockStart = false; }
@@ -82,8 +91,73 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     }
 
     function refresh() {
-        // Keep the settings menu static after construction to avoid device-specific
-        // issues around mutating Menu2 item subtitles at runtime.
+        var model = getModel();
+        var lockStart = Storage.getValue(STORAGE_KEY_LOCK_ON_START);
+        var dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
+
+        if (lockStart == null) { lockStart = false; }
+        if (dimMode == null) { dimMode = false; }
+
+        updateSubLabel(formatItem, ROW_MATCH_FORMAT, getMatchFormatLabel());
+        updateSubLabel(conversionItem, ROW_CONVERSION_TIMER, getConversionLabel());
+        updateSubLabel(penaltyItem, ROW_PENALTY_TIMER, getPenaltyLabel());
+        updateSubLabel(useConvItem, ROW_USE_CONVERSION, RugbySettingsSupport.getOnOffLabel(model != null && model.useConversionTimer));
+        updateSubLabel(usePenItem, ROW_USE_PENALTY, RugbySettingsSupport.getOnOffLabel(model != null && model.usePenaltyTimer));
+        updateSubLabel(teamLabelsItem, ROW_TEAM_LABELS, getTeamLabelModeLabel());
+        updateSubLabel(lockStartItem, ROW_LOCK_ON_START, lockStart ? "On" : "Off");
+        updateSubLabel(dimModeItem, ROW_DIM_THEME, dimMode ? "On" : "Off");
+    }
+
+    function getMatchFormatLabel() {
+        var model = getModel();
+        if (model != null) {
+            return RugbySettingsSupport.getMatchFormatLabelForValues(model.is7s, model.halfDuration);
+        }
+        return RugbySettingsSupport.getMatchFormatLabel(getActiveProfile());
+    }
+
+    function getConversionLabel() {
+        var model = getModel();
+        if (model != null) {
+            return formatTime(model.conversionTime);
+        }
+        return RugbySettingsSupport.getConversionLabel(getActiveProfile(), self);
+    }
+
+    function getPenaltyLabel() {
+        var model = getModel();
+        if (model != null) {
+            return formatTime(model.penaltyKickTime);
+        }
+        return RugbySettingsSupport.getPenaltyLabel(getActiveProfile(), self);
+    }
+
+    function getTeamLabelModeLabel() {
+        var model = getModel();
+        if (model != null) {
+            return RugbyTeamIdentitySupport.getLabelModeDisplayName(model.teamLabelMode);
+        }
+        return RugbySettingsSupport.getTeamLabelModeLabel(getActiveProfile());
+    }
+
+    function getRowIndexForItemId(itemId) {
+        if (itemId == :format_family) { return ROW_MATCH_FORMAT; }
+        if (itemId == :conv_time) { return ROW_CONVERSION_TIMER; }
+        if (itemId == :pen_time) { return ROW_PENALTY_TIMER; }
+        if (itemId == :use_conv) { return ROW_USE_CONVERSION; }
+        if (itemId == :use_pen) { return ROW_USE_PENALTY; }
+        if (itemId == :team_labels) { return ROW_TEAM_LABELS; }
+        if (itemId == :lock_start) { return ROW_LOCK_ON_START; }
+        if (itemId == :dim_mode) { return ROW_DIM_THEME; }
+        return 0;
+    }
+
+    function updateSubLabel(menuItem, rowIndex, text) {
+        if (menuItem == null) {
+            return;
+        }
+        menuItem.setSubLabel(text);
+        updateItem(menuItem, rowIndex);
     }
 
     function formatTime(seconds) {

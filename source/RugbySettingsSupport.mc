@@ -7,6 +7,14 @@ using Toybox.Lang;
  * unit-tested directly and reused across multiple settings files.
  */
 class RugbySettingsSupport {
+    static function getMatchFormatLabelForValues(is7s, halfDuration) {
+        if (halfDuration == 600) { return "10s"; }
+        if (halfDuration == 2100) { return "U19s"; }
+        if (halfDuration == 2400) { return "15s"; }
+        if (halfDuration == 420 || is7s == true) { return "7s"; }
+        return "Custom";
+    }
+
     static function getProfileEntry(profile) {
         return MatchProfileEntry.fromDict(profile);
     }
@@ -19,6 +27,14 @@ class RugbySettingsSupport {
     static function getFormatLabel(profile) {
         var entry = RugbySettingsSupport.getProfileEntry(profile);
         return entry != null ? RugbyMatchProfiles.getFormatLabel(entry.is7s) : null;
+    }
+
+    static function getMatchFormatLabel(profile) {
+        var entry = RugbySettingsSupport.getProfileEntry(profile);
+        if (entry == null) {
+            return null;
+        }
+        return RugbySettingsSupport.getMatchFormatLabelForValues(entry.is7s, entry.halfDuration);
     }
 
     static function getHalfLabel(profile, menu) {
@@ -38,6 +54,68 @@ class RugbySettingsSupport {
 
     static function getOnOffLabel(enabled) {
         return enabled == true ? "On" : "Off";
+    }
+
+    static function getTeamLabelModeLabel(profile) {
+        var entry = RugbySettingsSupport.getProfileEntry(profile);
+        if (entry == null) {
+            return RugbyTeamIdentitySupport.getLabelModeDisplayName(null);
+        }
+        return RugbyTeamIdentitySupport.getLabelModeDisplayName(entry.teamLabelMode);
+    }
+
+    static function resolveFormatFamily(itemId) {
+        var idText = itemId != null ? itemId.toString() : "";
+        if (itemId == :format_7s || idText == "format_7s" || idText == ":format_7s") {
+            return true;
+        }
+        if (itemId == :format_15s || idText == "format_15s" || idText == ":format_15s") {
+            return false;
+        }
+        return null;
+    }
+
+    static function resolveMatchFormatId(itemId) {
+        var idText = itemId != null ? itemId.toString() : "";
+        if (itemId == :match_format_7s || idText == "match_format_7s" || idText == ":match_format_7s") {
+            return "7s";
+        }
+        if (itemId == :match_format_10s || idText == "match_format_10s" || idText == ":match_format_10s") {
+            return "10s";
+        }
+        if (itemId == :match_format_15s || idText == "match_format_15s" || idText == ":match_format_15s") {
+            return "15s";
+        }
+        if (itemId == :match_format_u19 || idText == "match_format_u19" || idText == ":match_format_u19") {
+            return "u19";
+        }
+        return null;
+    }
+
+    static function resolveTeamLabelMode(itemId) {
+        var idText = itemId != null ? itemId.toString() : "";
+        if (itemId == :team_label_team_a_b || idText == "team_label_team_a_b" || idText == ":team_label_team_a_b") {
+            return TEAM_LABEL_MODE_TEAM_A_B;
+        }
+        if (itemId == :team_label_light_dark || idText == "team_label_light_dark" || idText == ":team_label_light_dark") {
+            return TEAM_LABEL_MODE_LIGHT_DARK;
+        }
+        if (itemId == :team_label_red_blue || idText == "team_label_red_blue" || idText == ":team_label_red_blue") {
+            return TEAM_LABEL_MODE_RED_BLUE;
+        }
+        if (itemId == :team_label_first_second_xv || idText == "team_label_first_second_xv" || idText == ":team_label_first_second_xv") {
+            return TEAM_LABEL_MODE_FIRST_SECOND_XV;
+        }
+        if (itemId == :team_label_varsity_jv || idText == "team_label_varsity_jv" || idText == ":team_label_varsity_jv") {
+            return TEAM_LABEL_MODE_VARSITY_JV;
+        }
+        if (itemId == :team_label_sharks_blues || idText == "team_label_sharks_blues" || idText == ":team_label_sharks_blues") {
+            return TEAM_LABEL_MODE_SHARKS_BLUES;
+        }
+        if (itemId == :team_label_a_b || idText == "team_label_a_b" || idText == ":team_label_a_b") {
+            return TEAM_LABEL_MODE_A_B;
+        }
+        return TEAM_LABEL_MODE_HOME_AWAY;
     }
 
     static function resolveProfileId(itemId) {

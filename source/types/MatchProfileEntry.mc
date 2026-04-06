@@ -16,6 +16,7 @@ class MatchProfileEntry {
     var penaltyKickTime;
     var useConversionTimer;
     var usePenaltyTimer;
+    var teamLabelMode;
 
     static function fromDict(profile) {
         if (!(profile instanceof Lang.Dictionary)) {
@@ -31,6 +32,7 @@ class MatchProfileEntry {
         entry.penaltyKickTime = profile["penaltyKickTime"];
         entry.useConversionTimer = profile["useConversionTimer"] == true;
         entry.usePenaltyTimer = profile["usePenaltyTimer"] == true;
+        entry.teamLabelMode = RugbyTeamIdentitySupport.normalizeLabelMode(profile["teamLabelMode"]);
         return entry;
     }
 
@@ -45,6 +47,7 @@ class MatchProfileEntry {
         entry.penaltyKickTime = penaltyKickTime;
         entry.useConversionTimer = useConversionTimer == true;
         entry.usePenaltyTimer = usePenaltyTimer == true;
+        entry.teamLabelMode = RugbyTeamIdentitySupport.getDefaultLabelMode();
         return entry;
     }
 
@@ -58,7 +61,8 @@ class MatchProfileEntry {
             "kickoffTime" => kickoffTime,
             "penaltyKickTime" => penaltyKickTime,
             "useConversionTimer" => useConversionTimer == true,
-            "usePenaltyTimer" => usePenaltyTimer == true
+            "usePenaltyTimer" => usePenaltyTimer == true,
+            "teamLabelMode" => RugbyTeamIdentitySupport.normalizeLabelMode(teamLabelMode)
         };
     }
 }

@@ -1,5 +1,6 @@
 using Toybox.Graphics;
 using Toybox.Lang;
+using Toybox.Math;
 using Toybox.System;
 using Toybox.WatchUi;
 using Rez.Drawables;
@@ -72,10 +73,10 @@ class RugbyTimerRenderer {
     static function calculateLayout(height) {
         // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
         // and the state/hint section so each renders consistently across devices.
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var gameTimerY = halfY * 0.5;
-        var triesY = halfY + height * 0.06;
+        var scoreY = height * 0.11;
+        var halfY = height * 0.185;
+        var gameTimerY = height * 0.075;
+        var triesY = halfY + height * 0.045;
         var cardsY = height * 0.31;
         var stateBaseY = height * 0.86;
         var hintBaseY = height * 0.93;
@@ -162,7 +163,54 @@ class RugbyTimerRenderer {
      * @param scoreFont The font to use for the scores
      * @param scoreY The Y position of the scores
      */
-    static function renderScores(dc, model, width, scoreFont, scoreY) {
+    static function getCircleSafeBounds(width, height, rowY, padding) {
+        var radius = (width < height ? width : height) / 2.0;
+        var centerX = width / 2.0;
+        var centerY = height / 2.0;
+        var dy = rowY - centerY;
+        var chordSquared = (radius * radius) - (dy * dy);
+        if (chordSquared < 0) { chordSquared = 0; }
+        var halfChord = Math.sqrt(chordSquared);
+        return RugbyHorizontalBounds.create(centerX - halfChord + padding, centerX + halfChord - padding);
+    }
+
+    static function estimateLabelWidth(text, compact) {
+        if (text == null) {
+            return 0;
+        }
+        var perChar = compact == true ? 7 : 8;
+        return (text.length() * perChar) + 4;
+    }
+
+    static function canFitScoreLabel(text, centerX, minX, maxX, compact) {
+        var estimatedWidth = RugbyTimerRenderer.estimateLabelWidth(text, compact);
+        var halfWidth = estimatedWidth / 2.0;
+        return (centerX - halfWidth) >= minX && (centerX + halfWidth) <= maxX;
+    }
+
+    static function renderScoreLabels(dc, model, width, height, scoreY) {
+        var activeLabelMode = RugbyTeamIdentitySupport.getDefaultLabelMode();
+        if (model != null && model.teamLabelMode != null) {
+            activeLabelMode = RugbyTeamIdentitySupport.normalizeLabelMode(model.teamLabelMode);
+        }
+        if (activeLabelMode == TEAM_LABEL_MODE_HOME_AWAY) {
+            return false;
+        }
+
+        var labelY = scoreY - (height * 0.03);
+        var homeX = width / 4;
+        var awayX = 3 * width / 4;
+        var homeLabel = RugbyTeamIdentitySupport.getScoreBandLabel(activeLabelMode, true, width <= 260);
+        var awayLabel = RugbyTeamIdentitySupport.getScoreBandLabel(activeLabelMode, false, width <= 260);
+
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(homeX, labelY, Graphics.FONT_XTINY, homeLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(awayX, labelY, Graphics.FONT_XTINY, awayLabel, Graphics.TEXT_JUSTIFY_CENTER);
+        return true;
+    }
+
+    static function renderScores(dc, model, width, height, scoreFont, scoreY) {
+        RugbyTimerRenderer.renderScoreLabels(dc, model, width, height, scoreY);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
@@ -193,9 +241,19 @@ class RugbyTimerRenderer {
      * @param halfY The Y position of the half number
      * @param triesY The Y position of the tries
      */
-    static function renderHalfAndTries(dc, model, width, halfFont, triesFont, halfY, triesY) {
+    static function renderHalfAndTries(dc, model, width, height, halfFont, triesFont, halfY, triesY, labelsDrawn) {
         var halfStr = "Half " + model.halfNumber.toString();
         dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
+        var hideTries = (width <= 220) || (labelsDrawn == true && width <= 240);
+        if (hideTries) {
+            return;
+        }
+        var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, halfFont, height * 0.045);
+        var rowGap = height * 0.012;
+        var measuredTriesY = halfY + halfHeight + rowGap;
+        if (measuredTriesY > triesY) {
+            triesY = measuredTriesY;
+        }
         var triesText = model.homeTries.toString() + "T / " + model.awayTries.toString() + "T";
         dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
     }

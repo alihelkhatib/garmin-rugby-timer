@@ -113,6 +113,8 @@ class RugbyTimerPersistence {
         summary.yellowAwayTotal = model.yellowAwayTotal;
         summary.redHomeTotal = model.redHomeTotal;
         summary.redAwayTotal = model.redAwayTotal;
+        summary.homeTeamLabel = RugbyTeamIdentitySupport.getTeamLabel(model, true);
+        summary.awayTeamLabel = RugbyTeamIdentitySupport.getTeamLabel(model, false);
         var eventLogText = RugbyTimerEventLog.buildEventLogText(model);
         if (eventLogText.length() > 0) {
             summary.eventLog = eventLogText;

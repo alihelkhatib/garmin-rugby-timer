@@ -21,11 +21,20 @@ class RugbyMatchProfiles {
         ).toDict();
     }
 
+    static function withTeamLabelMode(profile, teamLabelMode) {
+        var entry = MatchProfileEntry.fromDict(profile);
+        if (entry == null) {
+            return profile;
+        }
+        entry.teamLabelMode = RugbyTeamIdentitySupport.normalizeLabelMode(teamLabelMode);
+        return entry.toDict();
+    }
+
     static function getBuiltInProfile(profileId) {
         if (profileId == "7s") {
             return RugbyMatchProfiles.createProfile("7s", "Rugby 7s", true, 420, 30, 30, 60, true, false);
         } else if (profileId == "10s") {
-            return RugbyMatchProfiles.createProfile("10s", "Rugby 10s", false, 2400, 90, 60, 60, true, false);
+            return RugbyMatchProfiles.createProfile("10s", "Rugby 10s", false, 600, 90, 60, 60, true, false);
         } else if (profileId == "u19") {
             return RugbyMatchProfiles.createProfile("u19", "U19", false, 2100, 90, 60, 60, true, false);
         }
@@ -72,8 +81,10 @@ class RugbyMatchProfiles {
         if (useConversionTimer == null) { useConversionTimer = fallback.useConversionTimer; }
         var usePenaltyTimer = Storage.getValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER);
         if (usePenaltyTimer == null) { usePenaltyTimer = fallback.usePenaltyTimer; }
+        var teamLabelMode = Storage.getValue(STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE);
+        if (teamLabelMode == null) { teamLabelMode = fallback.teamLabelMode; }
 
-        return RugbyMatchProfiles.createProfile(
+        return RugbyMatchProfiles.withTeamLabelMode(RugbyMatchProfiles.createProfile(
             "custom",
             label,
             is7s,
@@ -83,7 +94,7 @@ class RugbyMatchProfiles {
             penaltyKickTime,
             useConversionTimer,
             usePenaltyTimer
-        );
+        ), teamLabelMode);
     }
 
     static function storeCustomProfile(profile) {
@@ -101,6 +112,7 @@ class RugbyMatchProfiles {
         Storage.setValue(STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME, entry.penaltyKickTime);
         Storage.setValue(STORAGE_KEY_CUSTOM_USE_CONVERSION_TIMER, entry.useConversionTimer);
         Storage.setValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER, entry.usePenaltyTimer);
+        Storage.setValue(STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE, RugbyTeamIdentitySupport.normalizeLabelMode(entry.teamLabelMode));
     }
 
     static function getProfileLabel(profileId) {
@@ -109,7 +121,11 @@ class RugbyMatchProfiles {
     }
 
     static function getFormatLabel(is7s) {
-        return is7s ? "7s-style" : "15s-style";
+        return is7s ? "7s" : "15s";
+    }
+
+    static function getMatchFormatIds() {
+        return ["7s", "10s", "15s", "u19"];
     }
 
     static function inferProfileIdFromSettings(is7s, halfDuration, conversionTime, kickoffTime, penaltyKickTime, useConversionTimer, usePenaltyTimer) {

@@ -135,6 +135,18 @@ class RugbyMainContentLayout {
     }
 }
 
+class RugbyHorizontalBounds {
+    var left;
+    var right;
+
+    static function create(left, right) {
+        var bounds = new RugbyHorizontalBounds();
+        bounds.left = left;
+        bounds.right = right;
+        return bounds;
+    }
+}
+
 class RugbyTimerUpdateResult {
     var timers;
     var expired;

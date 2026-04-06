@@ -13,6 +13,7 @@ const STORAGE_KEY_CUSTOM_KICKOFF_TIME = "customKickoffTime";
 const STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME = "customPenaltyKickTime";
 const STORAGE_KEY_CUSTOM_USE_CONVERSION_TIMER = "customUseConversionTimer";
 const STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER = "customUsePenaltyTimer";
+const STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE = "customTeamLabelMode";
 
 const STORAGE_KEY_GAME_STATE_DATA = "gameStateData";
 const STORAGE_KEY_LAST_GAME_SUMMARY = "lastGameSummary";

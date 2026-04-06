@@ -24,6 +24,8 @@ class MatchSummaryEntry {
     var yellowAwayTotal;
     var redHomeTotal;
     var redAwayTotal;
+    var homeTeamLabel;
+    var awayTeamLabel;
     var eventLog;
 
     static function fromDict(raw) {
@@ -49,6 +51,8 @@ class MatchSummaryEntry {
         entry.yellowAwayTotal = dict["yellowAwayTotal"];
         entry.redHomeTotal = dict["redHomeTotal"];
         entry.redAwayTotal = dict["redAwayTotal"];
+        entry.homeTeamLabel = dict["homeTeamLabel"];
+        entry.awayTeamLabel = dict["awayTeamLabel"];
         entry.eventLog = dict["eventLog"];
         return entry;
     }
@@ -71,7 +75,9 @@ class MatchSummaryEntry {
             "yellowHomeTotal" => yellowHomeTotal,
             "yellowAwayTotal" => yellowAwayTotal,
             "redHomeTotal" => redHomeTotal,
-            "redAwayTotal" => redAwayTotal
+            "redAwayTotal" => redAwayTotal,
+            "homeTeamLabel" => homeTeamLabel,
+            "awayTeamLabel" => awayTeamLabel
         };
         if (eventLog != null) {
             dict["eventLog"] = eventLog;

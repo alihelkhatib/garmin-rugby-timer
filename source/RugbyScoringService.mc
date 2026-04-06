@@ -29,7 +29,7 @@ class RugbyScoringService {
             model.conversionTeam = isHome;
             RugbyClockService.startConversionCountdown(model);
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Try");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Try"));
         RugbySnapshotService.persistState(model);
     }
 
@@ -42,7 +42,7 @@ class RugbyScoringService {
         RugbyScoringService.addEvent(model, :conversion, isHome);
         RugbyScoringService.trimEvents(model);
         model.conversionTeam = null;
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Conversion (made)");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Conversion (made)"));
         if (model.gameState == STATE_CONVERSION) {
             RugbyClockService.resumePlay(model);
         } else {
@@ -63,7 +63,7 @@ class RugbyScoringService {
         if (RugbyMatchStateSupport.shouldStartPenaltyAfterKick(model.gameState, model.usePenaltyTimer)) {
             RugbyClockService.startPenaltyCountdown(model);
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Penalty Goal");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Penalty Goal"));
         RugbySnapshotService.persistState(model);
     }
 
@@ -75,7 +75,7 @@ class RugbyScoringService {
         }
         RugbyScoringService.addEvent(model, :drop, isHome);
         RugbyScoringService.trimEvents(model);
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Drop Goal");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Drop Goal"));
         RugbySnapshotService.persistState(model);
     }
 
@@ -87,7 +87,7 @@ class RugbyScoringService {
         }
         RugbyScoringService.addEvent(model, :penalty_try, isHome);
         RugbyScoringService.trimEvents(model);
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Penalty Try");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Penalty Try"));
         RugbySnapshotService.persistState(model);
     }
 

@@ -79,26 +79,36 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         }
     }
 
+    function rebuildSettingsRoot() {
+        rebuildSettingsRootAtRow(0);
+    }
+
+    function rebuildSettingsRootAtRow(rowIndex) {
+        var refreshedMenu = new RugbySettingsMenu();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        WatchUi.pushView(refreshedMenu, new RugbySettingsMenuDelegate(refreshedMenu, embeddedInApp), WatchUi.SLIDE_IMMEDIATE);
+        refreshedMenu.setFocus(rowIndex);
+        WatchUi.requestUpdate();
+    }
+
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app == null || app.model == null) {
             return;
         }
 
-        var isIdleOnlyRow = item.getId() == :format_family || item.getId() == :countdown_timer;
+        var isIdleOnlyRow = item.getId() == :format_family || item.getId() == :team_labels;
         if (isIdleOnlyRow && menu.isInGame()) {
             handleIdleOnlySelection();
             return;
         }
 
         if (item.getId() == :format_family) {
-            app.model.setFormatFamily(!(app.model.is7s == true));
-            menu.refresh();
-            WatchUi.requestUpdate();
-        } else if (item.getId() == :countdown_timer) {
-            var initialMinutes = app.model.countdownTimer / 60;
-            initialMinutes = RugbySettingsSupport.clampMinutes(initialMinutes);
-            WatchUi.pushView(new MinutesPicker(initialMinutes), new TimerPickerDelegate(menu), WatchUi.SLIDE_UP);
+            WatchUi.pushView(
+                new MatchFormatMenu(app.model.matchProfileId),
+                new MatchFormatDelegate(menu),
+                WatchUi.SLIDE_UP
+            );
         } else if (item.getId() == :conv_time) {
             WatchUi.pushView(new ConversionAdjustMenu(), new ConversionAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :pen_time) {
@@ -106,11 +116,19 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
         } else if (item.getId() == :use_conv) {
             app.model.setConversionTimerEnabled(!(app.model.useConversionTimer == true));
             menu.refresh();
+            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
             WatchUi.requestUpdate();
         } else if (item.getId() == :use_pen) {
             app.model.setPenaltyTimerEnabled(!(app.model.usePenaltyTimer == true));
             menu.refresh();
+            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
             WatchUi.requestUpdate();
+        } else if (item.getId() == :team_labels) {
+            WatchUi.pushView(
+                new TeamLabelModeMenu(app.model.teamLabelMode),
+                new TeamLabelModeDelegate(menu),
+                WatchUi.SLIDE_UP
+            );
         } else if (item.getId() == :lock_start) {
             var lockStart = Storage.getValue(STORAGE_KEY_LOCK_ON_START);
             if (lockStart == null) { lockStart = false; }
@@ -118,6 +136,7 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             Storage.setValue(STORAGE_KEY_LOCK_ON_START, lockStart);
             app.model.lockOnStart = lockStart;
             menu.refresh();
+            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
             WatchUi.requestUpdate();
         } else if (item.getId() == :dim_mode) {
             var dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
@@ -128,6 +147,7 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
                 app.rugbyView.dimMode = dimMode;
             }
             menu.refresh();
+            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
             WatchUi.requestUpdate();
         } else if (item.getId() == :reset) {
             app.model.setMatchProfile(app.model.matchProfileId);
@@ -138,5 +158,104 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     function onBack() {
         closeSettingsRoot();
+    }
+}
+
+class TeamLabelModeMenu extends WatchUi.Menu2 {
+    function initialize(currentMode) {
+        Menu2.initialize({:title=>"Team Labels"});
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Home / Away", TEAM_LABEL_MODE_HOME_AWAY);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Team A / Team B", TEAM_LABEL_MODE_TEAM_A_B);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Light / Dark", TEAM_LABEL_MODE_LIGHT_DARK);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Red / Blue", TEAM_LABEL_MODE_RED_BLUE);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "1st XV / 2nd XV", TEAM_LABEL_MODE_FIRST_SECOND_XV);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Varsity / JV", TEAM_LABEL_MODE_VARSITY_JV);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "Sharks / Blues", TEAM_LABEL_MODE_SHARKS_BLUES);
+        TeamLabelModeMenu.addModeItem(self, currentMode, "A / B", TEAM_LABEL_MODE_A_B);
+    }
+
+    static function addModeItem(menu, currentMode, title, mode) {
+        var subtitle = null;
+        if (RugbyTeamIdentitySupport.normalizeLabelMode(currentMode) == mode) {
+            subtitle = "Current";
+        }
+        menu.addItem(new WatchUi.MenuItem(title, subtitle, mode, null));
+    }
+}
+
+class TeamLabelModeDelegate extends WatchUi.Menu2InputDelegate {
+    var settingsMenu;
+
+    function initialize(rootMenu) {
+        Menu2InputDelegate.initialize();
+        settingsMenu = rootMenu;
+    }
+
+    function onSelect(item) {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app == null || app.model == null) {
+            return;
+        }
+        var selectedMode = item.getId();
+        if (selectedMode != null) {
+            app.model.setTeamLabelMode(selectedMode.toString());
+        }
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        settingsMenu.refresh();
+        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:team_labels));
+        WatchUi.requestUpdate();
+    }
+}
+
+class MatchFormatMenu extends WatchUi.Menu2 {
+    function initialize(currentProfileId) {
+        Menu2.initialize({:title=>"Match Format"});
+        var app = Application.getApp() as RugbyTimerApp;
+        var currentFormatLabel = null;
+        if (app != null && app.model != null) {
+            currentFormatLabel = RugbySettingsSupport.getMatchFormatLabelForValues(app.model.is7s, app.model.halfDuration);
+        } else {
+            currentFormatLabel = RugbySettingsSupport.getMatchFormatLabel(RugbyMatchProfiles.getProfile(currentProfileId));
+        }
+        MatchFormatMenu.addFormatItem(self, currentFormatLabel, "7s");
+        MatchFormatMenu.addFormatItem(self, currentFormatLabel, "10s");
+        MatchFormatMenu.addFormatItem(self, currentFormatLabel, "15s");
+        MatchFormatMenu.addFormatItem(self, currentFormatLabel, "U19s");
+    }
+
+    static function addFormatItem(menu, currentFormatLabel, title) {
+        menu.addItem(new WatchUi.MenuItem(title, currentFormatLabel == title ? "Current" : null, title, null));
+    }
+}
+
+class MatchFormatDelegate extends WatchUi.Menu2InputDelegate {
+    var settingsMenu;
+
+    function initialize(rootMenu) {
+        Menu2InputDelegate.initialize();
+        settingsMenu = rootMenu;
+    }
+
+    function onSelect(item) {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app == null || app.model == null) {
+            return;
+        }
+        var selectedFormat = item.getId() != null ? item.getId().toString() : null;
+        var profileId = null;
+        if (selectedFormat == "7s" || selectedFormat == "10s" || selectedFormat == "15s") {
+            profileId = selectedFormat;
+        } else if (selectedFormat == "U19s") {
+            profileId = "u19";
+        }
+        if (profileId == null) {
+            WatchUi.popView(WatchUi.SLIDE_DOWN);
+            return;
+        }
+        app.model.setMatchProfile(profileId);
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        settingsMenu.refresh();
+        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:format_family));
+        WatchUi.requestUpdate();
     }
 }

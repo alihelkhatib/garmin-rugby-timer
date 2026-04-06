@@ -104,10 +104,10 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
 class ConversionAdjustMenu extends WatchUi.Menu2 {
     function initialize() {
         Menu2.initialize({:title=>"Conversion Timer"});
-        addItem(new WatchUi.MenuItem("30 sec", "00:30", :t30, null));
-        addItem(new WatchUi.MenuItem("60 sec", "01:00", :t60, null));
-        addItem(new WatchUi.MenuItem("90 sec", "01:30", :t90, null));
-        addItem(new WatchUi.MenuItem("120 sec", "02:00", :t120, null));
+        addItem(new WatchUi.MenuItem("30 sec", "00:30", "t30", null));
+        addItem(new WatchUi.MenuItem("60 sec", "01:00", "t60", null));
+        addItem(new WatchUi.MenuItem("90 sec", "01:30", "t90", null));
+        addItem(new WatchUi.MenuItem("120 sec", "02:00", "t120", null));
     }
 }
 
@@ -115,11 +115,11 @@ class ConversionAdjustMenu extends WatchUi.Menu2 {
  * Delegate for conversion overlay duration changes.
  */
 class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
-    var menu;
+    var settingsMenu;
 
     function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
-        menu = settingsMenu;
+        self.settingsMenu = settingsMenu;
     }
 
     function onSelect(item) {
@@ -127,10 +127,11 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getConversionSelectionSeconds(item.getId());
             app.model.setConversionTime(val);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        settingsMenu.refresh();
+        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:conv_time));
+        WatchUi.requestUpdate();
     }
 
     function onBack() {
@@ -144,9 +145,9 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
 class PenaltyAdjustMenu extends WatchUi.Menu2 {
     function initialize() {
         Menu2.initialize({:title=>"Penalty Kick"});
-        addItem(new WatchUi.MenuItem("30 sec", "00:30", :p30, null));
-        addItem(new WatchUi.MenuItem("60 sec", "01:00", :p60, null));
-        addItem(new WatchUi.MenuItem("90 sec", "01:30", :p90, null));
+        addItem(new WatchUi.MenuItem("30 sec", "00:30", "p30", null));
+        addItem(new WatchUi.MenuItem("60 sec", "01:00", "p60", null));
+        addItem(new WatchUi.MenuItem("90 sec", "01:30", "p90", null));
     }
 }
 
@@ -154,11 +155,11 @@ class PenaltyAdjustMenu extends WatchUi.Menu2 {
  * Delegate for penalty overlay duration changes.
  */
 class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
-    var menu;
+    var settingsMenu;
 
     function initialize(settingsMenu) {
         Menu2InputDelegate.initialize();
-        menu = settingsMenu;
+        self.settingsMenu = settingsMenu;
     }
 
     function onSelect(item) {
@@ -166,10 +167,11 @@ class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getId());
             app.model.setPenaltyKickTime(val);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        settingsMenu.refresh();
+        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:pen_time));
+        WatchUi.requestUpdate();
     }
 
     function onBack() {

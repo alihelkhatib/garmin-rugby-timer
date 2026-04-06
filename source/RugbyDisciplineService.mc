@@ -20,7 +20,7 @@ class RugbyDisciplineService {
             model.yellowAwayTimes.add(entry);
             model.yellowAwayTotal = model.yellowAwayTotal + 1;
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
+        RugbyTimerEventLog.appendEntry(model, RugbyTeamIdentitySupport.buildEventDescription(model, isHome, "Yellow Card (" + label + ")"));
         RugbySnapshotService.persistState(model);
     }
 
@@ -52,7 +52,14 @@ class RugbyDisciplineService {
         } else {
             model.redAwayTotal = model.redAwayTotal + 1;
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Red Card (" + label + ")" + (model.usesSevensCardRules() ? " (permanent)" : ""));
+        RugbyTimerEventLog.appendEntry(
+            model,
+            RugbyTeamIdentitySupport.buildEventDescription(
+                model,
+                isHome,
+                "Red Card (" + label + ")" + (model.usesSevensCardRules() ? " (permanent)" : "")
+            )
+        );
         RugbySnapshotService.persistState(model);
     }
 }
