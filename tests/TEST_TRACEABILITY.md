@@ -56,6 +56,10 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_start_pause_resume_restore_flow` — verifies start/pause/resume plus persisted paused restore
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_card_timers_survive_persist_restore` — verifies yellow/red sanction timers survive persistence with remaining time intact
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_startGame_uses_strict_rugby_recording` — verifies start flow either opens rugby recording or reports a strict rugby-only failure
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_made_returns_to_play_and_scores` — verifies a made conversion awards points and resumes open play
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_miss_returns_to_play_without_extra_score` — verifies a missed conversion resumes open play without extra points
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_penalty_timer_starts_and_expiry_resumes_play` — verifies the penalty-timer path enters special state and returns to play on expiry
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_second_half_then_end_game` — verifies halftime restart and the second-half end-game transition
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — verifies extracted view overlay visibility rules
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — verifies extracted hint-mode routing
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — verifies extracted toast visibility rules
@@ -103,6 +107,10 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_start_pause_resume_restore_flow` — Verifies the live clock flow can start, pause, persist, restore paused, and resume safely.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_card_timers_survive_persist_restore` — Verifies sanction timing remains intact after persistence/restore for both yellow and timed red cards.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_startGame_uses_strict_rugby_recording` — Verifies match start keeps the rugby-only recording contract by either opening a session or surfacing a rugby-specific failure state.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_made_returns_to_play_and_scores` — Verifies the conversion success path restores playing state and adds the expected score.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_miss_returns_to_play_without_extra_score` — Verifies the conversion miss path restores playing state without adding points.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_penalty_timer_starts_and_expiry_resumes_play` — Verifies penalty special-timer state starts correctly and expiry returns to open play.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_second_half_then_end_game` — Verifies halftime restart and manual end-game completion in the second half.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — Verifies conversion/penalty overlay visibility decisions moved out of `RugbyTimerView`.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — Verifies when non-overlay status toasts are allowed to render.

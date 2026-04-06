@@ -1967,3 +1967,38 @@
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
 
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+- 2026-04-06: Performed a low-risk cleanup pass that removed obsolete unused helpers from the model facade, view, renderer, cards helper, and persistence adapter while keeping behavior and public test-covered helpers unchanged.
+
+- 2026-04-06 low-risk cleanup validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Added `RugbyTimeMath` and rewired `RugbyGameModel.syncLiveClocksToNow`, `RugbyTimerTiming.updateGame`, and the persistence snapshot helpers to share one delta/snapshot/countdown implementation instead of maintaining separate copies of the same clock math.
+
+- 2026-04-06 time-math refactor validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Split `RugbyTimerPersistence` into explicit snapshot construction and snapshot application phases (`buildSnapshot` / `applySnapshot`) plus smaller restore helpers for core fields, profile fields, history, cards, counters, and clock anchors; added a direct round-trip persistence test for the new seam.
+
+- 2026-04-06 persistence-split validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Added `RugbyMatchStateSupport` as a pure shared transition-rules helper and rewired clock/scoring/delegate/persistence state checks to use it, while intentionally leaving the underlying transition side effects in the existing services so runtime behavior remains unchanged.
+
+- 2026-04-06 transition-rule refactor validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Reorganized the `source/` tree without changing class names or behavior: typed adapters/wrappers moved under `source/types/`, and pure shared helpers moved under `source/support/`, leaving the main app/runtime/service modules at the top level for easier scanning.
+
+- 2026-04-06 source-tree reorganization validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Deduplicated the repeated home/away yellow/red card-rendering loops in `RugbyTimerRenderer` into shared helper methods while preserving the existing label fallback, row limit, color, and permanent-red display behavior.
+
+- 2026-04-06 renderer cleanup validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`), with renderer container-analysis warnings reintroduced by the helper-state dictionaries.
+
+- 2026-04-06: Followed up the renderer cleanup by replacing the temporary helper-state/style dictionaries with typed render-helper models in `RugbyTimerRenderTypes`, preserving the deduplicated card-render path while removing the reintroduced container-analysis warnings.
+
+- 2026-04-06 renderer warning-cleanup validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`) with no warnings emitted in that validation run.
+
+- 2026-04-06: Added `docs/MAINTENANCE_ROADMAP.md` with the next recommended maintenance tasks and expanded `tests/README.md` with a manual regression checklist for watch-specific flows that automated tests still cannot fully prove.
+
+- 2026-04-06: Expanded `tests/Test_RugbyIntegrationFlows.mc` with higher-value multi-step coverage for conversion made/miss handling, penalty timer expiry, and second-half/end-game flow, then refreshed the test docs/traceability notes to reflect the broader integration coverage.
+
+- 2026-04-06 integration-flow expansion validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-06: Hardened `.gitignore` for Connect IQ/Monkey C development and moved non-runtime reference PNG assets from the repo root into `docs/assets/` so the top-level tree stays cleaner.

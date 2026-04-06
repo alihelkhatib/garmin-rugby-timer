@@ -49,6 +49,12 @@ Rugby, Timer, Score, Cards, Yellow Card, Red Card, Game Time, 7s, 15s, Referee, 
 ### Supported Devices
 Compiler-validated manifest targets currently cover the Fenix 6/7/8/E families plus vivoactive 5/6. Several Garmin sibling watches share those same Connect IQ product ids, so the Fenix targets also cover related tactix, quatix, and Enduro variants that map to the same device definitions.
 
+## Maintenance Notes
+
+- The project maintenance roadmap lives in [`docs/MAINTENANCE_ROADMAP.md`](docs/MAINTENANCE_ROADMAP.md).
+- The watch-facing manual regression checklist lives in [`tests/README.md`](tests/README.md) alongside the automated test instructions.
+- Source design/reference PNG assets that are not consumed by the app build live under [`docs/assets/`](docs/assets/) so the project root stays focused on build inputs and repo-level docs.
+
 ---
 
 ## What's New - Version 1.0.0

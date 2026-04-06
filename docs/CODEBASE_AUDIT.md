@@ -69,6 +69,6 @@
    `RugbyTimerTiming.updateGame`, `RugbyTimerRenderer.renderCardTimers`, `RugbyTimerPersistence.saveState`.
 
 ## Remaining Warning Reduction Targets
-- Production warnings are now cleared on the app build.
-- Remaining warning noise is limited to a small number of older tests that still access arrays/dictionaries directly.
-- The highest-value next cleanup is converting the remaining warning-heavy tests to fully typed helpers, not more production refactoring.
+- Production warnings are currently cleared on the app build.
+- The unit-test build is also currently warning-free on the local validation path after the recent renderer follow-up pass replaced temporary helper dictionaries with typed render-helper models.
+- The highest-value next cleanup is no longer warning reduction; it is choosing between naming consistency cleanup and stopping the refactor train while the codebase is in a stable, validated state.
