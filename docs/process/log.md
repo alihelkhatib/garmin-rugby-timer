@@ -2139,3 +2139,7 @@
 - 2026-04-06 integration-flow expansion validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
 
 - 2026-04-06: Hardened `.gitignore` for Connect IQ/Monkey C development and moved non-runtime reference PNG assets from the repo root into `docs/assets/` so the top-level tree stays cleaner.
+
+- 2026-04-07: Fixed an idle-screen regression where half-length adjustment could collapse the visible timer to `00:00`. The root cause was that idle input and idle rendering were still coupled to the live match countdown field (`countdownTimer`), which later halftime/overlay changes also touch. Idle adjustment and idle rendering now both derive from the configured `halfDuration`, and `setHalfDuration()` resets idle-only runtime fields (`gameTime`, `countdownSeconds`, `countdownRemaining`) so future match-state work stays isolated from the pre-kickoff setup screen.
+
+- 2026-04-07 idle-regression validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).

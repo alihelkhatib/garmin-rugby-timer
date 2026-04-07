@@ -131,6 +131,22 @@ class RugbyClockService {
         var nextBreakSeconds = RugbyTimerInputSupport.getAdjustedBreakSeconds(model.countdownSeconds, deltaMinutes);
         model.setKickoffTime(nextBreakSeconds);
         model.countdownSeconds = nextBreakSeconds;
+        if (nextBreakSeconds <= 0) {
+            RugbyClockService.prepareSecondHalfReady(model);
+            return;
+        }
+        model.lastUpdate = System.getTimer();
+        RugbySnapshotService.persistState(model);
+    }
+
+    static function prepareSecondHalfReady(model) {
+        if (model.gameState != STATE_HALFTIME) {
+            return;
+        }
+        model.countdownSeconds = 0;
+        model.gameTime = 0;
+        model.countdownRemaining = model.countdownTimer;
+        model.thirtySecondAlerted = false;
         model.lastUpdate = System.getTimer();
         RugbySnapshotService.persistState(model);
     }

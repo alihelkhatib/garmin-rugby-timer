@@ -453,33 +453,39 @@ class RugbyTimerRenderer {
      * @param countdownFont The font to use for the countdown timer
      * @param countdownY The Y position of the countdown timer
      */
+    static function getMainCountdownSeconds(model, renderNow) {
+        if (model.gameState == STATE_IDLE) {
+            // Idle mode is configuration-only, so always render from the
+            // configured half duration instead of any live countdown field.
+            return RugbyTimeMath.normalizeSeconds(model.halfDuration);
+        }
+        if (model.gameState == STATE_HALFTIME) {
+            if (model.countdownSeconds > 0) {
+                return RugbyTimeMath.snapshotReverseClock(
+                    model.countdownSeconds,
+                    model.lastUpdate,
+                    renderNow,
+                    true
+                );
+            }
+            return RugbyTimeMath.normalizeSeconds(model.halfDuration);
+        }
+        return RugbyTimeMath.getCountdownRemaining(
+            model.countdownTimer,
+            RugbyTimeMath.snapshotForwardClock(
+                model.gameTime,
+                model.lastUpdate,
+                renderNow,
+                RugbyTimerTiming.isClockRunning(model.gameState)
+            )
+        );
+    }
+
     static function renderCountdown(dc, model, width, countdownFont, countdownY, renderNow) {
         Profiler.start("renderCountdown");
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var remainingSeconds = 0;
-        if (model.gameState == STATE_IDLE) {
-            // Idle should always show the configured half length directly; it
-            // must not inherit any stale runtime gameTime from prior states.
-            remainingSeconds = RugbyTimeMath.normalizeSeconds(model.countdownTimer);
-        } else if (model.gameState == STATE_HALFTIME) {
-            remainingSeconds = RugbyTimeMath.snapshotReverseClock(
-                model.countdownSeconds,
-                model.lastUpdate,
-                renderNow,
-                true
-            );
-        } else {
-            remainingSeconds = RugbyTimeMath.getCountdownRemaining(
-                model.countdownTimer,
-                RugbyTimeMath.snapshotForwardClock(
-                    model.gameTime,
-                    model.lastUpdate,
-                    renderNow,
-                    RugbyTimerTiming.isClockRunning(model.gameState)
-                )
-            );
-        }
+        var remainingSeconds = RugbyTimerRenderer.getMainCountdownSeconds(model, renderNow);
         var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(remainingSeconds);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
@@ -520,7 +526,8 @@ class RugbyTimerRenderer {
             var countdownStr = (penSeconds as Lang.Number).toLong().toString();
             dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_HALFTIME) {
-            dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            var halftimeText = model.countdownSeconds > 0 ? "HALF TIME" : "HALF 2 READY";
+            dc.drawText(width / 2, stateY, stateFont, halftimeText, Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_ENDED) {
             dc.drawText(width / 2, stateY, stateFont, "GAME ENDED", Graphics.TEXT_JUSTIFY_CENTER);
         }

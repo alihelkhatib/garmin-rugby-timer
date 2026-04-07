@@ -80,6 +80,9 @@ class RugbyTimerTiming {
                 if (model.countdownSeconds < 0) {
                     model.countdownSeconds = 0;
                 }
+                if (model.countdownSeconds <= 0) {
+                    model.prepareSecondHalfReady();
+                }
             }
             
             if (suspensionClockRunning) {

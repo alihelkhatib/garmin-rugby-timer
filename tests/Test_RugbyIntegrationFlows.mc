@@ -344,3 +344,36 @@ function test_integration_enterHalftime_starts_break_and_allows_live_adjust(logg
     model.adjustHalfTimeBreak(-1);
     return model.countdownSeconds == 120 && model.kickoffTime == 120;
 }
+
+(:test)
+function test_integration_halftime_expiry_moves_to_half2_ready_screen(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_HALFTIME;
+    model.halfNumber = 1;
+    model.countdownTimer = 2400;
+    model.countdownRemaining = 0;
+    model.kickoffTime = 5;
+    model.countdownSeconds = 5;
+    model.gameTime = 2400;
+    model.lastUpdate = System.getTimer() - 6000;
+
+    RugbyTimerTiming.updateGame(model);
+
+    if (model.gameState != STATE_HALFTIME) {
+        logger.error("halftime expiry should remain in halftime state until select starts half 2");
+        return false;
+    }
+    if (model.countdownSeconds != 0) {
+        logger.error("halftime break should expire to zero");
+        return false;
+    }
+    if (model.gameTime != 0) {
+        logger.error("half 2 ready screen should reset match clock to 0");
+        return false;
+    }
+    return model.countdownRemaining == model.countdownTimer;
+}

@@ -57,3 +57,15 @@ function test_viewSupport_toast_visibility_rules(logger as Test.Logger) as Lang.
     }
     return !RugbyTimerViewSupport.shouldShowToast(false, "Saved", 50, 100);
 }
+
+(:test)
+function test_renderer_mainCountdown_uses_half_duration_while_idle(logger as Test.Logger) as Lang.Boolean {
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_IDLE;
+    model.halfDuration = 41 * 60;
+    model.countdownTimer = 0;
+    model.gameTime = 999;
+
+    return RugbyTimerRenderer.getMainCountdownSeconds(model, 0) == 41 * 60;
+}

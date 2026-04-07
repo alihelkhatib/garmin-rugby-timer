@@ -91,3 +91,22 @@ function test_settings_mutation_order_stays_custom_and_persists_values(logger as
     if (stored == null) { logger.error("stored custom missing"); return false; }
     return model.matchProfileId == "custom" && stored.halfDuration == 600 && stored.conversionTime == 45 && stored.is7s == true;
 }
+
+(:test)
+function test_idle_half_duration_change_resets_idle_runtime_fields(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_IDLE;
+    model.gameTime = 123;
+    model.countdownSeconds = 15;
+    model.countdownRemaining = 0;
+
+    model.setHalfDuration(41 * 60);
+
+    if (model.halfDuration != 41 * 60) { logger.error("half duration not updated"); return false; }
+    if (model.countdownTimer != 41 * 60) { logger.error("countdown timer not updated"); return false; }
+    if (model.countdownRemaining != 41 * 60) { logger.error("idle countdown remaining not reset"); return false; }
+    if (model.gameTime != 0) { logger.error("idle game time not reset"); return false; }
+    return model.countdownSeconds == 0;
+}

@@ -390,6 +390,7 @@ class RugbyGameModel {
         countdownTimer = seconds;
         if (gameState == STATE_IDLE) {
             gameTime = 0;
+            countdownSeconds = 0;
             countdownRemaining = seconds;
         }
         saveCurrentSettingsAsCustomProfile();
@@ -564,6 +565,13 @@ class RugbyGameModel {
      */
     function adjustHalfTimeBreak(deltaMinutes) {
         RugbyClockService.adjustHalfTimeBreak(self, deltaMinutes);
+    }
+
+    /**
+     * Move halftime from active break countdown into the ready-for-half-2 screen.
+     */
+    function prepareSecondHalfReady() {
+        RugbyClockService.prepareSecondHalfReady(self);
     }
 
     /**
