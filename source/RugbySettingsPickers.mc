@@ -85,10 +85,8 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
         if (app != null && app.model != null) {
             var minutes = RugbySettingsSupport.getMinutesFromDigits(values);
             app.model.setHalfDuration(minutes * 60);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
-        WatchUi.popView(WatchUi.SLIDE_DOWN);
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenuForItem(menu, :format_family);
         return true;
     }
 
@@ -125,16 +123,10 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
-            var val = RugbySettingsSupport.getConversionSelectionSeconds(item.getId());
-            if (val == 30) {
-                try {
-                    val = RugbySettingsSupport.getConversionSelectionSeconds(item.getLabel().toString().find("120") != null ? "t120" : item.getLabel().toString().find("90") != null ? "t90" : item.getLabel().toString().find("60") != null ? "t60" : "t30");
-                } catch (ex) {
-                }
-            }
+            var val = RugbySettingsSupport.resolveConversionSelectionSecondsFromItem(item);
             app.model.setConversionTime(val);
         }
-        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(1);
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenuForItem(settingsMenu, :conv_time);
     }
 
     function onBack() {
@@ -167,19 +159,10 @@ class HalftimeBreakAdjustDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
-            var val = RugbySettingsSupport.getHalftimeBreakSelectionSeconds(item.getId());
-            if (val == 30) {
-                try {
-                    var label = item.getLabel().toString();
-                    val = RugbySettingsSupport.getHalftimeBreakSelectionSeconds(
-                        label.find("10") != null ? "h600" : label.find("5") != null ? "h300" : label.find("2") != null ? "h120" : label.find("60") != null ? "h60" : "h30"
-                    );
-                } catch (ex) {
-                }
-            }
+            var val = RugbySettingsSupport.resolveHalftimeBreakSelectionSecondsFromItem(item);
             app.model.setKickoffTime(val);
         }
-        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(2);
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenuForItem(settingsMenu, :half_break);
     }
 
     function onBack() {
@@ -213,16 +196,10 @@ class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
     function onSelect(item) {
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
-            var val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getId());
-            if (val == 30) {
-                try {
-                    val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getLabel().toString().find("90") != null ? "p90" : item.getLabel().toString().find("60") != null ? "p60" : "p30");
-                } catch (ex) {
-                }
-            }
+            var val = RugbySettingsSupport.resolvePenaltySelectionSecondsFromItem(item);
             app.model.setPenaltyKickTime(val);
         }
-        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(2);
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenuForItem(settingsMenu, :pen_time);
     }
 
     function onBack() {

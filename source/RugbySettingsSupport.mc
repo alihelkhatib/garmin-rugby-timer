@@ -7,6 +7,34 @@ using Toybox.Lang;
  * unit-tested directly and reused across multiple settings files.
  */
 class RugbySettingsSupport {
+    static function getItemIdText(item) {
+        if (item == null) {
+            return null;
+        }
+        try {
+            var itemId = item.getId();
+            if (itemId != null) {
+                return itemId.toString();
+            }
+        } catch (ex) {
+        }
+        return null;
+    }
+
+    static function getItemLabelText(item) {
+        if (item == null) {
+            return null;
+        }
+        try {
+            var label = item.getLabel();
+            if (label != null) {
+                return label.toString();
+            }
+        } catch (ex) {
+        }
+        return null;
+    }
+
     static function formatTime(seconds) {
         if (seconds == null) { seconds = 0; }
         var mins = (seconds.toLong() / 60).toLong();
@@ -151,7 +179,19 @@ class RugbySettingsSupport {
         return null;
     }
 
-    static function resolveTeamLabelMode(itemId) {
+    static function resolveMatchFormatIdFromItem(item) {
+        var idText = RugbySettingsSupport.getItemIdText(item);
+        var profileId = RugbySettingsSupport.resolveMatchFormatId(idText);
+        if (profileId == null) {
+            profileId = RugbySettingsSupport.resolveMatchFormatIdFromText(idText);
+        }
+        if (profileId == null) {
+            profileId = RugbySettingsSupport.resolveMatchFormatIdFromText(RugbySettingsSupport.getItemLabelText(item));
+        }
+        return profileId;
+    }
+
+    static function resolveTeamLabelModeValue(itemId) {
         var idText = itemId != null ? itemId.toString() : "";
         if (itemId == :team_label_team_a_b || idText == "team_label_team_a_b" || idText == ":team_label_team_a_b") {
             return TEAM_LABEL_MODE_TEAM_A_B;
@@ -174,7 +214,15 @@ class RugbySettingsSupport {
         if (itemId == :team_label_a_b || idText == "team_label_a_b" || idText == ":team_label_a_b") {
             return TEAM_LABEL_MODE_A_B;
         }
-        return TEAM_LABEL_MODE_HOME_AWAY;
+        if (itemId == TEAM_LABEL_MODE_HOME_AWAY || idText == TEAM_LABEL_MODE_HOME_AWAY) {
+            return TEAM_LABEL_MODE_HOME_AWAY;
+        }
+        return null;
+    }
+
+    static function resolveTeamLabelMode(itemId) {
+        var resolved = RugbySettingsSupport.resolveTeamLabelModeValue(itemId);
+        return resolved != null ? resolved : TEAM_LABEL_MODE_HOME_AWAY;
     }
 
     static function resolveTeamLabelModeFromText(text) {
@@ -189,6 +237,21 @@ class RugbySettingsSupport {
         if (text == "Sharks / Blues") { return TEAM_LABEL_MODE_SHARKS_BLUES; }
         if (text == "A / B") { return TEAM_LABEL_MODE_A_B; }
         return TEAM_LABEL_MODE_HOME_AWAY;
+    }
+
+    static function resolveTeamLabelModeFromItem(item) {
+        var idText = RugbySettingsSupport.getItemIdText(item);
+        var mode = RugbySettingsSupport.resolveTeamLabelModeValue(idText);
+        if (mode == null) {
+            mode = RugbySettingsSupport.resolveTeamLabelModeFromText(idText);
+        }
+        if (mode == TEAM_LABEL_MODE_HOME_AWAY) {
+            var labelText = RugbySettingsSupport.getItemLabelText(item);
+            if (labelText != null && labelText != "Home / Away") {
+                mode = RugbySettingsSupport.resolveTeamLabelModeFromText(labelText);
+            }
+        }
+        return mode;
     }
 
     static function resolveProfileId(itemId) {
@@ -234,9 +297,40 @@ class RugbySettingsSupport {
         return 30;
     }
 
+    static function resolveConversionSelectionSecondsFromItem(item) {
+        var idText = RugbySettingsSupport.getItemIdText(item);
+        var val = RugbySettingsSupport.getConversionSelectionSeconds(idText);
+        if (val != 30) {
+            return val;
+        }
+        var labelText = RugbySettingsSupport.getItemLabelText(item);
+        if (labelText == null) {
+            return 30;
+        }
+        if (labelText.find("120") != null) { return 120; }
+        if (labelText.find("90") != null) { return 90; }
+        if (labelText.find("60") != null) { return 60; }
+        return 30;
+    }
+
     static function getPenaltySelectionSeconds(itemId) {
         if (itemId == "p60" || itemId == :p60) { return 60; }
         if (itemId == "p90" || itemId == :p90) { return 90; }
+        return 30;
+    }
+
+    static function resolvePenaltySelectionSecondsFromItem(item) {
+        var idText = RugbySettingsSupport.getItemIdText(item);
+        var val = RugbySettingsSupport.getPenaltySelectionSeconds(idText);
+        if (val != 30) {
+            return val;
+        }
+        var labelText = RugbySettingsSupport.getItemLabelText(item);
+        if (labelText == null) {
+            return 30;
+        }
+        if (labelText.find("90") != null) { return 90; }
+        if (labelText.find("60") != null) { return 60; }
         return 30;
     }
 
@@ -245,6 +339,23 @@ class RugbySettingsSupport {
         if (itemId == "h120" || itemId == :h120) { return 120; }
         if (itemId == "h300" || itemId == :h300) { return 300; }
         if (itemId == "h600" || itemId == :h600) { return 600; }
+        return 30;
+    }
+
+    static function resolveHalftimeBreakSelectionSecondsFromItem(item) {
+        var idText = RugbySettingsSupport.getItemIdText(item);
+        var val = RugbySettingsSupport.getHalftimeBreakSelectionSeconds(idText);
+        if (val != 30) {
+            return val;
+        }
+        var labelText = RugbySettingsSupport.getItemLabelText(item);
+        if (labelText == null) {
+            return 30;
+        }
+        if (labelText.find("10") != null) { return 600; }
+        if (labelText.find("5") != null) { return 300; }
+        if (labelText.find("2") != null) { return 120; }
+        if (labelText.find("60") != null) { return 60; }
         return 30;
     }
 }

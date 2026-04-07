@@ -11,8 +11,13 @@ by invoking small test-only delegate helpers that operate directly on the model.
 
 class TestMenuItem {
     var id;
-    function initialize(i) { id = i; }
+    var label;
+    function initialize(i, l) {
+        id = i;
+        label = l;
+    }
     function getId() { return id; }
+    function getLabel() { return label; }
 }
 
 class TestTimerPickerDelegate {
@@ -55,7 +60,7 @@ function test_ui_conversion_adjust_changes_value(logger as Test.Logger) as Lang.
     model.initialize();
 
     var c = new TestConversionAdjustDelegate(model);
-    var item = new TestMenuItem("t120");
+    var item = new TestMenuItem("t120", "120 sec");
     c.onSelect(item);
     return model.conversionTime == 120;
 }
@@ -91,6 +96,27 @@ function test_settings_support_choice_resolution(logger as Test.Logger) as Lang.
     if (RugbySettingsSupport.resolveMatchFormatId(:match_format_10s) != "10s") { logger.error("match format 10s resolution failed"); return false; }
     if (RugbySettingsSupport.resolveMatchFormatId(:match_format_u19) != "u19") { logger.error("match format u19 resolution failed"); return false; }
     return RugbySettingsSupport.resolveTeamLabelMode(:team_label_red_blue) == TEAM_LABEL_MODE_RED_BLUE;
+}
+
+(:test)
+function test_settings_support_item_resolution_falls_back_to_labels(logger as Test.Logger) as Lang.Boolean {
+    if (RugbySettingsSupport.resolveMatchFormatIdFromItem(new TestMenuItem(null, "U19s")) != "u19") {
+        logger.error("match format label fallback failed");
+        return false;
+    }
+    if (RugbySettingsSupport.resolveTeamLabelModeFromItem(new TestMenuItem(null, "Varsity / JV")) != TEAM_LABEL_MODE_VARSITY_JV) {
+        logger.error("team label fallback failed");
+        return false;
+    }
+    if (RugbySettingsSupport.resolveConversionSelectionSecondsFromItem(new TestMenuItem(null, "90 sec")) != 90) {
+        logger.error("conversion label fallback failed");
+        return false;
+    }
+    if (RugbySettingsSupport.resolveHalftimeBreakSelectionSecondsFromItem(new TestMenuItem(null, "5 min")) != 300) {
+        logger.error("halftime label fallback failed");
+        return false;
+    }
+    return RugbySettingsSupport.resolvePenaltySelectionSecondsFromItem(new TestMenuItem(null, "60 sec")) == 60;
 }
 
 (:test)
