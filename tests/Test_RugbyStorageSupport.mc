@@ -40,3 +40,27 @@ function test_storageSupport_accepts_current_snapshot_shapes(logger as Test.Logg
     };
     return RugbyStorageSupport.findUnsupportedValuePath(payload, "gameStateData") == null;
 }
+
+(:test)
+function test_storageSupport_accepts_real_built_snapshot(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.lastUpdate = 1000;
+    model.gameTime = 30;
+    model.elapsedTime = 30;
+    model.suspensionTime = 30;
+    model.recordTry(true);
+    model.recordPenalty(false);
+    model.recordYellowCard(true);
+
+    var snapshot = RugbyTimerPersistence.buildSnapshot(model);
+    if (snapshot == null) {
+        logger.error("snapshot missing");
+        return false;
+    }
+    return RugbyStorageSupport.findUnsupportedValuePath(snapshot.toDict(), "gameStateData") == null;
+}

@@ -1,3 +1,10 @@
+## [2026-04-07] Add direct regression coverage for live settings display
+
+- Added a typed `RugbySettingsDisplayState` helper so the root settings menu subtitles can be derived from the live model in one testable place instead of repeating formatting logic across menu construction and refresh.
+- Added direct UI-oriented tests that assert the displayed `Match Format`, timer rows, overlay toggles, and `Team Labels` row match the live chosen rules after preset changes and manual overrides.
+- Added a real snapshot-schema regression test that builds a live match snapshot with scores, cards, and event history and verifies the entire payload is accepted by `RugbyStorageSupport`.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
 ## [2026-04-07] Harden storage writes and make settings reliably rebuild from live state
 
 - Added `RugbyStorageSupport` as a pre-write validation layer for persisted payloads. Save-bound data now gets checked for Garmin-safe shapes before hitting Storage, with debug logs that include the failing path when unsupported values are found.

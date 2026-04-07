@@ -7,12 +7,56 @@ using Toybox.Lang;
  * unit-tested directly and reused across multiple settings files.
  */
 class RugbySettingsSupport {
+    static function formatTime(seconds) {
+        if (seconds == null) { seconds = 0; }
+        var mins = (seconds.toLong() / 60).toLong();
+        var secs = (seconds.toLong() % 60).toLong();
+        return mins.format("%02d") + ":" + secs.format("%02d");
+    }
+
     static function getMatchFormatLabelForValues(is7s, halfDuration) {
         if (halfDuration == 600) { return "10s"; }
         if (halfDuration == 2100) { return "U19s"; }
         if (halfDuration == 2400) { return "15s"; }
         if (halfDuration == 420 || is7s == true) { return "7s"; }
         return "Custom";
+    }
+
+    static function buildDisplayState(model, profile, lockStart, dimMode) {
+        var entry = RugbySettingsSupport.getProfileEntry(profile);
+        var matchFormatLabel = null;
+        var conversionLabel = null;
+        var penaltyLabel = null;
+        var useConversionLabel = "Off";
+        var usePenaltyLabel = "Off";
+        var teamLabelsLabel = RugbyTeamIdentitySupport.getLabelModeDisplayName(null);
+
+        if (model != null) {
+            matchFormatLabel = RugbySettingsSupport.getMatchFormatLabelForValues(model.is7s, model.halfDuration);
+            conversionLabel = RugbySettingsSupport.formatTime(model.conversionTime);
+            penaltyLabel = RugbySettingsSupport.formatTime(model.penaltyKickTime);
+            useConversionLabel = RugbySettingsSupport.getOnOffLabel(model.useConversionTimer);
+            usePenaltyLabel = RugbySettingsSupport.getOnOffLabel(model.usePenaltyTimer);
+            teamLabelsLabel = RugbyTeamIdentitySupport.getLabelModeDisplayName(model.teamLabelMode);
+        } else if (entry != null) {
+            matchFormatLabel = RugbySettingsSupport.getMatchFormatLabel(profile);
+            conversionLabel = RugbySettingsSupport.formatTime(entry.conversionTime);
+            penaltyLabel = RugbySettingsSupport.formatTime(entry.penaltyKickTime);
+            useConversionLabel = RugbySettingsSupport.getOnOffLabel(entry.useConversionTimer);
+            usePenaltyLabel = RugbySettingsSupport.getOnOffLabel(entry.usePenaltyTimer);
+            teamLabelsLabel = RugbyTeamIdentitySupport.getLabelModeDisplayName(entry.teamLabelMode);
+        }
+
+        return RugbySettingsDisplayState.create(
+            matchFormatLabel,
+            conversionLabel,
+            penaltyLabel,
+            useConversionLabel,
+            usePenaltyLabel,
+            teamLabelsLabel,
+            RugbySettingsSupport.getOnOffLabel(lockStart == true),
+            RugbySettingsSupport.getOnOffLabel(dimMode == true)
+        );
     }
 
     static function getProfileEntry(profile) {
@@ -39,17 +83,17 @@ class RugbySettingsSupport {
 
     static function getHalfLabel(profile, menu) {
         var entry = RugbySettingsSupport.getProfileEntry(profile);
-        return entry != null ? menu.formatTime(entry.halfDuration) : null;
+        return entry != null ? RugbySettingsSupport.formatTime(entry.halfDuration) : null;
     }
 
     static function getConversionLabel(profile, menu) {
         var entry = RugbySettingsSupport.getProfileEntry(profile);
-        return entry != null ? menu.formatTime(entry.conversionTime) : null;
+        return entry != null ? RugbySettingsSupport.formatTime(entry.conversionTime) : null;
     }
 
     static function getPenaltyLabel(profile, menu) {
         var entry = RugbySettingsSupport.getProfileEntry(profile);
-        return entry != null ? menu.formatTime(entry.penaltyKickTime) : null;
+        return entry != null ? RugbySettingsSupport.formatTime(entry.penaltyKickTime) : null;
     }
 
     static function getOnOffLabel(enabled) {

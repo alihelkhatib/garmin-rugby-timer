@@ -101,3 +101,44 @@ function test_settings_match_format_label_from_live_values(logger as Test.Logger
     if (RugbySettingsSupport.getMatchFormatLabelForValues(false, 2100) != "U19s") { logger.error("2100 should show U19s"); return false; }
     return RugbySettingsSupport.getMatchFormatLabelForValues(false, 1500) == "Custom";
 }
+
+(:test)
+function test_settings_display_state_tracks_live_preset_rules(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.setMatchProfile("7s");
+
+    var state = RugbySettingsSupport.buildDisplayState(model, null, true, false);
+    if (state.matchFormatLabel != "7s") { logger.error("live format label should show 7s"); return false; }
+    if (state.conversionLabel != "00:30") { logger.error("7s conversion label should be 00:30"); return false; }
+    if (state.penaltyLabel != "01:00") { logger.error("7s penalty label should be 01:00"); return false; }
+    if (state.useConversionLabel != "On") { logger.error("7s conversion overlay should be On"); return false; }
+    if (state.usePenaltyLabel != "Off") { logger.error("7s penalty overlay should be Off"); return false; }
+    if (state.lockOnStartLabel != "On") { logger.error("lock label mismatch"); return false; }
+    return state.dimThemeLabel == "Off";
+}
+
+(:test)
+function test_settings_display_state_tracks_live_customized_rules_and_labels(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.setMatchProfile("15s");
+    model.setConversionTime(120);
+    model.setPenaltyKickTime(90);
+    model.setConversionTimerEnabled(false);
+    model.setPenaltyTimerEnabled(true);
+    model.setTeamLabelMode(TEAM_LABEL_MODE_RED_BLUE);
+
+    var state = RugbySettingsSupport.buildDisplayState(model, null, false, true);
+    if (state.matchFormatLabel != "15s") { logger.error("format label should still follow live 15s structure"); return false; }
+    if (state.conversionLabel != "02:00") { logger.error("conversion label should reflect custom value"); return false; }
+    if (state.penaltyLabel != "01:30") { logger.error("penalty label should reflect custom value"); return false; }
+    if (state.useConversionLabel != "Off") { logger.error("conversion overlay label should be Off"); return false; }
+    if (state.usePenaltyLabel != "On") { logger.error("penalty overlay label should be On"); return false; }
+    if (state.teamLabelsLabel != "Red / Blue") { logger.error("team labels row should reflect selected preset"); return false; }
+    if (state.dimThemeLabel != "On") { logger.error("dim label mismatch"); return false; }
+    if (RugbyTeamIdentitySupport.getTeamLabel(model, true) != "Red") { logger.error("home team label propagation mismatch"); return false; }
+    return RugbyTeamIdentitySupport.getTeamLabel(model, false) == "Blue";
+}
