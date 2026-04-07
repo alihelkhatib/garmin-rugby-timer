@@ -133,20 +133,24 @@ class RugbyClockService {
     }
 
     static function startConversionCountdown(model) {
+        var now = System.getTimer();
+        model.syncLiveClocksToNow(now);
         model.gameState = STATE_CONVERSION;
         model.countdownSeconds = model.conversionTime;
-        model.conversionStartTime = System.getTimer();
+        model.conversionStartTime = now;
         model.specialAlertTriggered = false;
-        model.lastUpdate = System.getTimer();
+        model.lastUpdate = now;
         RugbyTimerTiming.triggerConversionStartVibe();
     }
 
     static function startPenaltyCountdown(model) {
+        var now = System.getTimer();
+        model.syncLiveClocksToNow(now);
         model.gameState = STATE_PENALTY;
         model.countdownSeconds = model.penaltyKickTime;
-        model.penaltyStartTime = System.getTimer();
+        model.penaltyStartTime = now;
         model.specialAlertTriggered = false;
-        model.lastUpdate = System.getTimer();
+        model.lastUpdate = now;
         RugbyTimerTiming.triggerPenaltyStartVibe();
     }
 

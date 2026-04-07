@@ -163,7 +163,15 @@ function test_integration_conversion_made_returns_to_play_and_scores(logger as T
         logger.error("home score should include try + conversion");
         return false;
     }
-    return model.conversionTeam == null;
+    if (model.conversionTeam != null) {
+        logger.error("conversionTeam should clear after made conversion");
+        return false;
+    }
+    if (model.consumeStatusMessage() != null) {
+        logger.error("conversion flow should not trigger a save failure status");
+        return false;
+    }
+    return true;
 }
 
 (:test)
@@ -192,7 +200,15 @@ function test_integration_conversion_miss_returns_to_play_without_extra_score(lo
         logger.error("away score should remain try-only after miss");
         return false;
     }
-    return model.conversionTeam == null;
+    if (model.conversionTeam != null) {
+        logger.error("conversionTeam should clear after missed conversion");
+        return false;
+    }
+    if (model.consumeStatusMessage() != null) {
+        logger.error("missed conversion flow should not trigger a save failure status");
+        return false;
+    }
+    return true;
 }
 
 (:test)
@@ -221,6 +237,39 @@ function test_integration_penalty_timer_starts_and_expiry_resumes_play(logger as
     RugbyTimerTiming.updateGame(model);
 
     return model.gameState == STATE_PLAYING && model.countdownSeconds == 0;
+}
+
+(:test)
+function test_integration_special_timer_starts_from_same_clock_boundary(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.countdownTimer = 2400;
+    model.gameTime = 12;
+    model.elapsedTime = 15;
+    model.suspensionTime = 15;
+    model.lastUpdate = System.getTimer() - 1600;
+    model.conversionTime = 30;
+
+    model.startConversionCountdown();
+
+    var expectedGameTime = 13;
+    if (model.gameState != STATE_CONVERSION) {
+        logger.error("conversion countdown should enter conversion state");
+        return false;
+    }
+    if (model.countdownSeconds != 30) {
+        logger.error("conversion countdown should start at configured value");
+        return false;
+    }
+    if (model.gameTime < expectedGameTime) {
+        logger.error("gameTime should be synced to now before conversion");
+        return false;
+    }
+    return model.countdownRemaining <= (model.countdownTimer - expectedGameTime);
 }
 
 (:test)

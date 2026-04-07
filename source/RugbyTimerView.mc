@@ -118,27 +118,33 @@ class RugbyTimerView extends WatchUi.View {
 
         var width = dc.getWidth();
         var height = dc.getHeight();
+        var renderNow = System.getTimer();
 
         // Conversion overlays should reopen automatically when a try transitions the
         // model into conversion state, even if that happened while a menu was on top.
+        var wasOverlayVisible = specialTimerOverlayVisible == true;
         specialTimerOverlayVisible = RugbyTimerViewSupport.getOverlayVisibility(specialTimerOverlayVisible, model.gameState);
+        if (wasOverlayVisible && !specialTimerOverlayVisible) {
+            specialOverlayMessage = null;
+            specialOverlayMessageExpiry = 0;
+        }
 
         // Use cached fonts and layout
         var fonts = cachedFonts;
         var layout = cachedLayout;
 
         var labelsDrawn = RugbyTimerRenderer.renderScores(dc, model, width, height, fonts.scoreFont, layout.scoreY);
-        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY);
+        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY, renderNow);
         RugbyTimerRenderer.renderHalfAndTries(dc, model, width, height, fonts.halfFont, fonts.triesFont, layout.halfY, layout.triesY, labelsDrawn);
         RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout.iconY, cachedPlayIcon, cachedPauseIcon);
         if (isLocked) {
             RugbyTimerRenderer.renderLockIndicator(dc, width, height, layout.scoreY, cachedLockIcon);
         }
 
-        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout.cardsY, height);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout.cardsY, height, renderNow);
         var mainContentLayout = RugbyTimerRenderer.getMainContentLayoutCached(dc, model, fonts, layout, cardInfo, height, isLocked);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts.countdownFont, mainContentLayout.countdownY);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts.stateFont, mainContentLayout.stateY, height);
+        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts.countdownFont, mainContentLayout.countdownY, renderNow);
+        RugbyTimerRenderer.renderStateText(dc, model, width, fonts.stateFont, mainContentLayout.stateY, height, renderNow);
         renderHint(dc, width, fonts.hintFont, mainContentLayout.hintY, height, mainContentLayout.hintLineGap);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);

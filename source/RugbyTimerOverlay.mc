@@ -109,6 +109,8 @@ class RugbyTimerOverlay {
     static function closeSpecialTimerScreen(view) {
         if (view.specialTimerOverlayVisible) {
             view.specialTimerOverlayVisible = false;
+            view.specialOverlayMessage = null;
+            view.specialOverlayMessageExpiry = 0;
         }
     }
 

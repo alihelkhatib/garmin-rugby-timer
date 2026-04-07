@@ -224,8 +224,14 @@ class RugbyTimerRenderer {
      * @param timerFont The font to use for the timer
      * @param gameTimerY The Y position of the timer
      */
-    static function renderGameTimer(dc, model, width, timerFont, gameTimerY) {
-        var gameStr = RugbyTimerTiming.formatTime(model.elapsedTime);
+    static function renderGameTimer(dc, model, width, timerFont, gameTimerY, renderNow) {
+        var elapsedSeconds = RugbyTimeMath.snapshotForwardClock(
+            model.elapsedTime,
+            model.lastUpdate,
+            renderNow,
+            model.gameState != STATE_IDLE && model.gameState != STATE_ENDED
+        );
+        var gameStr = RugbyTimerTiming.formatTime(elapsedSeconds);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -329,7 +335,7 @@ class RugbyTimerRenderer {
                 x,
                 cardsY + line * style.lineStep,
                 style.font,
-                label + ":" + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(remaining)),
+                label + ": " + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(remaining)),
                 Graphics.TEXT_JUSTIFY_CENTER
             );
             count += 1;
@@ -340,7 +346,7 @@ class RugbyTimerRenderer {
 
     static function renderPermanentRed(dc, x, cardsY, lineStep, lineIndex, font, labelCounter) {
         dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-        var label = labelCounter > 0 ? "R" + labelCounter.toString() + ":PERM" : "R:PERM";
+        var label = labelCounter > 0 ? "R" + labelCounter.toString() + ": PERM" : "R: PERM";
         dc.drawText(x, cardsY + lineIndex * lineStep, font, label, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
@@ -353,14 +359,18 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return A dictionary containing information about the rendered cards
      */
-    static function renderCardTimers(dc, model, width, cardsY, height) {
+    static function renderCardTimers(dc, model, width, cardsY, height, renderNow) {
         Profiler.start("renderCardTimers");
         // Only render the first two active sanctions per team so the primary layout stays tidy while
         // extra yellow/red timers continue counting in the background.
         if (model.yellowHomeTimes == null) { model.yellowHomeTimes = []; }
         if (model.yellowAwayTimes == null) { model.yellowAwayTimes = []; }
-        var timerNow = model.suspensionTime;
-        timerNow = RugbyTimeMath.normalizeSeconds(timerNow);
+        var timerNow = RugbyTimeMath.snapshotForwardClock(
+            model.suspensionTime,
+            model.lastUpdate,
+            renderNow,
+            RugbyTimerTiming.isSuspensionClockRunning(model.gameState)
+        );
         var visibleYellowHome = model.yellowHomeTimes.size();
         var visibleYellowAway = model.yellowAwayTimes.size();
         var visibleRedHome = model.redHomePermanent ? 1 : model.redHomeTimes.size();
@@ -444,11 +454,20 @@ class RugbyTimerRenderer {
      * @param countdownFont The font to use for the countdown timer
      * @param countdownY The Y position of the countdown timer
      */
-    static function renderCountdown(dc, model, width, countdownFont, countdownY) {
+    static function renderCountdown(dc, model, width, countdownFont, countdownY, renderNow) {
         Profiler.start("renderCountdown");
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining);
+        var remainingSeconds = RugbyTimeMath.getCountdownRemaining(
+            model.countdownTimer,
+            RugbyTimeMath.snapshotForwardClock(
+                model.gameTime,
+                model.lastUpdate,
+                renderNow,
+                RugbyTimerTiming.isClockRunning(model.gameState)
+            )
+        );
+        var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(remainingSeconds);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
@@ -464,7 +483,7 @@ class RugbyTimerRenderer {
      * @param stateY The Y position of the state text
      * @param height The height of the screen
      */
-    static function renderStateText(dc, model, width, stateFont, stateY, height) {
+    static function renderStateText(dc, model, width, stateFont, stateY, height, renderNow) {
         // Paused and special states adopt a red accent so they stand out from normal match play.
         var stateColor = Graphics.COLOR_WHITE;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
@@ -475,12 +494,16 @@ class RugbyTimerRenderer {
             dc.drawText(width / 2, stateY, Graphics.FONT_SMALL, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_CONVERSION) {
             dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
-            var convSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
+            var convSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(
+                RugbyTimeMath.snapshotReverseClock(model.countdownSeconds, model.lastUpdate, renderNow, true)
+            );
             var countdownStr = (convSeconds as Lang.Number).toLong().toString();
             dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_PENALTY) {
             dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
-            var penSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
+            var penSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(
+                RugbyTimeMath.snapshotReverseClock(model.countdownSeconds, model.lastUpdate, renderNow, true)
+            );
             var countdownStr = (penSeconds as Lang.Number).toLong().toString();
             dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_HALFTIME) {
