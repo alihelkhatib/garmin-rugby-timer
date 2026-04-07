@@ -283,6 +283,8 @@ function test_integration_second_half_then_end_game(logger as Test.Logger) as La
     model.halfNumber = 1;
     model.countdownTimer = 600;
     model.countdownRemaining = 0;
+    model.kickoffTime = 120;
+    model.countdownSeconds = 120;
 
     model.startSecondHalf();
 
@@ -301,4 +303,44 @@ function test_integration_second_half_then_end_game(logger as Test.Logger) as La
     model.endGame();
 
     return model.gameState == STATE_ENDED && model.lastUpdate == null;
+}
+
+(:test)
+function test_integration_enterHalftime_starts_break_and_allows_live_adjust(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.kickoffTime = 120;
+    model.gameState = STATE_PLAYING;
+    model.gameTime = model.countdownTimer;
+    model.countdownRemaining = 0;
+
+    model.enterHalfTime();
+
+    if (model.gameState != STATE_HALFTIME) {
+        logger.error("halftime state not entered");
+        return false;
+    }
+    if (model.countdownSeconds != 120) {
+        logger.error("halftime break should start from kickoffTime");
+        return false;
+    }
+
+    model.adjustHalfTimeBreak(1);
+    if (model.countdownSeconds != 180 || model.kickoffTime != 180) {
+        logger.error("halftime +1 should update live and stored break duration");
+        return false;
+    }
+
+    model.lastUpdate = System.getTimer() - 30000;
+    RugbyTimerTiming.updateGame(model);
+    if (model.countdownSeconds > 150) {
+        logger.error("halftime break should tick down while active");
+        return false;
+    }
+
+    model.adjustHalfTimeBreak(-1);
+    return model.countdownSeconds == 120 && model.kickoffTime == 120;
 }

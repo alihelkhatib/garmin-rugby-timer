@@ -34,6 +34,10 @@ function test_viewSupport_hintMode_rules(logger as Test.Logger) as Lang.Boolean 
         logger.error("playing hint mode mismatch");
         return false;
     }
+    if (RugbyTimerViewSupport.getHintMode(false, STATE_HALFTIME) != VIEW_HINT_MODE_HALFTIME) {
+        logger.error("halftime hint mode mismatch");
+        return false;
+    }
     return RugbyTimerViewSupport.getHintMode(false, STATE_PAUSED) == VIEW_HINT_MODE_NONE;
 }
 

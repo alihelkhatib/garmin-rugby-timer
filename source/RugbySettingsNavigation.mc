@@ -122,6 +122,8 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             );
         } else if (item.getId() == :conv_time) {
             WatchUi.pushView(new ConversionAdjustMenu(), new ConversionAdjustDelegate(menu), WatchUi.SLIDE_UP);
+        } else if (item.getId() == :half_break) {
+            WatchUi.pushView(new HalftimeBreakAdjustMenu(), new HalftimeBreakAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :pen_time) {
             WatchUi.pushView(new PenaltyAdjustMenu(), new PenaltyAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :use_conv) {

@@ -143,6 +143,51 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
 }
 
 /**
+ * Menu for choosing the halftime-break duration.
+ */
+class HalftimeBreakAdjustMenu extends WatchUi.Menu2 {
+    function initialize() {
+        Menu2.initialize({:title=>"Halftime Break"});
+        addItem(new WatchUi.MenuItem("30 sec", "00:30", "h30", null));
+        addItem(new WatchUi.MenuItem("60 sec", "01:00", "h60", null));
+        addItem(new WatchUi.MenuItem("2 min", "02:00", "h120", null));
+        addItem(new WatchUi.MenuItem("5 min", "05:00", "h300", null));
+        addItem(new WatchUi.MenuItem("10 min", "10:00", "h600", null));
+    }
+}
+
+class HalftimeBreakAdjustDelegate extends WatchUi.Menu2InputDelegate {
+    var settingsMenu;
+
+    function initialize(settingsMenu) {
+        Menu2InputDelegate.initialize();
+        self.settingsMenu = settingsMenu;
+    }
+
+    function onSelect(item) {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app != null && app.model != null) {
+            var val = RugbySettingsSupport.getHalftimeBreakSelectionSeconds(item.getId());
+            if (val == 30) {
+                try {
+                    var label = item.getLabel().toString();
+                    val = RugbySettingsSupport.getHalftimeBreakSelectionSeconds(
+                        label.find("10") != null ? "h600" : label.find("5") != null ? "h300" : label.find("2") != null ? "h120" : label.find("60") != null ? "h60" : "h30"
+                    );
+                } catch (ex) {
+                }
+            }
+            app.model.setKickoffTime(val);
+        }
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(2);
+    }
+
+    function onBack() {
+        WatchUi.popView(WatchUi.SLIDE_DOWN);
+    }
+}
+
+/**
  * Menu for choosing the penalty-kick overlay duration.
  */
 class PenaltyAdjustMenu extends WatchUi.Menu2 {

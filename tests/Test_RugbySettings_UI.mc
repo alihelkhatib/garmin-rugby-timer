@@ -112,6 +112,7 @@ function test_settings_display_state_tracks_live_preset_rules(logger as Test.Log
     var state = RugbySettingsSupport.buildDisplayState(model, null, true, false);
     if (state.matchFormatLabel != "7s") { logger.error("live format label should show 7s"); return false; }
     if (state.conversionLabel != "00:30") { logger.error("7s conversion label should be 00:30"); return false; }
+    if (state.halftimeBreakLabel != "00:30") { logger.error("7s halftime label should be 00:30"); return false; }
     if (state.penaltyLabel != "01:00") { logger.error("7s penalty label should be 01:00"); return false; }
     if (state.useConversionLabel != "On") { logger.error("7s conversion overlay should be On"); return false; }
     if (state.usePenaltyLabel != "Off") { logger.error("7s penalty overlay should be Off"); return false; }
@@ -134,6 +135,7 @@ function test_settings_display_state_tracks_live_customized_rules_and_labels(log
     var state = RugbySettingsSupport.buildDisplayState(model, null, false, true);
     if (state.matchFormatLabel != "15s") { logger.error("format label should still follow live 15s structure"); return false; }
     if (state.conversionLabel != "02:00") { logger.error("conversion label should reflect custom value"); return false; }
+    if (state.halftimeBreakLabel != "01:00") { logger.error("halftime break should reflect live kickoff value"); return false; }
     if (state.penaltyLabel != "01:30") { logger.error("penalty label should reflect custom value"); return false; }
     if (state.useConversionLabel != "Off") { logger.error("conversion overlay label should be Off"); return false; }
     if (state.usePenaltyLabel != "On") { logger.error("penalty overlay label should be On"); return false; }

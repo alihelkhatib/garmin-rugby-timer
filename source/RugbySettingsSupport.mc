@@ -26,6 +26,7 @@ class RugbySettingsSupport {
         var entry = RugbySettingsSupport.getProfileEntry(profile);
         var matchFormatLabel = null;
         var conversionLabel = null;
+        var halftimeBreakLabel = null;
         var penaltyLabel = null;
         var useConversionLabel = "Off";
         var usePenaltyLabel = "Off";
@@ -34,6 +35,7 @@ class RugbySettingsSupport {
         if (model != null) {
             matchFormatLabel = RugbySettingsSupport.getMatchFormatLabelForValues(model.is7s, model.halfDuration);
             conversionLabel = RugbySettingsSupport.formatTime(model.conversionTime);
+            halftimeBreakLabel = RugbySettingsSupport.formatTime(model.kickoffTime);
             penaltyLabel = RugbySettingsSupport.formatTime(model.penaltyKickTime);
             useConversionLabel = RugbySettingsSupport.getOnOffLabel(model.useConversionTimer);
             usePenaltyLabel = RugbySettingsSupport.getOnOffLabel(model.usePenaltyTimer);
@@ -41,6 +43,7 @@ class RugbySettingsSupport {
         } else if (entry != null) {
             matchFormatLabel = RugbySettingsSupport.getMatchFormatLabel(profile);
             conversionLabel = RugbySettingsSupport.formatTime(entry.conversionTime);
+            halftimeBreakLabel = RugbySettingsSupport.formatTime(entry.kickoffTime);
             penaltyLabel = RugbySettingsSupport.formatTime(entry.penaltyKickTime);
             useConversionLabel = RugbySettingsSupport.getOnOffLabel(entry.useConversionTimer);
             usePenaltyLabel = RugbySettingsSupport.getOnOffLabel(entry.usePenaltyTimer);
@@ -50,6 +53,7 @@ class RugbySettingsSupport {
         return RugbySettingsDisplayState.create(
             matchFormatLabel,
             conversionLabel,
+            halftimeBreakLabel,
             penaltyLabel,
             useConversionLabel,
             usePenaltyLabel,
@@ -233,6 +237,14 @@ class RugbySettingsSupport {
     static function getPenaltySelectionSeconds(itemId) {
         if (itemId == "p60" || itemId == :p60) { return 60; }
         if (itemId == "p90" || itemId == :p90) { return 90; }
+        return 30;
+    }
+
+    static function getHalftimeBreakSelectionSeconds(itemId) {
+        if (itemId == "h60" || itemId == :h60) { return 60; }
+        if (itemId == "h120" || itemId == :h120) { return 120; }
+        if (itemId == "h300" || itemId == :h300) { return 300; }
+        if (itemId == "h600" || itemId == :h600) { return 600; }
         return 30;
     }
 }

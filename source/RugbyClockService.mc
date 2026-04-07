@@ -98,9 +98,12 @@ class RugbyClockService {
     }
 
     static function enterHalfTime(model) {
+        var now = System.getTimer();
         model.gameState = STATE_HALFTIME;
         model.lastPauseReminderTime = null;
-        model.lastUpdate = System.getTimer();
+        model.countdownSeconds = model.kickoffTime;
+        model.specialAlertTriggered = false;
+        model.lastUpdate = now;
         RugbyTimerTiming.triggerHalfTimeVibe();
         RugbySnapshotService.persistState(model);
     }
@@ -119,6 +122,17 @@ class RugbyClockService {
             RugbyTimerTiming.triggerMatchStartVibe();
             RugbySnapshotService.persistState(model);
         }
+    }
+
+    static function adjustHalfTimeBreak(model, deltaMinutes) {
+        if (model.gameState != STATE_HALFTIME) {
+            return;
+        }
+        var nextBreakSeconds = RugbyTimerInputSupport.getAdjustedBreakSeconds(model.countdownSeconds, deltaMinutes);
+        model.setKickoffTime(nextBreakSeconds);
+        model.countdownSeconds = nextBreakSeconds;
+        model.lastUpdate = System.getTimer();
+        RugbySnapshotService.persistState(model);
     }
 
     static function endGame(model) {

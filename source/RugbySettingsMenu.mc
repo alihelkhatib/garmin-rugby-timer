@@ -12,16 +12,18 @@ using Toybox.Application.Storage;
 class RugbySettingsMenu extends WatchUi.Menu2 {
     const ROW_MATCH_FORMAT = 0;
     const ROW_CONVERSION_TIMER = 1;
-    const ROW_PENALTY_TIMER = 2;
-    const ROW_USE_CONVERSION = 3;
-    const ROW_USE_PENALTY = 4;
-    const ROW_TEAM_LABELS = 5;
-    const ROW_LOCK_ON_START = 6;
-    const ROW_DIM_THEME = 7;
+    const ROW_HALFTIME_BREAK = 2;
+    const ROW_PENALTY_TIMER = 3;
+    const ROW_USE_CONVERSION = 4;
+    const ROW_USE_PENALTY = 5;
+    const ROW_TEAM_LABELS = 6;
+    const ROW_LOCK_ON_START = 7;
+    const ROW_DIM_THEME = 8;
 
     var formatItem;
     var conversionItem;
     var penaltyItem;
+    var halftimeItem;
     var useConvItem;
     var usePenItem;
     var teamLabelsItem;
@@ -37,6 +39,9 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
 
         conversionItem = new WatchUi.MenuItem("Conversion Timer", displayState.conversionLabel, :conv_time, null);
         addItem(conversionItem);
+
+        halftimeItem = new WatchUi.MenuItem("Halftime Break", displayState.halftimeBreakLabel, :half_break, null);
+        addItem(halftimeItem);
 
         penaltyItem = new WatchUi.MenuItem("Penalty Kick", displayState.penaltyLabel, :pen_time, null);
         addItem(penaltyItem);
@@ -83,6 +88,7 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         var displayState = getDisplayState();
         updateSubLabel(formatItem, ROW_MATCH_FORMAT, displayState.matchFormatLabel);
         updateSubLabel(conversionItem, ROW_CONVERSION_TIMER, displayState.conversionLabel);
+        updateSubLabel(halftimeItem, ROW_HALFTIME_BREAK, displayState.halftimeBreakLabel);
         updateSubLabel(penaltyItem, ROW_PENALTY_TIMER, displayState.penaltyLabel);
         updateSubLabel(useConvItem, ROW_USE_CONVERSION, displayState.useConversionLabel);
         updateSubLabel(usePenItem, ROW_USE_PENALTY, displayState.usePenaltyLabel);
@@ -102,6 +108,7 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     function getRowIndexForItemId(itemId) {
         if (itemId == :format_family) { return ROW_MATCH_FORMAT; }
         if (itemId == :conv_time) { return ROW_CONVERSION_TIMER; }
+        if (itemId == :half_break) { return ROW_HALFTIME_BREAK; }
         if (itemId == :pen_time) { return ROW_PENALTY_TIMER; }
         if (itemId == :use_conv) { return ROW_USE_CONVERSION; }
         if (itemId == :use_pen) { return ROW_USE_PENALTY; }

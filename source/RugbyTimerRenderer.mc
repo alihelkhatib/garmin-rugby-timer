@@ -110,9 +110,8 @@ class RugbyTimerRenderer {
         if (isLocked) {
             hintLines = 1;
         } else if (model.gameState == STATE_IDLE) {
-            // Keep the idle countdown anchored at the same vertical position as
-            // live play so the main clock does not jump when the match starts.
-            hintLines = 1;
+            // Idle mode renders two separate help rows: adjustment plus start.
+            hintLines = 2;
         } else if (model.gameState == STATE_PLAYING) {
             hintLines = 1;
         }
@@ -458,15 +457,29 @@ class RugbyTimerRenderer {
         Profiler.start("renderCountdown");
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
-        var remainingSeconds = RugbyTimeMath.getCountdownRemaining(
-            model.countdownTimer,
-            RugbyTimeMath.snapshotForwardClock(
-                model.gameTime,
+        var remainingSeconds = 0;
+        if (model.gameState == STATE_IDLE) {
+            // Idle should always show the configured half length directly; it
+            // must not inherit any stale runtime gameTime from prior states.
+            remainingSeconds = RugbyTimeMath.normalizeSeconds(model.countdownTimer);
+        } else if (model.gameState == STATE_HALFTIME) {
+            remainingSeconds = RugbyTimeMath.snapshotReverseClock(
+                model.countdownSeconds,
                 model.lastUpdate,
                 renderNow,
-                RugbyTimerTiming.isClockRunning(model.gameState)
-            )
-        );
+                true
+            );
+        } else {
+            remainingSeconds = RugbyTimeMath.getCountdownRemaining(
+                model.countdownTimer,
+                RugbyTimeMath.snapshotForwardClock(
+                    model.gameTime,
+                    model.lastUpdate,
+                    renderNow,
+                    RugbyTimerTiming.isClockRunning(model.gameState)
+                )
+            );
+        }
         var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(remainingSeconds);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
         dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);

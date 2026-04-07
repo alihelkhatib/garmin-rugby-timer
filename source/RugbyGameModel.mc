@@ -389,6 +389,7 @@ class RugbyGameModel {
         halfDuration = seconds;
         countdownTimer = seconds;
         if (gameState == STATE_IDLE) {
+            gameTime = 0;
             countdownRemaining = seconds;
         }
         saveCurrentSettingsAsCustomProfile();
@@ -403,6 +404,9 @@ class RugbyGameModel {
     function setKickoffTime(seconds) {
         promoteToCustomProfile();
         kickoffTime = seconds;
+        if (gameState == STATE_HALFTIME) {
+            countdownSeconds = seconds;
+        }
         saveCurrentSettingsAsCustomProfile();
     }
 
@@ -553,6 +557,13 @@ class RugbyGameModel {
      */
     function startSecondHalf() {
         RugbyClockService.startSecondHalf(self);
+    }
+
+    /**
+     * Adjust the live halftime-break countdown in whole-minute increments.
+     */
+    function adjustHalfTimeBreak(deltaMinutes) {
+        RugbyClockService.adjustHalfTimeBreak(self, deltaMinutes);
     }
 
     /**

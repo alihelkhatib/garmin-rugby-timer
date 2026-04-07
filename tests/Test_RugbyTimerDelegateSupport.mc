@@ -16,6 +16,13 @@ function test_delegateSupport_idleMinuteAdjustment_clamps(logger as Test.Logger)
 }
 
 (:test)
+function test_delegateSupport_halftimeBreakAdjustment_clamps(logger as Test.Logger) as Lang.Boolean {
+    if (RugbyTimerInputSupport.getAdjustedBreakSeconds(30, -1) != 0) { logger.error("break low clamp failed"); return false; }
+    if (RugbyTimerInputSupport.getAdjustedBreakSeconds(99 * 60, 1) != 99 * 60) { logger.error("break high clamp failed"); return false; }
+    return RugbyTimerInputSupport.getAdjustedBreakSeconds(75, 1) == 180;
+}
+
+(:test)
 function test_delegateSupport_overlayKeyMapping(logger as Test.Logger) as Lang.Boolean {
     if (RugbyTimerInputSupport.getOverlayActionForKey(STATE_CONVERSION, WatchUi.KEY_DOWN) != :miss) { logger.error("conversion down failed"); return false; }
     if (RugbyTimerInputSupport.getOverlayActionForKey(STATE_CONVERSION, WatchUi.KEY_MENU) != :made) { logger.error("conversion menu failed"); return false; }

@@ -74,6 +74,13 @@ class RugbyTimerTiming {
                     }
                 }
             }
+
+            if (model.gameState == STATE_HALFTIME && model.countdownSeconds > 0) {
+                model.countdownSeconds = model.countdownSeconds - deltaSeconds;
+                if (model.countdownSeconds < 0) {
+                    model.countdownSeconds = 0;
+                }
+            }
             
             if (suspensionClockRunning) {
                 var homeYellowUpdate = RugbyTimerCards.updateYellowTimers(model, model.yellowHomeTimes, model.suspensionTime);

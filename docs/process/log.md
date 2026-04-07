@@ -1,3 +1,10 @@
+## [2026-04-07] Add a live halftime-break countdown and controls
+
+- Entering halftime now automatically starts a real intermission countdown from the configured `Halftime Break` duration (`kickoffTime` internally), instead of showing only a static halftime state.
+- The large main timer now shows the halftime-break countdown while `HALF TIME` is active, and the halftime screen exposes matching guidance so `UP` or `UP/MENU` adds one minute, `DOWN` subtracts one minute, and `SELECT` starts the second half.
+- Added a new settings row for `Halftime Break`, wired it into the live settings display model, and added direct tests for halftime button adjustment, halftime hint mode, halftime settings labels, and the halftime state transition/countdown flow.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
 ## [2026-04-07] Add direct regression coverage for live settings display
 
 - Added a typed `RugbySettingsDisplayState` helper so the root settings menu subtitles can be derived from the live model in one testable place instead of repeating formatting logic across menu construction and refresh.

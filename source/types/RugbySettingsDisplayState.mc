@@ -7,6 +7,7 @@
 class RugbySettingsDisplayState {
     var matchFormatLabel;
     var conversionLabel;
+    var halftimeBreakLabel;
     var penaltyLabel;
     var useConversionLabel;
     var usePenaltyLabel;
@@ -14,10 +15,11 @@ class RugbySettingsDisplayState {
     var lockOnStartLabel;
     var dimThemeLabel;
 
-    static function create(matchFormatLabel, conversionLabel, penaltyLabel, useConversionLabel, usePenaltyLabel, teamLabelsLabel, lockOnStartLabel, dimThemeLabel) {
+    static function create(matchFormatLabel, conversionLabel, halftimeBreakLabel, penaltyLabel, useConversionLabel, usePenaltyLabel, teamLabelsLabel, lockOnStartLabel, dimThemeLabel) {
         var state = new RugbySettingsDisplayState();
         state.matchFormatLabel = matchFormatLabel;
         state.conversionLabel = conversionLabel;
+        state.halftimeBreakLabel = halftimeBreakLabel;
         state.penaltyLabel = penaltyLabel;
         state.useConversionLabel = useConversionLabel;
         state.usePenaltyLabel = usePenaltyLabel;

@@ -146,8 +146,19 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
 
             // Before kickoff only, map UP/MENU to +1 minute adjustment.
             if (model.gameState == STATE_IDLE) {
+                if (!view.isActionAllowed()) {
+                    return true;
+                }
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.countdownTimer, 1);
                 model.setHalfDuration(newMinutes * 60);
+                return true;
+            }
+
+            if (model.gameState == STATE_HALFTIME) {
+                if (!view.isActionAllowed()) {
+                    return true;
+                }
+                model.adjustHalfTimeBreak(1);
                 return true;
             }
 
@@ -234,6 +245,10 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 model.setHalfDuration(newMinutes * 60);
                 return true;
             }
+            if (model.gameState == STATE_HALFTIME) {
+                model.adjustHalfTimeBreak(-1);
+                return true;
+            }
             if (model.gameState == STATE_PENALTY) {
                 if (view.isSpecialOverlayActive()) {
                     handleOverlayAction(:hide);
@@ -271,6 +286,10 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.countdownTimer, 1);
                 model.setHalfDuration(newMinutes * 60);
+                return true;
+            }
+            if (model.gameState == STATE_HALFTIME) {
+                model.adjustHalfTimeBreak(1);
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {

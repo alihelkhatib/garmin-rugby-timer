@@ -20,6 +20,21 @@ class RugbyTimerInputSupport {
     }
 
     /**
+     * Adjusts a halftime break countdown in whole-minute steps while allowing
+     * the running timer to reach zero if the referee shortens the break.
+     */
+    static function getAdjustedBreakSeconds(currentSeconds, deltaMinutes) {
+        var currentMinutes = (currentSeconds / 60).toLong();
+        if ((currentSeconds % 60) > 0) {
+            currentMinutes += 1;
+        }
+        var nextMinutes = currentMinutes + deltaMinutes;
+        if (nextMinutes < 0) { return 0; }
+        if (nextMinutes > 99) { return 99 * 60; }
+        return nextMinutes * 60;
+    }
+
+    /**
      * Maps overlay hardware keys to the logical overlay action the delegate
      * should execute.
      */

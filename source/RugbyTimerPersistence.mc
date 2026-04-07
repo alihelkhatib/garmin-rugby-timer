@@ -277,7 +277,12 @@ class RugbyTimerPersistence {
     }
 
     static function getSnapshotCountdownSeconds(model) {
-        return RugbyTimeMath.snapshotReverseClock(model.countdownSeconds, model.lastUpdate, System.getTimer(), model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY);
+        return RugbyTimeMath.snapshotReverseClock(
+            model.countdownSeconds,
+            model.lastUpdate,
+            System.getTimer(),
+            model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_HALFTIME
+        );
     }
 
     static function serializeYellowTimers(list, clockValue) {

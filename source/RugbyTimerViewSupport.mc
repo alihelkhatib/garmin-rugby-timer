@@ -4,6 +4,7 @@ const VIEW_HINT_MODE_NONE = "none";
 const VIEW_HINT_MODE_LOCKED = "locked";
 const VIEW_HINT_MODE_IDLE = "idle";
 const VIEW_HINT_MODE_PLAYING = "playing";
+const VIEW_HINT_MODE_HALFTIME = "halftime";
 
 /**
  * Pure presentation rules for the main match view.
@@ -37,6 +38,9 @@ class RugbyTimerViewSupport {
         }
         if (gameState == STATE_PLAYING) {
             return VIEW_HINT_MODE_PLAYING;
+        }
+        if (gameState == STATE_HALFTIME) {
+            return VIEW_HINT_MODE_HALFTIME;
         }
         return VIEW_HINT_MODE_NONE;
     }
