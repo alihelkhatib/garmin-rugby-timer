@@ -104,15 +104,15 @@ class RugbyMatchProfiles {
         }
         var label = entry.label;
         if (label == null) { label = "Custom"; }
-        Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL, label);
-        Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, entry.is7s);
-        Storage.setValue(STORAGE_KEY_CUSTOM_HALF_DURATION, entry.halfDuration);
-        Storage.setValue(STORAGE_KEY_CUSTOM_CONVERSION_TIME, entry.conversionTime);
-        Storage.setValue(STORAGE_KEY_CUSTOM_KICKOFF_TIME, entry.kickoffTime);
-        Storage.setValue(STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME, entry.penaltyKickTime);
-        Storage.setValue(STORAGE_KEY_CUSTOM_USE_CONVERSION_TIMER, entry.useConversionTimer);
-        Storage.setValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER, entry.usePenaltyTimer);
-        Storage.setValue(STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE, RugbyTeamIdentitySupport.normalizeLabelMode(entry.teamLabelMode));
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL, label);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, entry.is7s);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_HALF_DURATION, entry.halfDuration);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_CONVERSION_TIME, entry.conversionTime);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_KICKOFF_TIME, entry.kickoffTime);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME, entry.penaltyKickTime);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_USE_CONVERSION_TIMER, entry.useConversionTimer);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER, entry.usePenaltyTimer);
+        RugbyStorageSupport.setValue(STORAGE_KEY_CUSTOM_TEAM_LABEL_MODE, RugbyTeamIdentitySupport.normalizeLabelMode(entry.teamLabelMode));
     }
 
     static function getProfileLabel(profileId) {
@@ -191,7 +191,7 @@ class RugbyMatchProfiles {
             usePenaltyTimer
         );
 
-        Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, inferredProfileId);
+        RugbyStorageSupport.setValue(STORAGE_KEY_MATCH_PROFILE_ID, inferredProfileId);
         if (inferredProfileId == "custom") {
             RugbyMatchProfiles.storeCustomProfile(RugbyMatchProfiles.createProfile(
                 "custom",

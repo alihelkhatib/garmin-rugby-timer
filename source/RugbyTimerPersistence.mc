@@ -26,7 +26,7 @@ class RugbyTimerPersistence {
 
     static function clearInvalidSavedState(model, reason) {
         System.println("Clearing invalid saved state: " + reason);
-        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        RugbyStorageSupport.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
         model.resetMatchRuntimeState();
         model.setStatusMessage("Saved match reset");
     }
@@ -37,7 +37,7 @@ class RugbyTimerPersistence {
      */
     static function saveState(model) {
         var snapshot = RugbyTimerPersistence.buildSnapshot(model);
-        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, snapshot.toDict());
+        return RugbyStorageSupport.setValue(STORAGE_KEY_GAME_STATE_DATA, snapshot.toDict());
     }
 
     static function buildSnapshot(model) {
@@ -119,7 +119,7 @@ class RugbyTimerPersistence {
         if (eventLogText.length() > 0) {
             summary.eventLog = eventLogText;
         }
-        Storage.setValue(STORAGE_KEY_LAST_GAME_SUMMARY, summary.toDict());
+        return RugbyStorageSupport.setValue(STORAGE_KEY_LAST_GAME_SUMMARY, summary.toDict());
     }
 
     /**

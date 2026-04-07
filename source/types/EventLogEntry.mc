@@ -22,15 +22,21 @@ class EventLogEntry {
             return null;
         }
         var entry = new EventLogEntry();
-        entry.time = raw[:time];
-        entry.desc = raw[:desc];
+        entry.time = raw["time"];
+        if (entry.time == null) {
+            entry.time = raw[:time];
+        }
+        entry.desc = raw["desc"];
+        if (entry.desc == null) {
+            entry.desc = raw[:desc];
+        }
         return entry;
     }
 
     function toDict() {
         return {
-            :time => time,
-            :desc => desc
+            "time" => time,
+            "desc" => desc
         };
     }
 

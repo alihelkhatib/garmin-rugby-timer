@@ -25,10 +25,24 @@ function test_matchProfileEntry_roundtrip(logger as Test.Logger) as Lang.Boolean
 
 (:test)
 function test_scoreEvent_roundtrip(logger as Test.Logger) as Lang.Boolean {
-    var raw = ScoreEvent.create(:penalty_try, true).toDict();
+    var raw = ScoreEvent.create(:penalty_try, true).toDict() as Lang.Dictionary;
+    if (raw["type"] != "penalty_try") {
+        logger.error("ScoreEvent should persist string type keys");
+        return false;
+    }
     var entry = ScoreEvent.fromDict(raw);
     if (entry == null) { logger.error("ScoreEvent.fromDict returned null"); return false; }
-    return entry.eventType == :penalty_try && entry.isHome == true;
+    return entry.isType(:penalty_try) && entry.isHome == true;
+}
+
+(:test)
+function test_scoreEvent_accepts_legacy_symbol_payload(logger as Test.Logger) as Lang.Boolean {
+    var entry = ScoreEvent.fromDict({
+        :type => :drop,
+        :home => false
+    });
+    if (entry == null) { logger.error("legacy ScoreEvent payload should still restore"); return false; }
+    return entry.isType(:drop) && entry.isHome == false;
 }
 
 (:test)

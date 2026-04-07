@@ -10,11 +10,11 @@ using Toybox.System;
 class RugbySnapshotService {
     static function persistState(model) {
         try {
-            RugbyTimerPersistence.saveState(model);
-            model.lastPersistTime = System.getTimer();
+            if (RugbyTimerPersistence.saveState(model)) {
+                model.lastPersistTime = System.getTimer();
+            }
         } catch (ex) {
             System.println("Error persisting state: " + ex.getErrorMessage());
-            model.setStatusMessage("Save failed");
         }
     }
 
@@ -29,7 +29,7 @@ class RugbySnapshotService {
         RugbyRecordingService.stopRecording(model);
         model.resetMatchRuntimeState();
         RugbySnapshotService.persistState(model);
-        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        RugbyStorageSupport.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
     }
 
     static function saveGame(model) {
@@ -38,17 +38,16 @@ class RugbySnapshotService {
             RugbySnapshotService.persistState(model);
         } catch (ex) {
             System.println("Error saving finished match: " + ex.getErrorMessage());
-            model.setStatusMessage("Save failed");
         }
     }
 
     static function finalizeGame(model) {
         try {
-            RugbyTimerPersistence.finalizeGameData(model);
-            Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+            if (RugbyTimerPersistence.finalizeGameData(model)) {
+                RugbyStorageSupport.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+            }
         } catch (ex) {
             System.println("Error finalizing game: " + ex.getErrorMessage());
-            model.setStatusMessage("Save failed");
         }
     }
 

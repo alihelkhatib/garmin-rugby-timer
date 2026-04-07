@@ -331,7 +331,7 @@ class RugbyGameModel {
         // Always update countdownRemaining to match the new profile timer
         countdownRemaining = countdownTimer;
         if (persist) {
-            Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
+            RugbyStorageSupport.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
             if (matchProfileId == "custom") {
                 RugbyMatchProfiles.storeCustomProfile(entry.toDict());
             }
@@ -434,7 +434,7 @@ class RugbyGameModel {
         if (matchProfileId != "custom") {
             saveCurrentSettingsAsCustomProfile();
             matchProfileId = "custom";
-            Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
+            RugbyStorageSupport.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
         }
     }
 

@@ -101,7 +101,7 @@ class RugbyScoringService {
             return true;
         }
         var isHome = eventEntry.isHome;
-        if (eventEntry.eventType == :try) {
+        if (eventEntry.isType(:try)) {
             if (isHome) {
                 model.homeScore = model.homeScore - 5;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -111,7 +111,7 @@ class RugbyScoringService {
                 if (model.awayScore < 0) { model.awayScore = 0; }
                 if (model.awayTries > 0) { model.awayTries -= 1; }
             }
-        } else if (eventEntry.eventType == :conversion) {
+        } else if (eventEntry.isType(:conversion)) {
             if (isHome) {
                 model.homeScore = model.homeScore - 2;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -119,7 +119,7 @@ class RugbyScoringService {
                 model.awayScore = model.awayScore - 2;
                 if (model.awayScore < 0) { model.awayScore = 0; }
             }
-        } else if (eventEntry.eventType == :penalty_try) {
+        } else if (eventEntry.isType(:penalty_try)) {
             if (isHome) {
                 model.homeScore = model.homeScore - 7;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -127,7 +127,7 @@ class RugbyScoringService {
                 model.awayScore = model.awayScore - 7;
                 if (model.awayScore < 0) { model.awayScore = 0; }
             }
-        } else if (eventEntry.eventType == :penalty || eventEntry.eventType == :drop) {
+        } else if (eventEntry.isType(:penalty) || eventEntry.isType(:drop)) {
             if (isHome) {
                 model.homeScore = model.homeScore - 3;
                 if (model.homeScore < 0) { model.homeScore = 0; }

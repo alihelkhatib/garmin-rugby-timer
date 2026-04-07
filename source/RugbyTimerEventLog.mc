@@ -58,7 +58,7 @@ class RugbyTimerEventLog {
 
     static function exportEventLog(model) {
         var text = RugbyTimerEventLog.buildEventLogText(model);
-        Storage.setValue(EVENT_LOG_STORAGE_KEY, text);
+        RugbyStorageSupport.setValue(EVENT_LOG_STORAGE_KEY, text);
     }
 
     static function showEventLog(model) {
