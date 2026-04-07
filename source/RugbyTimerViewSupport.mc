@@ -13,6 +13,19 @@ const VIEW_HINT_MODE_HALFTIME = "halftime";
  * out of `RugbyTimerView` so those rules can be unit-tested without WatchUi.
  */
 class RugbyTimerViewSupport {
+    static function getConfiguredIdleSeconds(model) {
+        if (RugbyTimeMath.isNumeric(model.halfDuration) && model.halfDuration > 0) {
+            return RugbyTimeMath.normalizeSeconds(model.halfDuration);
+        }
+        if (RugbyTimeMath.isNumeric(model.countdownTimer) && model.countdownTimer > 0) {
+            return RugbyTimeMath.normalizeSeconds(model.countdownTimer);
+        }
+        if (RugbyTimeMath.isNumeric(model.countdownRemaining) && model.countdownRemaining > 0) {
+            return RugbyTimeMath.normalizeSeconds(model.countdownRemaining);
+        }
+        return RugbyMatchProfiles.getDefaultHalfDuration(model != null && model.is7s == true);
+    }
+
     static function getElapsedSeconds(model, renderNow) {
         return RugbyTimeMath.snapshotForwardClock(
             model.elapsedTime,
@@ -24,7 +37,7 @@ class RugbyTimerViewSupport {
 
     static function getMainCountdownSeconds(model, renderNow) {
         if (model.gameState == STATE_IDLE) {
-            return RugbyTimeMath.normalizeSeconds(model.halfDuration);
+            return RugbyTimerViewSupport.getConfiguredIdleSeconds(model);
         }
         if (model.gameState == STATE_HALFTIME) {
             if (model.countdownSeconds > 0) {

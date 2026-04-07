@@ -21,6 +21,11 @@ class RugbyTimerPersistence {
         if (!RugbyTimeMath.isNumeric(snapshot.gameTime)) { return false; }
         if (!RugbyTimeMath.isNumeric(snapshot.elapsedTime)) { return false; }
         if (!RugbyTimeMath.isNumeric(snapshot.countdownTimer)) { return false; }
+        if (snapshot.countdownTimer <= 0) { return false; }
+        if (snapshot.halfNumber < 1) { return false; }
+        if (snapshot.gameTime < 0 || snapshot.elapsedTime < 0) { return false; }
+        if (RugbyTimeMath.isNumeric(snapshot.countdownRemaining) && snapshot.countdownRemaining < 0) { return false; }
+        if (RugbyTimeMath.isNumeric(snapshot.countdownSeconds) && snapshot.countdownSeconds < 0) { return false; }
         return snapshot.gameState instanceof Lang.Number;
     }
 
@@ -187,6 +192,7 @@ class RugbyTimerPersistence {
         model.matchProfileId = snapshot.matchProfileId;
         model.is7s = snapshot.is7s;
         model.countdownTimer = snapshot.countdownTimer;
+        model.halfDuration = snapshot.countdownTimer;
         model.conversionTime = RugbyTimerPersistence.restoreConversionTime(snapshot);
         model.kickoffTime = RugbyTimerPersistence.restoreKickoffTime(snapshot.kickoffTime, model.is7s);
         model.penaltyKickTime = snapshot.penaltyKickTime;

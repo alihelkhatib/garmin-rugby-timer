@@ -149,7 +149,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 if (!view.isActionAllowed()) {
                     return true;
                 }
-                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, 1);
+                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(RugbyTimerViewSupport.getConfiguredIdleSeconds(model), 1);
                 model.setHalfDuration(newMinutes * 60);
                 WatchUi.requestUpdate();
                 return true;
@@ -242,7 +242,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             }
             // Physical DOWN should shorten the idle half length by one minute.
             if (model.gameState == STATE_IDLE) {
-                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, -1);
+                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(RugbyTimerViewSupport.getConfiguredIdleSeconds(model), -1);
                 model.setHalfDuration(newMinutes * 60);
                 WatchUi.requestUpdate();
                 return true;
@@ -286,7 +286,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             }
             // Physical UP should lengthen the idle half length by one minute.
             if (model.gameState == STATE_IDLE) {
-                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, 1);
+                var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(RugbyTimerViewSupport.getConfiguredIdleSeconds(model), 1);
                 model.setHalfDuration(newMinutes * 60);
                 WatchUi.requestUpdate();
                 return true;

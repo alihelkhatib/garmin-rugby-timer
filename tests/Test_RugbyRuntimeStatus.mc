@@ -67,3 +67,33 @@ function test_invalidSavedSnapshot_is_cleared_and_reported(logger as Test.Logger
     }
     return Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) == null;
 }
+
+(:test)
+function test_zero_countdown_savedSnapshot_is_cleared_and_reported(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, {
+        "homeScore" => 0,
+        "awayScore" => 0,
+        "homeTries" => 0,
+        "awayTries" => 0,
+        "halfNumber" => 1,
+        "gameTime" => 0,
+        "elapsedTime" => 0,
+        "countdownTimer" => 0,
+        "gameState" => STATE_PAUSED
+    });
+
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    if (model.gameState != STATE_IDLE) {
+        logger.error("zero-countdown snapshot should reset to STATE_IDLE");
+        return false;
+    }
+    if (model.consumeStatusMessage() != "Saved match reset") {
+        logger.error("zero-countdown snapshot should surface reset message");
+        return false;
+    }
+    return Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) == null;
+}

@@ -330,6 +330,10 @@ class RugbyGameModel {
         if (entry == null) {
             return;
         }
+        entry = RugbyMatchProfiles.sanitizeProfileEntry(
+            entry,
+            entry.id
+        );
         matchProfileId = entry.id;
         is7s = entry.is7s;
         halfDuration = entry.halfDuration;

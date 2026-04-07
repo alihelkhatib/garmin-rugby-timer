@@ -2151,3 +2151,7 @@
 - 2026-04-07: Fixed a remaining idle-screen regression on round fēnix-style devices. The idle increment path now handles both raw `KEY_UP` and raw `KEY_MENU` mappings for the shared `UP/MENU` button, requests an immediate redraw after idle duration changes, and clamps the idle/halftime hint rows to a safer bottom anchor so the two-line guidance (`UP/MENU: +1   DOWN: -1`, `SELECT: Start`) remains visible.
 
 - 2026-04-07 idle-input/hint validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-07: Hardened idle startup recovery after repeated `00:00` regressions on round devices. The root cause was that startup could still accept poisoned timing state from either a zero-duration custom profile or a saved snapshot with a zero countdown timer, and the idle screen/hardware adjustments would then faithfully operate on that bad data. `RugbyMatchProfiles` now sanitizes custom profiles on read/write, `RugbyTimerPersistence` rejects zero-duration snapshots and resyncs `halfDuration` during restore, `RugbyTimerViewSupport` resolves idle countdown/input values from configuration-first fields instead of stale remaining-time fields, and the idle/halftime hint rows now anchor from measured font height near the bottom safe area instead of drifting with dynamic layout.
+
+- 2026-04-07 startup-idle hardening validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).

@@ -60,6 +60,8 @@ function test_viewSupport_toast_visibility_rules(logger as Test.Logger) as Lang.
 
 (:test)
 function test_renderer_mainCountdown_uses_half_duration_while_idle(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
     var model = new RugbyGameModel();
     model.initialize();
     model.gameState = STATE_IDLE;
@@ -71,7 +73,38 @@ function test_renderer_mainCountdown_uses_half_duration_while_idle(logger as Tes
 }
 
 (:test)
+function test_viewSupport_idleConfiguredSeconds_prefers_profile_config_and_safe_fallback(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.halfDuration = 40 * 60;
+    model.countdownTimer = 25 * 60;
+    model.countdownRemaining = 35 * 60;
+    if (RugbyTimerViewSupport.getConfiguredIdleSeconds(model) != 40 * 60) {
+        logger.error("idle configured seconds should prefer halfDuration");
+        return false;
+    }
+    model.countdownRemaining = 0;
+    model.halfDuration = 0;
+    if (RugbyTimerViewSupport.getConfiguredIdleSeconds(model) != 25 * 60) {
+        logger.error("idle configured seconds should fall back to countdownTimer");
+        return false;
+    }
+    model.countdownTimer = 0;
+    if (RugbyTimerViewSupport.getConfiguredIdleSeconds(model) != 35 * 60) {
+        logger.error("idle configured seconds should fall back to remaining time only when config is unavailable");
+        return false;
+    }
+    model.countdownRemaining = 0;
+    model.is7s = true;
+    return RugbyTimerViewSupport.getConfiguredIdleSeconds(model) == 420;
+}
+
+(:test)
 function test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
     var model = new RugbyGameModel();
     model.initialize();
     model.gameState = STATE_HALFTIME;
@@ -90,6 +123,8 @@ function test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration(l
 
 (:test)
 function test_viewSupport_special_and_suspension_clocks_share_snapshot_math(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
     var model = new RugbyGameModel();
     model.initialize();
     model.lastUpdate = 0;

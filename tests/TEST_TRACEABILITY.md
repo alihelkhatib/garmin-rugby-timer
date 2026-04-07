@@ -5,7 +5,7 @@ This document maps functional requirements (from specs) to unit tests in `tests/
 Format: Requirement ID — Short description — Test(s) (file::function) — Status
 
 - **FR-001** — Allow any whole-minute half-length 1..99 — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps`, `tests/Test_RugbySettings_UI.mc::test_ui_minutes_picker_sets_half_duration` — Partially Covered
-- **FR-002** — Duration input available during new-game setup — `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields`, `tests/Test_RugbyTimerViewSupport.mc::test_renderer_mainCountdown_uses_half_duration_while_idle` — Partially Covered
+- **FR-002** — Duration input available during new-game setup — `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields`, `tests/Test_RugbyGameModelServices.mc::test_model_initialize_recovers_from_invalid_custom_idle_profile`, `tests/Test_RugbyTimerViewSupport.mc::test_renderer_mainCountdown_uses_half_duration_while_idle`, `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_idleConfiguredSeconds_prefers_profile_config_and_safe_fallback` — Covered
 - **FR-003** — Duration input available in Settings when idle; disabled during match — Planned: UI/state tests — Not Covered
 - **FR-004** — Persist chosen half-length per game type — `tests/Test_RugbyMatchProfiles.mc::test_store_and_retrieve_custom_profile` — Covered
 - **FR-005** — Pre-populate duration picker with saved value — Planned: UI test — Not Covered
@@ -91,6 +91,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyMatchProfiles.mc::test_store_and_retrieve_custom_profile` — Verifies storing a custom profile persists expected fields.
 - `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults` — Verifies legacy migration returns a safe default profile id when legacy keys are absent.
 - `tests/Test_RugbyMatchProfiles.mc::test_model_initialize_restores_stored_profile_id` — Verifies a stored `matchProfileId` is respected on the next model initialization.
+- `tests/Test_RugbyMatchProfiles.mc::test_stored_custom_profile_invalid_zero_halfDuration_falls_back_safely` — Verifies poisoned custom-profile timing values are normalized to a safe built-in baseline before startup/render paths consume them.
 
 - `tests/Test_RugbyTimerCards_advanced.mc::test_yellow_multiple_ordering_and_numbering` — Verifies multiple yellow cards append and label numbering increments per-team.
 - `tests/Test_RugbyTimerCards_advanced.mc::test_red_numbering_and_timed_entries` — Verifies red card numbering and timed entry creation under 15s rules.
@@ -105,6 +106,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyGameModelServices.mc::test_preset_switching_updates_selected_profile_and_timer` — Verifies sequential preset changes apply the expected built-in timing values.
 - `tests/Test_RugbyGameModelServices.mc::test_settings_mutation_order_stays_custom_and_persists_values` — Verifies custom-setting mutations remain on the custom profile and persist the final expected values.
 - `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields` — Verifies idle half-length changes reset only the idle runtime countdown fields and leave the screen driven by configuration.
+- `tests/Test_RugbyGameModelServices.mc::test_model_initialize_recovers_from_invalid_custom_idle_profile` — Verifies startup recovers to a sane idle countdown when stored custom-profile timing values have been corrupted.
 - `tests/Test_RugbyTypedEntries.mc::test_cardEntry_roundtrip_and_invalid_input` — Verifies the typed card wrapper preserves fields and safely rejects non-dictionary input.
 - `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — Verifies event-log entries roundtrip through the wrapper and format the saved menu/export label correctly.
 - `tests/Test_RugbySettings_UI.mc::test_settings_support_profile_resolution_and_clamp` — Verifies the extracted settings helper resolves preset ids and clamps picker values without needing the WatchUi runtime.
@@ -117,6 +119,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — Verifies the typed render-layout/font/card-info and timer-update adapters are constructed as expected.
 - `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — Verifies the model-level runtime status channel returns one message once and then clears.
 - `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — Verifies malformed persisted snapshots are discarded and replaced with a safe idle reset plus a user-visible reset notice.
+- `tests/Test_RugbyRuntimeStatus.mc::test_zero_countdown_savedSnapshot_is_cleared_and_reported` — Verifies zero-duration saved snapshots are treated as invalid and cleared before startup can strand the app in a broken pseudo-idle state.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_preset_change_persists_and_restores` — Verifies preset changes persist through a fresh model initialization cycle.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_start_pause_resume_restore_flow` — Verifies the live clock flow can start, pause, persist, restore paused, and resume safely.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_card_timers_survive_persist_restore` — Verifies sanction timing remains intact after persistence/restore for both yellow and timed red cards.
@@ -130,6 +133,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — Verifies conversion/penalty overlay visibility decisions moved out of `RugbyTimerView`.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — Verifies when non-overlay status toasts are allowed to render.
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_idleConfiguredSeconds_prefers_profile_config_and_safe_fallback` — Verifies idle setup resolves from configured profile timing before stale runtime countdown values and still falls back to a safe default when every stored timer field is invalid.
 - `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — Verifies preset changes made through the shared app model survive the later `getInitialView()` path instead of being reset by a new `RugbyGameModel`.
 - `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_normalizes_invalid_mode` — Verifies invalid team-label modes normalize back to the default `Home / Away` preset.
 - `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_resolves_labels_for_preset` — Verifies the preset lookup returns the expected short home/away labels.

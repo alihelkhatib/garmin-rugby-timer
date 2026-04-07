@@ -110,3 +110,20 @@ function test_idle_half_duration_change_resets_idle_runtime_fields(logger as Tes
     if (model.gameTime != 0) { logger.error("idle game time not reset"); return false; }
     return model.countdownSeconds == 0;
 }
+
+(:test)
+function test_model_initialize_recovers_from_invalid_custom_idle_profile(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    Toybox.Application.Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, "custom");
+    Toybox.Application.Storage.setValue(STORAGE_KEY_CUSTOM_HALF_DURATION, 0);
+    Toybox.Application.Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, false);
+
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    if (model.gameState != STATE_IDLE) { logger.error("invalid custom profile should still boot idle"); return false; }
+    if (model.halfDuration != 2400) { logger.error("invalid custom half duration should recover to 15s"); return false; }
+    if (model.countdownTimer != 2400) { logger.error("idle countdown timer should recover to 15s"); return false; }
+    return model.countdownRemaining == 2400;
+}

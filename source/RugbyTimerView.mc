@@ -176,17 +176,18 @@ class RugbyTimerView extends WatchUi.View {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         var hintMode = RugbyTimerViewSupport.getHintMode(isLocked, model.gameState);
-        var bottomSafeHintY = height * 0.80;
+        var hintFontHeight = RugbyTimerRenderer.getFontHeightSafe(dc, hintFont, height * 0.04);
+        var stackedHintY = height - (hintFontHeight * 2) - hintLineGap - (height * 0.05);
+        if (stackedHintY < hintY) {
+            stackedHintY = hintY;
+        }
         if (hintMode == VIEW_HINT_MODE_LOCKED) {
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Locked), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
         if (hintMode == VIEW_HINT_MODE_IDLE) {
-            if (hintY > bottomSafeHintY) {
-                hintY = bottomSafeHintY;
-            }
-            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, stackedHintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, stackedHintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
         if (hintMode == VIEW_HINT_MODE_PLAYING) {
@@ -194,11 +195,8 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         if (hintMode == VIEW_HINT_MODE_HALFTIME) {
-            if (hintY > bottomSafeHintY) {
-                hintY = bottomSafeHintY;
-            }
-            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Halftime_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
-            dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Half2), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, stackedHintY, hintFont, loadString(Rez.Strings.Hint_Halftime_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(width / 2, stackedHintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Half2), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
     }

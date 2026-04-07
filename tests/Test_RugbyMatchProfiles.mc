@@ -68,3 +68,31 @@ function test_model_initialize_restores_stored_profile_id(logger as Test.Logger)
 
     return model.matchProfileId == "u19" && model.halfDuration == 2100;
 }
+
+// Purpose: verify an invalid stored custom profile falls back to a safe non-zero preset duration.
+(:test)
+function test_stored_custom_profile_invalid_zero_halfDuration_falls_back_safely(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, "custom");
+    Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL, "Custom");
+    Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, false);
+    Storage.setValue(STORAGE_KEY_CUSTOM_HALF_DURATION, 0);
+    Storage.setValue(STORAGE_KEY_CUSTOM_CONVERSION_TIME, -1);
+    Storage.setValue(STORAGE_KEY_CUSTOM_KICKOFF_TIME, -1);
+    Storage.setValue(STORAGE_KEY_CUSTOM_PENALTY_KICK_TIME, -1);
+
+    var stored = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
+    if (stored == null) {
+        logger.error("stored custom profile missing");
+        return false;
+    }
+    if (stored.halfDuration != 2400) {
+        logger.error("invalid custom half duration should fall back to 15s default");
+        return false;
+    }
+    if (stored.conversionTime != 90 || stored.kickoffTime != 60 || stored.penaltyKickTime != 60) {
+        logger.error("invalid custom timers should fall back to safe defaults");
+        return false;
+    }
+    return stored.label == "Custom";
+}
