@@ -126,12 +126,15 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getConversionSelectionSeconds(item.getId());
+            if (val == 30) {
+                try {
+                    val = RugbySettingsSupport.getConversionSelectionSeconds(item.getLabel().toString().find("120") != null ? "t120" : item.getLabel().toString().find("90") != null ? "t90" : item.getLabel().toString().find("60") != null ? "t60" : "t30");
+                } catch (ex) {
+                }
+            }
             app.model.setConversionTime(val);
         }
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        settingsMenu.refresh();
-        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:conv_time));
-        WatchUi.requestUpdate();
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(1);
     }
 
     function onBack() {
@@ -166,12 +169,15 @@ class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
         var app = Application.getApp() as RugbyTimerApp;
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getId());
+            if (val == 30) {
+                try {
+                    val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getLabel().toString().find("90") != null ? "p90" : item.getLabel().toString().find("60") != null ? "p60" : "p30");
+                } catch (ex) {
+                }
+            }
             app.model.setPenaltyKickTime(val);
         }
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        settingsMenu.refresh();
-        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:pen_time));
-        WatchUi.requestUpdate();
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(2);
     }
 
     function onBack() {

@@ -92,6 +92,17 @@ class RugbySettingsSupport {
         return null;
     }
 
+    static function resolveMatchFormatIdFromText(text) {
+        if (text == null) {
+            return null;
+        }
+        if (text == "7s" || text == "Rugby 7s") { return "7s"; }
+        if (text == "10s" || text == "Rugby 10s") { return "10s"; }
+        if (text == "15s" || text == "Rugby 15s") { return "15s"; }
+        if (text == "U19s" || text == "U19") { return "u19"; }
+        return null;
+    }
+
     static function resolveTeamLabelMode(itemId) {
         var idText = itemId != null ? itemId.toString() : "";
         if (itemId == :team_label_team_a_b || idText == "team_label_team_a_b" || idText == ":team_label_team_a_b") {
@@ -115,6 +126,20 @@ class RugbySettingsSupport {
         if (itemId == :team_label_a_b || idText == "team_label_a_b" || idText == ":team_label_a_b") {
             return TEAM_LABEL_MODE_A_B;
         }
+        return TEAM_LABEL_MODE_HOME_AWAY;
+    }
+
+    static function resolveTeamLabelModeFromText(text) {
+        if (text == null) {
+            return TEAM_LABEL_MODE_HOME_AWAY;
+        }
+        if (text == "Team A / Team B") { return TEAM_LABEL_MODE_TEAM_A_B; }
+        if (text == "Light / Dark") { return TEAM_LABEL_MODE_LIGHT_DARK; }
+        if (text == "Red / Blue") { return TEAM_LABEL_MODE_RED_BLUE; }
+        if (text == "1st XV / 2nd XV") { return TEAM_LABEL_MODE_FIRST_SECOND_XV; }
+        if (text == "Varsity / JV") { return TEAM_LABEL_MODE_VARSITY_JV; }
+        if (text == "Sharks / Blues") { return TEAM_LABEL_MODE_SHARKS_BLUES; }
+        if (text == "A / B") { return TEAM_LABEL_MODE_A_B; }
         return TEAM_LABEL_MODE_HOME_AWAY;
     }
 

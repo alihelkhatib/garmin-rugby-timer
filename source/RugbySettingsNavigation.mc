@@ -45,6 +45,21 @@ class RugbySettingsHostDelegate extends WatchUi.BehaviorDelegate {
     }
 }
 
+class RugbySettingsNavigationSupport {
+    static function replaceRootMenuAtRow(rowIndex) {
+        var refreshedMenu = new RugbySettingsMenu();
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        WatchUi.pushView(refreshedMenu, new RugbySettingsMenuDelegate(refreshedMenu, true), WatchUi.SLIDE_IMMEDIATE);
+        refreshedMenu.setFocus(rowIndex);
+        WatchUi.requestUpdate();
+    }
+
+    static function returnToRefreshedRootMenu(rowIndex) {
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
+        RugbySettingsNavigationSupport.replaceRootMenuAtRow(rowIndex);
+    }
+}
+
 /**
  * Delegate for settings navigation and side effects.
  *
@@ -84,11 +99,7 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function rebuildSettingsRootAtRow(rowIndex) {
-        var refreshedMenu = new RugbySettingsMenu();
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        WatchUi.pushView(refreshedMenu, new RugbySettingsMenuDelegate(refreshedMenu, embeddedInApp), WatchUi.SLIDE_IMMEDIATE);
-        refreshedMenu.setFocus(rowIndex);
-        WatchUi.requestUpdate();
+        RugbySettingsNavigationSupport.replaceRootMenuAtRow(rowIndex);
     }
 
     function onSelect(item) {
@@ -115,14 +126,10 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.pushView(new PenaltyAdjustMenu(), new PenaltyAdjustDelegate(menu), WatchUi.SLIDE_UP);
         } else if (item.getId() == :use_conv) {
             app.model.setConversionTimerEnabled(!(app.model.useConversionTimer == true));
-            menu.refresh();
-            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
-            WatchUi.requestUpdate();
+            rebuildSettingsRootAtRow(menu.getRowIndexForItemId(item.getId()));
         } else if (item.getId() == :use_pen) {
             app.model.setPenaltyTimerEnabled(!(app.model.usePenaltyTimer == true));
-            menu.refresh();
-            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
-            WatchUi.requestUpdate();
+            rebuildSettingsRootAtRow(menu.getRowIndexForItemId(item.getId()));
         } else if (item.getId() == :team_labels) {
             WatchUi.pushView(
                 new TeamLabelModeMenu(app.model.teamLabelMode),
@@ -133,22 +140,18 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             var lockStart = Storage.getValue(STORAGE_KEY_LOCK_ON_START);
             if (lockStart == null) { lockStart = false; }
             lockStart = !lockStart;
-            Storage.setValue(STORAGE_KEY_LOCK_ON_START, lockStart);
+            RugbyStorageSupport.setValue(STORAGE_KEY_LOCK_ON_START, lockStart);
             app.model.lockOnStart = lockStart;
-            menu.refresh();
-            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
-            WatchUi.requestUpdate();
+            rebuildSettingsRootAtRow(menu.getRowIndexForItemId(item.getId()));
         } else if (item.getId() == :dim_mode) {
             var dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
             if (dimMode == null) { dimMode = false; }
             dimMode = !dimMode;
-            Storage.setValue(STORAGE_KEY_DIM_MODE, dimMode);
+            RugbyStorageSupport.setValue(STORAGE_KEY_DIM_MODE, dimMode);
             if (app.rugbyView != null) {
                 app.rugbyView.dimMode = dimMode;
             }
-            menu.refresh();
-            menu.setFocus(menu.getRowIndexForItemId(item.getId()));
-            WatchUi.requestUpdate();
+            rebuildSettingsRootAtRow(menu.getRowIndexForItemId(item.getId()));
         } else if (item.getId() == :reset) {
             app.model.setMatchProfile(app.model.matchProfileId);
             app.model.resetGame();
@@ -197,13 +200,24 @@ class TeamLabelModeDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
         var selectedMode = item.getId();
+        var resolvedMode = null;
         if (selectedMode != null) {
-            app.model.setTeamLabelMode(selectedMode.toString());
+            resolvedMode = RugbyTeamIdentitySupport.normalizeLabelMode(selectedMode.toString());
+            if (resolvedMode == TEAM_LABEL_MODE_HOME_AWAY && selectedMode.toString() != TEAM_LABEL_MODE_HOME_AWAY) {
+                resolvedMode = RugbySettingsSupport.resolveTeamLabelMode(selectedMode);
+            }
+            if (resolvedMode == TEAM_LABEL_MODE_HOME_AWAY && selectedMode.toString() != TEAM_LABEL_MODE_HOME_AWAY && selectedMode.toString() != "Home / Away") {
+                resolvedMode = RugbySettingsSupport.resolveTeamLabelModeFromText(selectedMode.toString());
+            }
         }
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        settingsMenu.refresh();
-        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:team_labels));
-        WatchUi.requestUpdate();
+        if (resolvedMode == null || resolvedMode == TEAM_LABEL_MODE_HOME_AWAY) {
+            try {
+                resolvedMode = RugbySettingsSupport.resolveTeamLabelModeFromText(item.getLabel().toString());
+            } catch (ex) {
+            }
+        }
+        app.model.setTeamLabelMode(resolvedMode);
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(5);
     }
 }
 
@@ -242,20 +256,18 @@ class MatchFormatDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
         var selectedFormat = item.getId() != null ? item.getId().toString() : null;
-        var profileId = null;
-        if (selectedFormat == "7s" || selectedFormat == "10s" || selectedFormat == "15s") {
-            profileId = selectedFormat;
-        } else if (selectedFormat == "U19s") {
-            profileId = "u19";
+        var profileId = RugbySettingsSupport.resolveMatchFormatIdFromText(selectedFormat);
+        if (profileId == null) {
+            try {
+                profileId = RugbySettingsSupport.resolveMatchFormatIdFromText(item.getLabel().toString());
+            } catch (ex) {
+            }
         }
         if (profileId == null) {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             return;
         }
         app.model.setMatchProfile(profileId);
-        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        settingsMenu.refresh();
-        settingsMenu.setFocus(settingsMenu.getRowIndexForItemId(:format_family));
-        WatchUi.requestUpdate();
+        RugbySettingsNavigationSupport.returnToRefreshedRootMenu(0);
     }
 }
