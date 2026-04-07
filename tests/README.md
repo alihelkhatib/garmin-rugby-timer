@@ -31,14 +31,15 @@ Integration coverage:
 
 Manual regression checklist:
 - Idle screen: adjust half length up/down and confirm the countdown updates directly from the main screen without needing a separate settings row.
-- Format family flow: open `Settings -> Format Family`, choose `7s-style` and `15s-style`, and confirm the active ruleset changes as expected.
+- Match format flow: open `Settings -> Match Format`, choose `7s`, `10s`, `15s`, and `U19s`, and confirm the active ruleset plus visible settings values update immediately.
+- Timer settings flow: change `Conversion Timer`, `Halftime Break`, and `Penalty Kick`, then confirm the settings root shows the new values without bouncing to a stale row.
 - Start flow: start a match from idle, confirm the countdown, top elapsed clock, and lock-on-start behavior if enabled.
 - Pause/resume flow: pause during live play, wait for the paused reminder cadence, then resume and confirm countdown/card timers continue correctly.
 - Conversion flow: record a try, confirm the conversion overlay opens, then test both made and missed paths.
 - Penalty flow: trigger a penalty timer path, confirm the overlay/countdown behavior and dismiss path.
 - Card flow: issue multiple yellow/red cards for both teams and confirm label order, row limit, and timed/permanent red behavior.
 - Team label flow: while idle, switch the `Team Labels` preset and confirm the score labels, new event-log entries, and saved summary/export wording all use the selected pair.
-- Halftime/fulltime flow: let the main countdown expire in each half and confirm halftime, second-half restart, and game end behavior.
+- Halftime/fulltime flow: let the main countdown expire in each half and confirm halftime break countdown, live halftime `+1/-1` adjustment, half-2-ready state, second-half restart, and game end behavior.
 - Exit/save flow: open the back/exit menu, test Resume, Save Game, Reset Game, Event Log, and finished-summary behavior.
 - Persistence flow: leave and relaunch during a live match and confirm the saved session reopens as a safe paused snapshot.
-- GPS/runtime status flow: start a match on a device or simulator environment that may not support rugby recording and confirm the app either starts recording or surfaces the expected one-shot status notice.
+- GPS/runtime notice flow: start a match on a device or simulator environment that may not support rugby recording and confirm the app either starts recording or surfaces the expected one-shot operational notice.

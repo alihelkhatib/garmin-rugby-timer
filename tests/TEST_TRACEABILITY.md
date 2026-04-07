@@ -4,15 +4,15 @@ This document maps functional requirements (from specs) to unit tests in `tests/
 
 Format: Requirement ID — Short description — Test(s) (file::function) — Status
 
-- **FR-001** — Allow any whole-minute half-length 1..99 — Planned: validation tests for UI/picker — Not Covered
-- **FR-002** — Duration input available during new-game setup — Planned: UI integration tests — Not Covered
+- **FR-001** — Allow any whole-minute half-length 1..99 — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps`, `tests/Test_RugbySettings_UI.mc::test_ui_minutes_picker_sets_half_duration` — Partially Covered
+- **FR-002** — Duration input available during new-game setup — `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields`, `tests/Test_RugbyTimerViewSupport.mc::test_renderer_mainCountdown_uses_half_duration_while_idle` — Partially Covered
 - **FR-003** — Duration input available in Settings when idle; disabled during match — Planned: UI/state tests — Not Covered
 - **FR-004** — Persist chosen half-length per game type — `tests/Test_RugbyMatchProfiles.mc::test_store_and_retrieve_custom_profile` — Covered
 - **FR-005** — Pre-populate duration picker with saved value — Planned: UI test — Not Covered
-- **FR-006** — Enforce minimum duration of 1 minute (clamp) — Planned: add unit test for picker/accept path — Not Covered
+- **FR-006** — Enforce minimum duration of 1 minute (clamp) — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps`, `tests/Test_RugbySettings_UI.mc::test_settings_support_minutes_and_timer_mapping` — Covered
 - **FR-007** — Defaults when no saved value (7 min for 7s, 40 min for 15s) — `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults` — Covered
 - **FR-008** — Chosen half-length fixed once match starts — `tests/Test_RugbySettings_UI.mc::test_ui_select_profile_while_playing_is_blocked` — Partially Covered
-- **FR-009** — Countdown updates immediately after user confirms duration (idle) — Planned: integration test — Not Covered
+- **FR-009** — Countdown updates immediately after user confirms duration (idle) — `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields`, `tests/Test_RugbyTimerViewSupport.mc::test_renderer_mainCountdown_uses_half_duration_while_idle` — Covered
 - **FR-010** — Persist last-selected game type (`lastGameType`/`matchProfileId`) — `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults`, `tests/Test_RugbyMatchProfiles.mc::test_model_initialize_restores_stored_profile_id` — Covered
 
 Card timers (requirements discovered from history and conversation):
@@ -63,6 +63,9 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — verifies extracted view overlay visibility rules
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — verifies extracted hint-mode routing
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_toast_visibility_rules` — verifies extracted toast visibility rules
+- `tests/Test_RugbyTimerViewSupport.mc::test_renderer_mainCountdown_uses_half_duration_while_idle` — verifies idle countdown derives only from configured half duration
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration` — verifies halftime render countdown switches from break timer to half-duration ready state
+- `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_special_and_suspension_clocks_share_snapshot_math` — verifies special and suspension clocks use the shared render snapshot rules
 - `tests/Test_RugbyTimerApp.mc::test_app_reuses_initialized_model_across_settings_and_main_view` — verifies settings-driven profile changes are not lost when the main view is created
 - `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_normalizes_invalid_mode` — verifies unknown team-label modes fall back safely
 - `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_resolves_labels_for_preset` — verifies preset pair resolution for score/event-log labels
@@ -70,6 +73,9 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTeamIdentitySupport.mc::test_teamIdentitySupport_compact_scoreBand_labels` — verifies compact score-band aliases for tight round-watch layouts
 - `tests/Test_RugbyMatchProfiles_Settings.mc::test_setTeamLabelMode_promotes_to_custom_and_persists` — verifies team-label edits promote the active preset to `Custom` and persist across reloads
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderer_topBand_safeBounds_and_fit` — verifies round-watch safe bounds and label-fit decisions for the top score band
+- `tests/Test_RugbyRuntimeStatus.mc::test_runtimeNotice_wraps_legacy_strings_and_preserves_message` — verifies legacy string notices normalize through the typed runtime-notice wrapper
+- `tests/Test_RugbyTimerPersistence.mc::test_buildSnapshot_normalizes_history_payloads` — verifies snapshot building normalizes score-history and event-log entries through typed wrappers before saving
+- `tests/Test_RugbyTimerPersistence.mc::test_finalizeGameData_normalizes_summary_card_entries` — verifies summary saves drop malformed card entries instead of persisting them
 
 Detailed test purposes (file::function -> purpose):
 
@@ -98,9 +104,11 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyGameModelServices.mc::test_saveGame_wrapper_writes_summary` — Verifies the snapshot facade still writes `lastGameSummary` via the public model method.
 - `tests/Test_RugbyGameModelServices.mc::test_preset_switching_updates_selected_profile_and_timer` — Verifies sequential preset changes apply the expected built-in timing values.
 - `tests/Test_RugbyGameModelServices.mc::test_settings_mutation_order_stays_custom_and_persists_values` — Verifies custom-setting mutations remain on the custom profile and persist the final expected values.
+- `tests/Test_RugbyGameModelServices.mc::test_idle_half_duration_change_resets_idle_runtime_fields` — Verifies idle half-length changes reset only the idle runtime countdown fields and leave the screen driven by configuration.
 - `tests/Test_RugbyTypedEntries.mc::test_cardEntry_roundtrip_and_invalid_input` — Verifies the typed card wrapper preserves fields and safely rejects non-dictionary input.
 - `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — Verifies event-log entries roundtrip through the wrapper and format the saved menu/export label correctly.
 - `tests/Test_RugbySettings_UI.mc::test_settings_support_profile_resolution_and_clamp` — Verifies the extracted settings helper resolves preset ids and clamps picker values without needing the WatchUi runtime.
+- `tests/Test_RugbySettings_UI.mc::test_settings_support_item_resolution_falls_back_to_labels` — Verifies settings choices still resolve correctly when a device returns labels or null ids instead of the expected item identifier.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps` — Verifies the extracted delegate helper clamps idle half-minute adjustments to the supported 1..99 range.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_overlayKeyMapping` — Verifies overlay hardware keys map to the correct logical conversion/penalty actions.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_presetHoldKeys` — Verifies only MENU and UP arm the hold-to-preset shortcut.
@@ -116,6 +124,8 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_made_returns_to_play_and_scores` — Verifies the conversion success path restores playing state and adds the expected score.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_conversion_miss_returns_to_play_without_extra_score` — Verifies the conversion miss path restores playing state without adding points.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_penalty_timer_starts_and_expiry_resumes_play` — Verifies penalty special-timer state starts correctly and expiry returns to open play.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_resumePlay_clears_special_timer_runtime` — Verifies resuming normal play clears special-timer runtime fields so stale conversion/penalty state does not leak across transitions.
+- `tests/Test_RugbyIntegrationFlows.mc::test_integration_startSecondHalf_clears_break_timer_runtime` — Verifies halftime-to-second-half transition clears break-only timer state and restores the normal half countdown.
 - `tests/Test_RugbyIntegrationFlows.mc::test_integration_second_half_then_end_game` — Verifies halftime restart and manual end-game completion in the second half.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_overlayVisibility_rules` — Verifies conversion/penalty overlay visibility decisions moved out of `RugbyTimerView`.
 - `tests/Test_RugbyTimerViewSupport.mc::test_viewSupport_hintMode_rules` — Verifies the extracted main-screen hint selection logic.
