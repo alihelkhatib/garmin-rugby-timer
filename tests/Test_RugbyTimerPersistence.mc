@@ -139,3 +139,60 @@ function test_finalizeGameData_writes_summary_and_event_log(logger as Test.Logge
     var eventLog = summary.eventLog as Lang.String;
     return eventLog != null && eventLog.find("Light Try") != null;
 }
+
+(:test)
+function test_buildSnapshot_normalizes_history_payloads(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.lastEvents = [
+        { :type => :try, :home => true } as Lang.Dictionary,
+        { "bogus" => true } as Lang.Dictionary
+    ];
+    model.eventLogEntries = [
+        { :time => "00:10", :desc => "Home Try" } as Lang.Dictionary,
+        { "time" => 10 } as Lang.Dictionary
+    ];
+
+    var snapshot = RugbyTimerPersistence.buildSnapshot(model);
+    if (snapshot == null) {
+        logger.error("snapshot missing");
+        return false;
+    }
+    if (snapshot.lastEvents.size() != 1) {
+        logger.error("score history should be normalized and invalid entries dropped");
+        return false;
+    }
+    if (snapshot.eventLogEntries.size() != 1) {
+        logger.error("event log entries should be normalized and invalid entries dropped");
+        return false;
+    }
+    return RugbyStorageSupport.findUnsupportedValuePath(snapshot.toDict(), "gameStateData") == null;
+}
+
+(:test)
+function test_finalizeGameData_normalizes_summary_card_entries(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.yellowHomeTimes = [
+        { "startTime" => 100, "duration" => 600, "remaining" => 500, "label" => "Y1", "cardId" => 1, "vibeTriggered" => false } as Lang.Dictionary,
+        { "duration" => "bad" } as Lang.Dictionary
+    ];
+
+    if (!RugbyTimerPersistence.finalizeGameData(model)) {
+        logger.error("finalizeGameData should write summary");
+        return false;
+    }
+
+    var summary = MatchSummaryEntry.fromDict(Storage.getValue(STORAGE_KEY_LAST_GAME_SUMMARY));
+    if (summary == null) {
+        logger.error("summary missing");
+        return false;
+    }
+    return summary.yellowHomeTimes.size() == 1;
+}

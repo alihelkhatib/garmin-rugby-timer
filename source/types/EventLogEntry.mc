@@ -11,6 +11,9 @@ class EventLogEntry {
     var desc;
 
     static function create(time, desc) {
+        if (!(desc instanceof Lang.String) || desc.length() == 0) {
+            return null;
+        }
         var entry = new EventLogEntry();
         entry.time = time;
         entry.desc = desc;
@@ -29,6 +32,9 @@ class EventLogEntry {
         entry.desc = raw["desc"];
         if (entry.desc == null) {
             entry.desc = raw[:desc];
+        }
+        if (!(entry.time instanceof Lang.String) || !(entry.desc instanceof Lang.String) || entry.desc.length() == 0) {
+            return null;
         }
         return entry;
     }

@@ -50,7 +50,11 @@ class RugbyTimerEventLog {
             model.eventLogEntries = [];
         }
         var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
-        model.eventLogEntries.add(EventLogEntry.create(timestamp, description).toDict());
+        var entry = EventLogEntry.create(timestamp, description);
+        if (entry == null) {
+            return;
+        }
+        model.eventLogEntries.add(entry.toDict());
         if (model.eventLogEntries.size() > EVENT_LOG_LIMIT) {
             model.eventLogEntries.remove(0);
         }

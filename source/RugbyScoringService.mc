@@ -6,7 +6,10 @@
  */
 class RugbyScoringService {
     static function addEvent(model, eventType, isHome) {
-        model.lastEvents.add(ScoreEvent.create(eventType, isHome).toDict());
+        var entry = ScoreEvent.create(eventType, isHome);
+        if (entry != null) {
+            model.lastEvents.add(entry.toDict());
+        }
     }
 
     static function trimEvents(model) {

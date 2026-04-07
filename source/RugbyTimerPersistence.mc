@@ -85,8 +85,8 @@ class RugbyTimerPersistence {
         snapshot.redAwayTotal = model.redAwayTotal;
         snapshot.homePenalties = model.homePenalties;
         snapshot.awayPenalties = model.awayPenalties;
-        snapshot.lastEvents = model.lastEvents;
-        snapshot.eventLogEntries = model.eventLogEntries;
+        snapshot.lastEvents = RugbyTimerPersistence.serializeScoreHistoryEntries(model.lastEvents);
+        snapshot.eventLogEntries = RugbyTimerPersistence.serializeEventLogEntries(model.eventLogEntries);
         return snapshot;
     }
 
@@ -103,8 +103,8 @@ class RugbyTimerPersistence {
         summary.halfNumber = model.halfNumber;
         summary.elapsedTime = model.elapsedTime;
         summary.countdownRemaining = model.countdownRemaining;
-        summary.yellowHomeTimes = model.yellowHomeTimes;
-        summary.yellowAwayTimes = model.yellowAwayTimes;
+        summary.yellowHomeTimes = RugbyTimerPersistence.serializeActiveCardEntries(model.yellowHomeTimes);
+        summary.yellowAwayTimes = RugbyTimerPersistence.serializeActiveCardEntries(model.yellowAwayTimes);
         summary.redHomeActive = (model.redHomePermanent || model.redHomeTimes.size() > 0);
         summary.redAwayActive = (model.redAwayPermanent || model.redAwayTimes.size() > 0);
         summary.redHomePermanent = model.redHomePermanent;
@@ -283,6 +283,54 @@ class RugbyTimerPersistence {
             System.getTimer(),
             model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_HALFTIME
         );
+    }
+
+    static function serializeScoreHistoryEntries(list) {
+        var serialized = [];
+        if (!(list instanceof Lang.Array)) {
+            return serialized;
+        }
+        var entries = list as Lang.Array;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = ScoreEvent.fromDict(entries[i]);
+            if (entry == null) {
+                continue;
+            }
+            serialized.add(entry.toDict());
+        }
+        return serialized;
+    }
+
+    static function serializeEventLogEntries(list) {
+        var serialized = [];
+        if (!(list instanceof Lang.Array)) {
+            return serialized;
+        }
+        var entries = list as Lang.Array;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = EventLogEntry.fromDict(entries[i]);
+            if (entry == null) {
+                continue;
+            }
+            serialized.add(entry.toDict());
+        }
+        return serialized;
+    }
+
+    static function serializeActiveCardEntries(list) {
+        var serialized = [];
+        if (!(list instanceof Lang.Array)) {
+            return serialized;
+        }
+        var entries = list as Lang.Array;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = CardEntry.fromDict(entries[i]);
+            if (entry == null) {
+                continue;
+            }
+            serialized.add(entry.toDict());
+        }
+        return serialized;
     }
 
     static function serializeYellowTimers(list, clockValue) {

@@ -25,8 +25,12 @@ class ScoreEvent {
     }
 
     static function create(eventType, isHome) {
+        var normalizedType = ScoreEvent.normalizeTypeKey(eventType);
+        if (normalizedType == null) {
+            return null;
+        }
         var entry = new ScoreEvent();
-        entry.eventType = ScoreEvent.normalizeTypeKey(eventType);
+        entry.eventType = normalizedType;
         entry.isHome = isHome == true;
         return entry;
     }
@@ -44,6 +48,9 @@ class ScoreEvent {
         entry.isHome = raw["home"] == true;
         if (entry.isHome != true) {
             entry.isHome = raw[:home] == true;
+        }
+        if (entry.eventType == null) {
+            return null;
         }
         return entry;
     }
