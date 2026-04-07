@@ -196,3 +196,27 @@ function test_finalizeGameData_normalizes_summary_card_entries(logger as Test.Lo
     }
     return summary.yellowHomeTimes.size() == 1;
 }
+
+(:test)
+function test_persistState_idle_match_clears_saved_snapshot(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, {
+        "homeScore" => 1,
+        "awayScore" => 0,
+        "homeTries" => 0,
+        "awayTries" => 0,
+        "halfNumber" => 1,
+        "gameTime" => 1,
+        "elapsedTime" => 1,
+        "countdownTimer" => 2400,
+        "gameState" => STATE_PLAYING
+    });
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_IDLE;
+    model.persistState();
+
+    return Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) == null;
+}

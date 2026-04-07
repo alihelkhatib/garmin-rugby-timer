@@ -9,6 +9,11 @@ using Toybox.System;
  */
 class RugbySnapshotService {
     static function persistState(model) {
+        RugbyMatchIntegritySupport.reconcileModelState(model);
+        if (model.gameState == STATE_IDLE || model.gameState == STATE_ENDED) {
+            RugbyStorageSupport.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+            return;
+        }
         try {
             if (RugbyTimerPersistence.saveState(model)) {
                 model.lastPersistTime = System.getTimer();

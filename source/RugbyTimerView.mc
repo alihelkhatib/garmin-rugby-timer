@@ -113,6 +113,7 @@ class RugbyTimerView extends WatchUi.View {
      * @param dc The device context
      */
     function onUpdate(dc) {
+        RugbyMatchIntegritySupport.reconcileModelState(model);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
 
@@ -149,7 +150,8 @@ class RugbyTimerView extends WatchUi.View {
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);
         // Toast message for non-overlay states (e.g. idle timer adjustment feedback)
-        if (RugbyTimerViewSupport.shouldShowToast(isSpecialOverlayActive(), specialOverlayMessage, specialOverlayMessageExpiry, System.getTimer())) {
+        var overlayActive = isSpecialOverlayActive() || RugbyTimerViewSupport.isHalftimeBreakActive(model);
+        if (RugbyTimerViewSupport.shouldShowToast(overlayActive, specialOverlayMessage, specialOverlayMessageExpiry, System.getTimer())) {
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
             dc.drawText(width / 2, height * 0.62, Graphics.FONT_MEDIUM, specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }
@@ -214,6 +216,12 @@ class RugbyTimerView extends WatchUi.View {
         if (value instanceof Lang.String) {
             return value;
         }
+        if (resourceId == Rez.Strings.Hint_Idle_Adjust) { return "UP/MENU: +1   DOWN: -1"; }
+        if (resourceId == Rez.Strings.Hint_Select_Start) { return "SELECT: Start"; }
+        if (resourceId == Rez.Strings.Hint_Select_Pause) { return "SELECT: Pause"; }
+        if (resourceId == Rez.Strings.Hint_Halftime_Adjust) { return "UP/MENU: +1   DOWN: -1"; }
+        if (resourceId == Rez.Strings.Hint_Select_Half2) { return "SELECT: Half 2"; }
+        if (resourceId == Rez.Strings.Hint_Locked) { return "LOCKED"; }
         return "";
     }
 

@@ -9,6 +9,18 @@ using Toybox.System;
  * consistent transition surface.
  */
 class RugbyClockService {
+    static function resetHalfCountdownFromConfig(model) {
+        var configuredHalfDuration = model.halfDuration;
+        if (!RugbyTimeMath.isNumeric(configuredHalfDuration) || configuredHalfDuration <= 0) {
+            configuredHalfDuration = RugbyMatchProfiles.getDefaultHalfDuration(model != null && model.is7s == true);
+        } else {
+            configuredHalfDuration = RugbyTimeMath.normalizeSeconds(configuredHalfDuration);
+        }
+        model.halfDuration = configuredHalfDuration;
+        model.countdownTimer = configuredHalfDuration;
+        model.countdownRemaining = configuredHalfDuration;
+    }
+
     static function clearSpecialTimerState(model) {
         model.countdownSeconds = 0;
         model.conversionStartTime = null;
@@ -27,7 +39,7 @@ class RugbyClockService {
             model.elapsedTime = 0;
             model.gameTime = 0;
             model.suspensionTime = 0;
-            model.countdownRemaining = model.countdownTimer;
+            RugbyClockService.resetHalfCountdownFromConfig(model);
             RugbyClockService.clearSpecialTimerState(model);
             model.pausedState = null;
             model.thirtySecondAlerted = false;
@@ -125,7 +137,7 @@ class RugbyClockService {
         if (model.gameState == STATE_HALFTIME) {
             model.halfNumber = 2;
             model.gameTime = 0;
-            model.countdownRemaining = model.countdownTimer;
+            RugbyClockService.resetHalfCountdownFromConfig(model);
             model.gameState = STATE_PLAYING;
             model.lastPauseReminderTime = null;
             RugbyClockService.clearSpecialTimerState(model);
@@ -159,7 +171,7 @@ class RugbyClockService {
         }
         RugbyClockService.clearSpecialTimerState(model);
         model.gameTime = 0;
-        model.countdownRemaining = model.countdownTimer;
+        RugbyClockService.resetHalfCountdownFromConfig(model);
         model.thirtySecondAlerted = false;
         model.pausedState = null;
         model.lastUpdate = System.getTimer();

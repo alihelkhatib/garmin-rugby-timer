@@ -13,6 +13,13 @@ const VIEW_HINT_MODE_HALFTIME = "halftime";
  * out of `RugbyTimerView` so those rules can be unit-tested without WatchUi.
  */
 class RugbyTimerViewSupport {
+    static function isHalftimeBreakActive(model) {
+        return model != null
+            && model.gameState == STATE_HALFTIME
+            && RugbyTimeMath.isNumeric(model.countdownSeconds)
+            && model.countdownSeconds > 0;
+    }
+
     static function getConfiguredIdleSeconds(model) {
         if (RugbyTimeMath.isNumeric(model.halfDuration) && model.halfDuration > 0) {
             return RugbyTimeMath.normalizeSeconds(model.halfDuration);
@@ -40,14 +47,6 @@ class RugbyTimerViewSupport {
             return RugbyTimerViewSupport.getConfiguredIdleSeconds(model);
         }
         if (model.gameState == STATE_HALFTIME) {
-            if (model.countdownSeconds > 0) {
-                return RugbyTimeMath.snapshotReverseClock(
-                    model.countdownSeconds,
-                    model.lastUpdate,
-                    renderNow,
-                    true
-                );
-            }
             return RugbyTimeMath.normalizeSeconds(model.halfDuration);
         }
         return RugbyTimeMath.getCountdownRemaining(
@@ -66,7 +65,7 @@ class RugbyTimerViewSupport {
             model.countdownSeconds,
             model.lastUpdate,
             renderNow,
-            model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY
+            model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || RugbyTimerViewSupport.isHalftimeBreakActive(model)
         );
     }
 

@@ -26,6 +26,26 @@ function test_start_pause_resume_game_wrappers(logger as Test.Logger) as Lang.Bo
 }
 
 (:test)
+function test_startGame_uses_configured_halfDuration_even_if_countdownTimer_stale(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_IDLE;
+    model.halfDuration = 40 * 60;
+    model.countdownTimer = 0;
+    model.countdownRemaining = 0;
+    model.countdownSeconds = 60;
+
+    model.startGame();
+
+    if (model.gameState != STATE_PLAYING) { logger.error("startGame did not enter STATE_PLAYING"); return false; }
+    if (model.countdownTimer != 40 * 60) { logger.error("startGame should restore countdownTimer from halfDuration"); return false; }
+    if (model.countdownRemaining != 40 * 60) { logger.error("startGame should restore countdownRemaining from halfDuration"); return false; }
+    return model.countdownSeconds == 0;
+}
+
+(:test)
 function test_recordTry_starts_conversion_and_undo_reverts(logger as Test.Logger) as Lang.Boolean {
     clearCustomStorage();
     clearSavedGameStorage();

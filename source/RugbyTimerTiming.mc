@@ -26,6 +26,7 @@ class RugbyTimerTiming {
      */
     static function updateGame(model) {
         try {
+            RugbyMatchIntegritySupport.reconcileModelState(model);
             var now = System.getTimer();
             if (model.lastUpdate == null) {
                 model.lastUpdate = now;
@@ -122,6 +123,7 @@ class RugbyTimerTiming {
 
             Profiler.stop("updateGame");
             model.lastUpdate = now;
+            RugbyMatchIntegritySupport.reconcileModelState(model);
             if (model.lastPersistTime == 0 || now - model.lastPersistTime > model.STATE_SAVE_INTERVAL_MS) {
                 model.persistState();
             }

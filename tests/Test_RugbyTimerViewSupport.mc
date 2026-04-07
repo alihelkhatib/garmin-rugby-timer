@@ -9,7 +9,10 @@ WatchUi device context.
 */
 (:test)
 function test_viewSupport_overlayVisibility_rules(logger as Test.Logger) as Lang.Boolean {
-    if (!RugbyTimerViewSupport.getOverlayVisibility(false, STATE_CONVERSION)) {
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_CONVERSION;
+    if (!RugbyTimerViewSupport.getOverlayVisibility(false, model.gameState)) {
         logger.error("conversion should force overlay visible");
         return false;
     }
@@ -102,7 +105,7 @@ function test_viewSupport_idleConfiguredSeconds_prefers_profile_config_and_safe_
 }
 
 (:test)
-function test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration(logger as Test.Logger) as Lang.Boolean {
+function test_viewSupport_mainCountdown_keeps_half_duration_during_halftime_break(logger as Test.Logger) as Lang.Boolean {
     clearCustomStorage();
     clearSavedGameStorage();
     var model = new RugbyGameModel();
@@ -112,13 +115,17 @@ function test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration(l
     model.countdownSeconds = 90;
     model.lastUpdate = 0;
 
-    if (RugbyTimerViewSupport.getMainCountdownSeconds(model, 30000) >= 90) {
-        logger.error("halftime break countdown should tick down while active");
+    if (RugbyTimerViewSupport.getMainCountdownSeconds(model, 30000) != 40 * 60) {
+        logger.error("main countdown should stay on the configured half duration during halftime");
         return false;
     }
 
-    model.countdownSeconds = 0;
-    return RugbyTimerViewSupport.getMainCountdownSeconds(model, 30000) == 40 * 60;
+    var breakSeconds = RugbyTimerViewSupport.getSpecialCountdownSeconds(model, 30000);
+    if (breakSeconds >= 90) {
+        logger.error("halftime break should tick through the special countdown path");
+        return false;
+    }
+    return RugbyTimerViewSupport.isHalftimeBreakActive(model);
 }
 
 (:test)

@@ -25,6 +25,10 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         overlayActionHandledUntil = 0;
     }
 
+    function reconcileModelForInput() {
+        RugbyMatchIntegritySupport.reconcileModelState(model);
+    }
+
     /**
      * Logs and swallows input failures so one bad state transition does not crash the app.
      * @param context Short label describing the failing input path
@@ -87,6 +91,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onKey(evt) {
         try {
+            reconcileModelForInput();
             var view = Application.getApp().rugbyView;
             if (view == null || view.isLocked) {
                 return false;
@@ -128,6 +133,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onMenu() {
         try {
+            reconcileModelForInput();
             var view = Application.getApp().rugbyView;
             if (view.isLocked) {
                 return true;
@@ -176,6 +182,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onSelect() {
         try {
+            reconcileModelForInput();
             var view = Application.getApp().rugbyView;
             if (view.isLocked) {
                 return true;
@@ -209,6 +216,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onBack() {
         try {
+            reconcileModelForInput();
             if (Application.getApp().rugbyView.isLocked) {
                 return true;
             }
@@ -236,6 +244,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onNextPage() {
         try {
+            reconcileModelForInput();
             var view = Application.getApp().rugbyView;
             if (view.isLocked || !view.isActionAllowed()) {
                 return true;
@@ -280,6 +289,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
      */
     function onPreviousPage() {
         try {
+            reconcileModelForInput();
             var view = Application.getApp().rugbyView;
             if (view.isLocked || !view.isActionAllowed()) {
                 return true;

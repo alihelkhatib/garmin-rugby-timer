@@ -170,6 +170,7 @@ class RugbyGameModel {
         applyProfile(activeProfile, false);
         
         RugbyTimerPersistence.loadSavedState(self);
+        RugbyMatchIntegritySupport.reconcileModelState(self);
     }
 
     /**

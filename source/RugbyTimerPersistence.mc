@@ -134,6 +134,10 @@ class RugbyTimerPersistence {
     static function loadSavedState(model) {
         var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
         if (snapshot != null) {
+            if (snapshot.gameState == STATE_IDLE || snapshot.gameState == STATE_ENDED) {
+                RugbyTimerPersistence.clearInvalidSavedState(model, "non-live snapshot");
+                return;
+            }
             if (!RugbyTimerPersistence.isSnapshotUsable(snapshot)) {
                 RugbyTimerPersistence.clearInvalidSavedState(model, "missing required fields");
                 return;

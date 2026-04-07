@@ -30,3 +30,42 @@ function test_matchStateSupport_select_action_and_special_timers(logger as Test.
     if (!RugbyMatchStateSupport.shouldStartConversionAfterTry(STATE_PLAYING, true)) { logger.error("playing try should start conversion when enabled"); return false; }
     return RugbyMatchStateSupport.shouldStartPenaltyAfterKick(STATE_PLAYING, false) == false;
 }
+
+(:test)
+function test_matchIntegrity_reconcile_idle_restores_config_owned_fields(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_IDLE;
+    model.halfDuration = 35 * 60;
+    model.countdownTimer = 0;
+    model.countdownRemaining = 0;
+    model.countdownSeconds = 90;
+    model.gameTime = 123;
+    model.elapsedTime = 456;
+
+    RugbyMatchIntegritySupport.reconcileModelState(model);
+
+    if (model.countdownTimer != 35 * 60) { logger.error("idle countdownTimer should follow halfDuration"); return false; }
+    if (model.countdownRemaining != 35 * 60) { logger.error("idle countdownRemaining should follow halfDuration"); return false; }
+    if (model.countdownSeconds != 0) { logger.error("idle should clear special countdown"); return false; }
+    if (model.gameTime != 0 || model.elapsedTime != 0) { logger.error("idle should reset live clocks"); return false; }
+    return model.pausedState == null;
+}
+
+(:test)
+function test_matchIntegrity_reconcile_invalid_state_falls_back_to_idle(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = 99;
+    model.halfDuration = 0;
+
+    RugbyMatchIntegritySupport.reconcileModelState(model);
+
+    if (model.gameState != STATE_IDLE) { logger.error("unknown state should reset to idle"); return false; }
+    if (model.halfDuration <= 0) { logger.error("idle fallback should restore positive half duration"); return false; }
+    return model.countdownRemaining == model.halfDuration;
+}
