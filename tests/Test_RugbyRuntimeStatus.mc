@@ -25,6 +25,20 @@ function test_statusMessage_is_one_shot(logger as Test.Logger) as Lang.Boolean {
 }
 
 (:test)
+function test_runtimeNotice_wraps_legacy_strings_and_preserves_message(logger as Test.Logger) as Lang.Boolean {
+    var notice = RugbyRuntimeNotice.fromValue("Recording unsupported");
+    if (notice == null) {
+        logger.error("legacy string should normalize to runtime notice");
+        return false;
+    }
+    if (notice.message != "Recording unsupported") {
+        logger.error("runtime notice message mismatch");
+        return false;
+    }
+    return notice.channel == RUGBY_NOTICE_CHANNEL_TOAST;
+}
+
+(:test)
 function test_invalidSavedSnapshot_is_cleared_and_reported(logger as Test.Logger) as Lang.Boolean {
     clearCustomStorage();
     clearSavedGameStorage();

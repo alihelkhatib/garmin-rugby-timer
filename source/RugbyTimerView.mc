@@ -217,9 +217,9 @@ class RugbyTimerView extends WatchUi.View {
      */
     function updateGame() as Void {
         model.updateGame();
-        var statusMessage = model.consumeStatusMessage();
-        if (statusMessage != null) {
-            displaySpecialOverlayMessage(statusMessage);
+        var runtimeNotice = model.consumeRuntimeNotice();
+        if (runtimeNotice != null && runtimeNotice.channel == RUGBY_NOTICE_CHANNEL_TOAST) {
+            displaySpecialOverlayMessage(runtimeNotice.message);
         }
         WatchUi.requestUpdate();
     }

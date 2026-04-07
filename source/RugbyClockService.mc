@@ -9,6 +9,15 @@ using Toybox.System;
  * consistent transition surface.
  */
 class RugbyClockService {
+    static function clearSpecialTimerState(model) {
+        model.countdownSeconds = 0;
+        model.conversionStartTime = null;
+        model.penaltyStartTime = null;
+        model.kickoffStartTime = null;
+        model.specialAlertTriggered = false;
+        model.conversionTeam = null;
+    }
+
     static function startGame(model) {
         if (model.gameState == STATE_IDLE) {
             var now = System.getTimer();
@@ -19,7 +28,8 @@ class RugbyClockService {
             model.gameTime = 0;
             model.suspensionTime = 0;
             model.countdownRemaining = model.countdownTimer;
-            model.countdownSeconds = 0;
+            RugbyClockService.clearSpecialTimerState(model);
+            model.pausedState = null;
             model.thirtySecondAlerted = false;
             RugbyRecordingService.startRecording(model);
             RugbyTimerTiming.triggerMatchStartVibe();
@@ -93,6 +103,8 @@ class RugbyClockService {
         model.gameState = STATE_PLAYING;
         model.lastPauseReminderTime = null;
         model.lastUpdate = System.getTimer();
+        RugbyClockService.clearSpecialTimerState(model);
+        model.pausedState = null;
         RugbyRecordingService.startRecording(model);
         RugbySnapshotService.persistState(model);
     }
@@ -101,8 +113,9 @@ class RugbyClockService {
         var now = System.getTimer();
         model.gameState = STATE_HALFTIME;
         model.lastPauseReminderTime = null;
+        RugbyClockService.clearSpecialTimerState(model);
         model.countdownSeconds = model.kickoffTime;
-        model.specialAlertTriggered = false;
+        model.pausedState = null;
         model.lastUpdate = now;
         RugbyTimerTiming.triggerHalfTimeVibe();
         RugbySnapshotService.persistState(model);
@@ -115,9 +128,10 @@ class RugbyClockService {
             model.countdownRemaining = model.countdownTimer;
             model.gameState = STATE_PLAYING;
             model.lastPauseReminderTime = null;
-            model.countdownSeconds = 0;
+            RugbyClockService.clearSpecialTimerState(model);
             model.lastUpdate = System.getTimer();
             RugbyRecordingService.startRecording(model);
+            model.pausedState = null;
             model.thirtySecondAlerted = false;
             RugbyTimerTiming.triggerMatchStartVibe();
             RugbySnapshotService.persistState(model);
@@ -143,10 +157,11 @@ class RugbyClockService {
         if (model.gameState != STATE_HALFTIME) {
             return;
         }
-        model.countdownSeconds = 0;
+        RugbyClockService.clearSpecialTimerState(model);
         model.gameTime = 0;
         model.countdownRemaining = model.countdownTimer;
         model.thirtySecondAlerted = false;
+        model.pausedState = null;
         model.lastUpdate = System.getTimer();
         RugbySnapshotService.persistState(model);
     }
@@ -154,6 +169,8 @@ class RugbyClockService {
     static function endGame(model) {
         model.gameState = STATE_ENDED;
         model.lastPauseReminderTime = null;
+        RugbyClockService.clearSpecialTimerState(model);
+        model.pausedState = null;
         model.lastUpdate = null;
         RugbyRecordingService.stopRecording(model);
         RugbyTimerTiming.triggerFullTimeVibe();
@@ -165,10 +182,10 @@ class RugbyClockService {
     static function startConversionCountdown(model) {
         var now = System.getTimer();
         model.syncLiveClocksToNow(now);
+        RugbyClockService.clearSpecialTimerState(model);
         model.gameState = STATE_CONVERSION;
         model.countdownSeconds = model.conversionTime;
         model.conversionStartTime = now;
-        model.specialAlertTriggered = false;
         model.lastUpdate = now;
         RugbyTimerTiming.triggerConversionStartVibe();
     }
@@ -176,10 +193,10 @@ class RugbyClockService {
     static function startPenaltyCountdown(model) {
         var now = System.getTimer();
         model.syncLiveClocksToNow(now);
+        RugbyClockService.clearSpecialTimerState(model);
         model.gameState = STATE_PENALTY;
         model.countdownSeconds = model.penaltyKickTime;
         model.penaltyStartTime = now;
-        model.specialAlertTriggered = false;
         model.lastUpdate = now;
         RugbyTimerTiming.triggerPenaltyStartVibe();
     }

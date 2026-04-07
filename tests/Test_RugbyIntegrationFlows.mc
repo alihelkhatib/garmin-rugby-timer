@@ -273,6 +273,61 @@ function test_integration_special_timer_starts_from_same_clock_boundary(logger a
 }
 
 (:test)
+function test_integration_resumePlay_clears_special_timer_runtime(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_CONVERSION;
+    model.countdownSeconds = 12;
+    model.conversionTeam = true;
+    model.conversionStartTime = 1000;
+    model.specialAlertTriggered = true;
+
+    model.resumePlay();
+
+    if (model.gameState != STATE_PLAYING) {
+        logger.error("resumePlay should restore playing state");
+        return false;
+    }
+    if (model.countdownSeconds != 0) {
+        logger.error("resumePlay should clear special countdown");
+        return false;
+    }
+    if (model.conversionTeam != null) {
+        logger.error("resumePlay should clear conversion team");
+        return false;
+    }
+    return model.conversionStartTime == null && model.specialAlertTriggered == false;
+}
+
+(:test)
+function test_integration_startSecondHalf_clears_break_timer_runtime(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_HALFTIME;
+    model.countdownTimer = 2400;
+    model.countdownSeconds = 120;
+    model.kickoffStartTime = 1000;
+
+    model.startSecondHalf();
+
+    if (model.gameState != STATE_PLAYING || model.halfNumber != 2) {
+        logger.error("startSecondHalf should enter playing half 2");
+        return false;
+    }
+    if (model.countdownRemaining != 2400) {
+        logger.error("startSecondHalf should restore half countdown");
+        return false;
+    }
+    return model.countdownSeconds == 0 && model.kickoffStartTime == null;
+}
+
+(:test)
 function test_integration_second_half_then_end_game(logger as Test.Logger) as Lang.Boolean {
     clearCustomStorage();
     clearSavedGameStorage();

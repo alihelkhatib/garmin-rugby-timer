@@ -33,9 +33,14 @@ class RugbyTimerOverlay {
     }
 
     static function renderSpecialOverlayBody(view, model, dc, width, height) {
+        var renderNow = System.getTimer();
         var label = RugbyTimerOverlay.getSpecialStateLabel(model);
-        var countdown = RugbyTimerTiming.formatTime(RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds));
-        var countdownMain = RugbyTimerTiming.formatTime(RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining));
+        var countdown = RugbyTimerTiming.formatTime(
+            RugbyTimerTiming.getDisplayCountdownSeconds(RugbyTimerViewSupport.getSpecialCountdownSeconds(model, renderNow))
+        );
+        var countdownMain = RugbyTimerTiming.formatTime(
+            RugbyTimerTiming.getDisplayCountdownSeconds(RugbyTimerViewSupport.getMainCountdownSeconds(model, renderNow))
+        );
         var specialTimerY = RugbyTimerOverlay.getSpecialTimerY(model, height);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -49,15 +54,18 @@ class RugbyTimerOverlay {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.84, Graphics.FONT_XTINY, hint, Graphics.TEXT_JUSTIFY_CENTER);
         }
-        if (view.specialOverlayMessage != null && System.getTimer() < view.specialOverlayMessageExpiry) {
+        if (view.specialOverlayMessage != null && renderNow < view.specialOverlayMessageExpiry) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, view.specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }
     }
 
     static function renderSpecialOverlayFallback(view, model, dc, width, height) {
+        var renderNow = System.getTimer();
         var label = RugbyTimerOverlay.getSpecialStateLabel(model);
-        var countdown = RugbyTimerTiming.formatTime(RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds));
+        var countdown = RugbyTimerTiming.formatTime(
+            RugbyTimerTiming.getDisplayCountdownSeconds(RugbyTimerViewSupport.getSpecialCountdownSeconds(model, renderNow))
+        );
         var specialTimerY = RugbyTimerOverlay.getSpecialTimerY(model, height) - (height * 0.07);
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
@@ -69,7 +77,7 @@ class RugbyTimerOverlay {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.84, Graphics.FONT_XTINY, hint, Graphics.TEXT_JUSTIFY_CENTER);
         }
-        if (view.specialOverlayMessage != null && System.getTimer() < view.specialOverlayMessageExpiry) {
+        if (view.specialOverlayMessage != null && renderNow < view.specialOverlayMessageExpiry) {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
             dc.drawText(width / 2, height * 0.65, Graphics.FONT_MEDIUM, view.specialOverlayMessage, Graphics.TEXT_JUSTIFY_CENTER);
         }

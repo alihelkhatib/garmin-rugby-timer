@@ -67,5 +67,41 @@ function test_renderer_mainCountdown_uses_half_duration_while_idle(logger as Tes
     model.countdownTimer = 0;
     model.gameTime = 999;
 
-    return RugbyTimerRenderer.getMainCountdownSeconds(model, 0) == 41 * 60;
+    return RugbyTimerViewSupport.getMainCountdownSeconds(model, 0) == 41 * 60;
+}
+
+(:test)
+function test_viewSupport_mainCountdown_uses_halftime_break_then_half_duration(logger as Test.Logger) as Lang.Boolean {
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_HALFTIME;
+    model.halfDuration = 40 * 60;
+    model.countdownSeconds = 90;
+    model.lastUpdate = 0;
+
+    if (RugbyTimerViewSupport.getMainCountdownSeconds(model, 30000) >= 90) {
+        logger.error("halftime break countdown should tick down while active");
+        return false;
+    }
+
+    model.countdownSeconds = 0;
+    return RugbyTimerViewSupport.getMainCountdownSeconds(model, 30000) == 40 * 60;
+}
+
+(:test)
+function test_viewSupport_special_and_suspension_clocks_share_snapshot_math(logger as Test.Logger) as Lang.Boolean {
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.lastUpdate = 0;
+    model.gameState = STATE_CONVERSION;
+    model.countdownSeconds = 30;
+    model.suspensionTime = 10;
+
+    var special = RugbyTimerViewSupport.getSpecialCountdownSeconds(model, 4000);
+    var suspension = RugbyTimerViewSupport.getSuspensionClockSeconds(model, 4000);
+    if (special >= 30) {
+        logger.error("special countdown should tick down");
+        return false;
+    }
+    return suspension > 10;
 }
