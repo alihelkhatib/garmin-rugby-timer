@@ -94,7 +94,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
 
             if (!view.isSpecialOverlayActive() && model.gameState == STATE_IDLE) {
                 var idleKey = evt.getKey();
-                if (idleKey == WatchUi.KEY_UP) {
+                if (idleKey == WatchUi.KEY_UP || idleKey == WatchUi.KEY_MENU) {
                     return onPreviousPage();
                 }
                 if (idleKey == WatchUi.KEY_DOWN) {
@@ -151,6 +151,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 }
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, 1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
                 return true;
             }
 
@@ -243,6 +244,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, -1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
                 return true;
             }
             if (model.gameState == STATE_HALFTIME) {
@@ -286,6 +288,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.halfDuration, 1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
                 return true;
             }
             if (model.gameState == STATE_HALFTIME) {

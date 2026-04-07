@@ -2147,3 +2147,7 @@
 - 2026-04-07: Performed a consistency/hardening pass across timing, settings, and persistence. Render-facing clocks now resolve through shared pure helpers in `RugbyTimerViewSupport`, special countdown runtime fields now clear through one clock-service path when transitions return to normal play/halftime/endgame, settings submenu delegates now resolve selections through shared pure helpers and restore focus by root-row lookup instead of hardcoded indexes, and persistence now normalizes score history, event-log entries, and summary card arrays through typed wrappers before saving. Added a typed `RugbyRuntimeNotice` wrapper so one-shot operational notices no longer travel as arbitrary raw strings through the view/update path.
 
 - 2026-04-07 consistency/hardening validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).
+
+- 2026-04-07: Fixed a remaining idle-screen regression on round fēnix-style devices. The idle increment path now handles both raw `KEY_UP` and raw `KEY_MENU` mappings for the shared `UP/MENU` button, requests an immediate redraw after idle duration changes, and clamps the idle/halftime hint rows to a safer bottom anchor so the two-line guidance (`UP/MENU: +1   DOWN: -1`, `SELECT: Start`) remains visible.
+
+- 2026-04-07 idle-input/hint validation: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for the app target (`bin/garminrugbytimer.prg`) and the unit-test target (`bin/tests.prg`).

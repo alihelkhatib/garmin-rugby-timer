@@ -176,11 +176,15 @@ class RugbyTimerView extends WatchUi.View {
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
         dc.setColor(hintColor, Graphics.COLOR_TRANSPARENT);
         var hintMode = RugbyTimerViewSupport.getHintMode(isLocked, model.gameState);
+        var bottomSafeHintY = height * 0.80;
         if (hintMode == VIEW_HINT_MODE_LOCKED) {
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Locked), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
         if (hintMode == VIEW_HINT_MODE_IDLE) {
+            if (hintY > bottomSafeHintY) {
+                hintY = bottomSafeHintY;
+            }
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
             return;
@@ -190,6 +194,9 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         if (hintMode == VIEW_HINT_MODE_HALFTIME) {
+            if (hintY > bottomSafeHintY) {
+                hintY = bottomSafeHintY;
+            }
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Halftime_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Half2), Graphics.TEXT_JUSTIFY_CENTER);
             return;

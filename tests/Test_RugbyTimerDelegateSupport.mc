@@ -36,3 +36,15 @@ function test_delegateSupport_presetHoldKeys(logger as Test.Logger) as Lang.Bool
     if (!RugbyTimerInputSupport.shouldStartPresetHold(WatchUi.KEY_UP)) { logger.error("up should arm hold"); return false; }
     return RugbyTimerInputSupport.shouldStartPresetHold(WatchUi.KEY_DOWN) == false;
 }
+
+(:test)
+function test_delegateSupport_idleMenuAndUpResolveToSameIncrement(logger as Test.Logger) as Lang.Boolean {
+    var base = 40 * 60;
+    var upMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(base, 1);
+    var menuMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(base, 1);
+    if (upMinutes != 41) {
+        logger.error("up increment mismatch");
+        return false;
+    }
+    return menuMinutes == upMinutes;
+}
