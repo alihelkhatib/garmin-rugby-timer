@@ -1,3 +1,58 @@
+## [2026-04-07] Harden storage writes and make settings reliably rebuild from live state
+
+- Added `RugbyStorageSupport` as a pre-write validation layer for persisted payloads. Save-bound data now gets checked for Garmin-safe shapes before hitting Storage, with debug logs that include the failing path when unsupported values are found.
+- `ScoreEvent` history entries now serialize plain string event types in addition to plain string keys, while still accepting older symbol-key and symbol-value payloads on restore. This closes the remaining score-history schema gap that could still trigger device-only save errors.
+- Reworked settings changes to rebuild the root `Rugby Settings` menu from the live `RugbyGameModel` at the same focused row after each change instead of relying on in-place `Menu2` subtitle updates, which were proving stale on real hardware.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+- Attempted runtime execution with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" "1" -t`, but this environment still returned `Unable to connect to simulator`, so simulator-backed verification remains a manual follow-up.
+
+## [2026-04-07] Remove duplicate long-press settings path and unify timer display cadence
+
+- Removed the separate `getSettingsView()` app-settings entrypoint from `RugbyTimerApp`, which should stop long-press system settings from opening a duplicate crash-prone menu outside the intended in-app settings flow.
+- Completed the render-time timer snapshot work so the visible elapsed clock, main countdown, card timers, and special countdown labels all derive from the same render timestamp instead of appearing to update in a staggered order.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Remove the remaining `Save failed` status message path
+
+- Removed the last two `model.setStatusMessage("Save failed")` calls from the explicit save/finalize paths.
+- That generic message was not a useful user-facing feature in practice; it could still surface inside special overlays and confuse normal match flow even after the autosave toast was removed.
+- Persistence failures now stay in the debug log only.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Stop surfacing autosave failures as on-watch toasts
+
+- Removed the generic `Save failed` status toast from the background `persistState()` autosave path.
+- The toast was never intended to be a gameplay feature; it was only a generic persistence-failure signal. Because autosave runs frequently, repeated failures could make it look persistent and overwhelm the UI during normal match flows like cards or conversions.
+- Autosave failures now stay in the debug log, while explicit save/finalize actions can still report user-visible errors if needed.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Clear overlay-owned status toasts when special overlays close
+
+- Fixed a UI regression where a status message shown during the conversion/penalty overlay could remain cached in the view and then reappear on the main match screen after the overlay closed.
+- The special-overlay close path and the main view’s overlay-visibility reconciliation now both clear the overlay message cache so transient toasts do not linger across screens.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Fix score-history persistence keys used by conversion saves
+
+- Fixed another Storage payload regression: `ScoreEvent` history entries were still serialized with symbol keys, and conversion flows persist that `lastEvents` history on every save.
+- `ScoreEvent` now writes plain string keys and reads both string and legacy symbol-key payloads for compatibility.
+- Added integration assertions that conversion made/miss flows do not surface a `Save failed` runtime status.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Snap live clocks before starting special countdowns
+
+- Updated the conversion and penalty transition path so the app first synchronizes `gameTime`, `elapsedTime`, `suspensionTime`, and the frozen main countdown to the same current timestamp before starting the special countdown.
+- This prevents the large match countdown from freezing on an older tick while the special countdown starts from a newer tick, which could make the timers look out of sync on-watch.
+- Added integration coverage for the special-countdown boundary sync behavior.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
+## [2026-04-07] Fix event-log persistence payloads and harden on-device settings selection
+
+- Fixed a persistence regression where newly appended event-log entries were serialized with symbol-key dictionaries; on-device Storage writes could then fail during card/score saves and surface the generic `Save failed` toast.
+- `EventLogEntry` now writes plain string keys and can still read legacy symbol-key payloads for compatibility.
+- Hardened the settings selection delegates so match-format, team-label, and timer selections can resolve from either the menu item identifier or the visible row label text, which is more robust across Connect IQ device/runtime differences.
+- Built successfully with `./scripts/validate-local.sh`, which produced `bin/garminrugbytimer.prg` and `bin/tests.prg`.
+
 ## [2026-04-06] Remove settings-root rebuilds from submenu selections
 
 - Simplified the settings interaction flow so match-format changes, team-label selections, and conversion/penalty timer picks now update the live model, pop only the submenu, refresh the same root settings menu in place, and restore focus to the launching row.

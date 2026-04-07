@@ -22,7 +22,7 @@ This document outlines the main interaction patterns and communication flows bet
     *   `RugbyTimerApp` passes the `RugbyGameModel` instance to `RugbyTimerView` and `RugbyTimerDelegate` during their initialization.
 *   **Event Handling:**
     *   `RugbyTimerApp` receives global events (e.g., GPS updates via `onPosition`) and forwards relevant data to `RugbyGameModel` (`model.updatePosition(info)`).
-    *   `RugbyTimerApp` also manages the overall application flow, including showing settings views (e.g., `getSettingsView`).
+    *   Settings are now intentionally routed through the in-app match menu and `RugbySettingsHostView`; the old separate app-settings entrypoint has been removed.
 
 #### 2. Model-View-Delegate (MVD) Pattern
 
