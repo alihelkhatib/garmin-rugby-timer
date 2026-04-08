@@ -1,0 +1,6 @@
+name: specs-ambiguities-and-gaps
+created-by: openspec-propose
+artifacts:
+  - proposal.md
+  - design.md
+  - tasks.md

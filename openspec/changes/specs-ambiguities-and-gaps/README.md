@@ -1,0 +1,1 @@
+Change scaffold for specs-ambiguities-and-gaps. Contains proposal.md, design.md, tasks.md.
