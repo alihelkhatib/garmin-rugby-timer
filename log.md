@@ -1,9 +1,3 @@
-## [2026-04-08] Lower the elapsed timer slightly within the measured header
-
-- Increased the measured top safe inset used for the elapsed timer row in `source/RugbyTimerRenderer.mc`, moving the top game timer slightly downward while preserving the rest of the measured header layout.
-- Kept this as a header-level spacing adjustment rather than a one-off row nudge so the score labels, score digits, half row, and tries row remain internally aligned.
-- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
-
 ## [2026-04-08] Redesign the score header and normalize card-row typography
 
 - Replaced the old percentage-only score-header layout with a measured header band in `source/RugbyTimerRenderer.mc`. The elapsed timer, `HOME` / `AWAY`, score row, half row, and tries row now use actual font heights plus explicit gaps, so the labels no longer clip into the top bezel.

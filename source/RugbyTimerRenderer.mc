@@ -79,7 +79,7 @@ class RugbyTimerRenderer {
         var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.04);
         var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.045);
 
-        var topSafeInset = height * 0.075;
+        var topSafeInset = height * 0.06;
         var rowGap = height * 0.01;
         var groupGap = height * 0.014;
 
