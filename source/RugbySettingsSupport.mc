@@ -40,6 +40,13 @@ class RugbySettingsSupport {
         return enabled == true ? "On" : "Off";
     }
 
+    static function getStoredFlag(value, defaultValue) {
+        if (value == null) {
+            return defaultValue == true;
+        }
+        return value == true;
+    }
+
     static function resolveProfileId(itemId) {
         // Accept both Symbol and String forms because Connect IQ menu ids can
         // arrive differently across runtime paths and tests.

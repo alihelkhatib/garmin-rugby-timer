@@ -1,5 +1,6 @@
 using Toybox.Test;
 using Toybox.Lang;
+using Toybox.Graphics;
 
 /*
 Headless renderer layout regression tests.
@@ -200,6 +201,20 @@ function test_calculateLayout_keeps_header_inside_safe_band(logger as Test.Logge
         return false;
     }
 
+    return true;
+}
+
+(:test)
+function test_compact_round_fonts_reduce_hint_and_label_emphasis(logger as Test.Logger) as Lang.Boolean {
+    var fonts = RugbyTimerRenderer.chooseFonts(240);
+    if (fonts.hintFont != Graphics.FONT_XTINY) {
+        logger.error("compact-round idle hints did not shrink");
+        return false;
+    }
+    if (RugbyTimerRenderer.chooseTeamLabelFont(240) != Graphics.FONT_SYSTEM_TINY) {
+        logger.error("compact-round team labels did not shrink");
+        return false;
+    }
     return true;
 }
 

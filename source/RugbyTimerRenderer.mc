@@ -42,7 +42,7 @@ class RugbyTimerRenderer {
             timerFont = Graphics.FONT_SYSTEM_TINY;
             countdownFont = Graphics.FONT_NUMBER_HOT;
             stateFont = Graphics.FONT_XTINY;
-            hintFont = Graphics.FONT_SYSTEM_TINY;
+            hintFont = Graphics.FONT_XTINY;
         } else if (width <= 260) {
             scoreFont = Graphics.FONT_NUMBER_MEDIUM;
             triesFont = Graphics.FONT_XTINY;
@@ -65,7 +65,7 @@ class RugbyTimerRenderer {
 
     static function chooseTeamLabelFont(width) {
         if (width <= 240) {
-            return Graphics.FONT_XTINY;
+            return Graphics.FONT_SYSTEM_TINY;
         }
         return Graphics.FONT_SMALL;
     }
@@ -224,8 +224,12 @@ class RugbyTimerRenderer {
         layout.centerX = safeLeft + (contentWidth / 2);
         layout.homeScoreX = safeLeft + (contentWidth * 0.21);
         layout.awayScoreX = safeRight - (contentWidth * 0.21);
-        layout.homeTriesX = safeLeft + (contentWidth * 0.08);
-        layout.awayTriesX = safeRight - (contentWidth * 0.08);
+        var triesOffset = contentWidth * 0.12;
+        if (compactRound) {
+            triesOffset = contentWidth * 0.10;
+        }
+        layout.homeTriesX = layout.homeScoreX - triesOffset;
+        layout.awayTriesX = layout.awayScoreX + triesOffset;
         layout.homeCardAnchorX = safeLeft + (contentWidth * guide.cardInsetPct);
         layout.awayCardAnchorX = safeRight - (contentWidth * guide.cardInsetPct);
         layout.gameTimerY = gameTimerY;

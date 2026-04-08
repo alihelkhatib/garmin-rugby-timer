@@ -25,6 +25,7 @@ Persistence and hot-path regressions:
 - **PERSIST-006** — Event-log payloads remain backward-compatible with legacy symbol payloads. — `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display`, `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_legacy_payload_is_supported` — Covered
 - **RESP-001** — Custom profile writes are deferred during repeated idle edits and only hit Storage on flush. — `tests/Test_RugbyGameModelServices.mc::test_custom_settings_writes_defer_until_flush` — Covered
 - **RESP-002** — Idle hardware keys still adjust the timer even when the normal action gate is closed. — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — Covered
+- **RESP-003** — Idle hints default to enabled and respect the persisted on/off setting. — `tests/Test_RugbySettings_UI.mc::test_settings_support_idle_hints_default_enabled_and_persisted` — Covered
 
 Card timers (requirements discovered from history and conversation):
 
@@ -45,6 +46,7 @@ Layout regressions:
 - **LAYOUT-008** — Compact-round metadata returns in priority order: elapsed, then half, then tries. — `tests/Test_RugbyTimerRendererLayout.mc::test_compactDetailMode_recovers_metadata_in_priority_order` — Covered
 - **LAYOUT-009** — Timed sanctions force compact round into `critical-only` mode so optional metadata drops before the primary lanes shrink. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_compact_round_uses_critical_only_for_timed_cards` — Covered
 - **LAYOUT-010** — Urgent sanction selection ignores expired entries and keeps the nearest live timed sanction visible. — `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_picks_lowest_remaining_time`, `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_skips_expired_entries` — Covered
+- **LAYOUT-011** — Compact-round idle hints and `HOME` / `AWAY` labels use reduced emphasis tiers. — `tests/Test_RugbyTimerRendererLayout.mc::test_compact_round_fonts_reduce_hint_and_label_emphasis` — Covered
 
 Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 

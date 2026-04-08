@@ -135,3 +135,20 @@ function test_settings_support_profile_resolution_and_clamp(logger as Test.Logge
     if (RugbySettingsSupport.clampMinutes(120) != 99) { logger.error("minutes clamp high failed"); return false; }
     return RugbySettingsSupport.getMinutesFromDigits([0, 5]) == 5;
 }
+
+(:test)
+function test_settings_support_idle_hints_default_enabled_and_persisted(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    if (!RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true)) {
+        logger.error("idle hints should default to enabled");
+        return false;
+    }
+
+    Storage.setValue(STORAGE_KEY_SHOW_IDLE_HINTS, false);
+    if (RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true)) {
+        logger.error("idle hints persisted toggle was not respected");
+        return false;
+    }
+
+    return true;
+}

@@ -27,6 +27,7 @@ class RugbyTimerView extends WatchUi.View {
     var isLocked;
     // A boolean indicating if the screen is in dim mode
     var dimMode;
+    var showIdleHints;
     // The timestamp of the last user action
     var lastActionTs;
     // A boolean indicating if the special timer overlay is visible
@@ -60,6 +61,7 @@ class RugbyTimerView extends WatchUi.View {
         specialOverlayMessageExpiry = 0;
         dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
         if (dimMode == null) { dimMode = false; }
+        showIdleHints = RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true);
         // Preload small bitmaps once at init
         try {
             cachedLockIcon = WatchUi.loadResource(Rez.Drawables.LockIcon) as WatchUi.BitmapResource;
@@ -181,6 +183,9 @@ class RugbyTimerView extends WatchUi.View {
             return;
         }
         if (model.gameState == STATE_IDLE) {
+            if (!showIdleHints) {
+                return;
+            }
             dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Idle_Adjust), Graphics.TEXT_JUSTIFY_CENTER);
             dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
             return;

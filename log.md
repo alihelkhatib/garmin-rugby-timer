@@ -2044,3 +2044,10 @@
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o bin/garminrugbytimer.prg -d fenix6 -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
 
 - 2026-04-01 rebuild: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/garminrugbytimer-fenix7x.prg -d fenix7x -y /Users/600171959/developer_key -w` -> BUILD SUCCESSFUL (warnings only: existing container-analysis warnings / unreachable-statement warnings).
+## [2026-04-08] Reduce idle hint pressure and tighten score-column metadata
+
+- Added a persisted `Idle Hints` setting through the existing settings flow so referees can hide the idle helper text entirely if they want a cleaner compact-round screen. The setting defaults to enabled and updates the live view immediately.
+- Reduced compact-round hint typography and shrank the `HOME` / `AWAY` label tier further so those support labels stop competing with the main score lane.
+- Re-anchored tries from the score columns instead of placing them as loose header metadata, which keeps them visually attached to the correct team when they are allowed to appear.
+- Expanded regression coverage for the idle-hints setting default/persistence and for compact-round font-emphasis rules.
+- Pending validation for this change set: `./scripts/validate-local.sh` and a simulator pass.

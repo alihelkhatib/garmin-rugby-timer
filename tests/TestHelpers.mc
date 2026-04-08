@@ -16,6 +16,7 @@ function clearCustomStorage() {
     Storage.setValue(STORAGE_KEY_CUSTOM_USE_PENALTY_TIMER, null);
     Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, null);
     Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, null);
+    Storage.setValue(STORAGE_KEY_SHOW_IDLE_HINTS, null);
 }
 
 function clearSavedGameStorage() {

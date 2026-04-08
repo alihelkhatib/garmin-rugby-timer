@@ -19,6 +19,7 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     var usePenItem;
     var lockStartItem;
     var dimModeItem;
+    var idleHintsItem;
 
     function initialize() {
         Menu2.initialize({:title=>"Rugby Settings"});
@@ -62,6 +63,10 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         if (dimMode == null) { dimMode = false; }
         dimModeItem = new WatchUi.MenuItem("Dim Theme", dimMode ? "On" : "Off", :dim_mode, null);
         addItem(dimModeItem);
+
+        var showIdleHints = RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true);
+        idleHintsItem = new WatchUi.MenuItem("Idle Hints", showIdleHints ? "On" : "Off", :idle_hints, null);
+        addItem(idleHintsItem);
 
         addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
     }

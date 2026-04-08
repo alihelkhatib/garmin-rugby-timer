@@ -20,6 +20,7 @@ const STORAGE_KEY_EVENT_LOG_EXPORT = "eventLogExport";
 
 const STORAGE_KEY_LOCK_ON_START = "lockOnStart";
 const STORAGE_KEY_DIM_MODE = "dimMode";
+const STORAGE_KEY_SHOW_IDLE_HINTS = "showIdleHints";
 
 const STORAGE_KEY_LEGACY_RUGBY_7S = "rugby7s";
 const STORAGE_KEY_LEGACY_HALF_DURATION_7S = "halfDuration7s";

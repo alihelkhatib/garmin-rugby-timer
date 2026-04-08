@@ -137,6 +137,15 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
             }
             menu.refresh();
             WatchUi.requestUpdate();
+        } else if (item.getId() == :idle_hints) {
+            var showIdleHints = RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true);
+            showIdleHints = !showIdleHints;
+            Storage.setValue(STORAGE_KEY_SHOW_IDLE_HINTS, showIdleHints);
+            if (app.rugbyView != null) {
+                app.rugbyView.showIdleHints = showIdleHints;
+            }
+            menu.refresh();
+            WatchUi.requestUpdate();
         } else if (item.getId() == :reset) {
             app.model.setMatchProfile(app.model.matchProfileId);
             app.model.resetGame();
