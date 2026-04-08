@@ -5,13 +5,17 @@
  * side effects so discipline behavior does not stay embedded in the model.
  */
 class RugbyDisciplineService {
+    static function formatCardLabel(prefix, cardId) {
+        return prefix + cardId.toString();
+    }
+
     static function recordYellowCard(model, isHome) {
         if (model.gameState != STATE_IDLE && model.gameState != STATE_HALFTIME && model.gameState != STATE_PAUSED && model.gameState != STATE_ENDED) {
             RugbyClockService.pauseClock(model);
         }
         var duration = model.getYellowCardDuration();
         var cardId = RugbyTimerCards.allocateYellowCardId(model, isHome);
-        var label = "Y" + cardId.toString() + " ";
+        var label = formatCardLabel("Y", cardId);
         var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(model.suspensionTime, duration, label, cardId);
         if (isHome) {
             model.yellowHomeTimes.add(entry);
@@ -30,7 +34,7 @@ class RugbyDisciplineService {
         }
         var redDuration = model.getRedCardDuration();
         var cardId = RugbyTimerCards.allocateRedCardId(model, isHome);
-        var label = "R" + cardId.toString() + " ";
+        var label = formatCardLabel("R", cardId);
         if (model.usesSevensCardRules()) {
             if (isHome) {
                 model.redHomePermanent = true;

@@ -2,10 +2,10 @@ using Toybox.Test;
 using Toybox.Lang;
 
 /*
-Unit tests for small typed wrappers introduced during warning reduction.
+Unit tests for compact storage-boundary helpers.
 
-Purpose: ensure profile, score-event, and card-entry adapters preserve the
-legacy dictionary shapes expected by the rest of the app.
+Purpose: ensure profile entries, score-history payload helpers, and card-entry
+adapters preserve the dictionary shapes expected by the rest of the app.
 */
 (:test)
 function test_matchProfileEntry_roundtrip(logger as Test.Logger) as Lang.Boolean {

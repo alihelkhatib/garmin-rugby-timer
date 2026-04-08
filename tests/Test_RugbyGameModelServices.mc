@@ -86,6 +86,7 @@ function test_settings_mutation_order_stays_custom_and_persists_values(logger as
     model.setFormatFamily(true);
     model.setHalfDuration(600);
     model.setConversionTime(45);
+    model.flushPendingCustomProfileSave();
 
     var stored = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
     if (stored == null) { logger.error("stored custom missing"); return false; }
@@ -133,5 +134,31 @@ function test_debounced_snapshot_save_flushes_on_immediate_persist(logger as Tes
     model.persistState();
     var snapshot = PersistedGameSnapshot.fromDict(Toybox.Application.Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
     if (snapshot == null) { logger.error("persistState did not flush debounced snapshot"); return false; }
+    return snapshot.homeScore == 5 && snapshot.lastEvents != null && snapshot.lastEvents.size() == 1;
+}
+
+(:test)
+function test_handleAppStop_flushes_pending_snapshot_and_custom_profile(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.lastUpdate = System.getTimer();
+    model.useConversionTimer = false;
+
+    model.setHalfDuration(600);
+    model.recordTry(true);
+    model.handleAppStop();
+
+    var storedProfileId = Toybox.Application.Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID);
+    if (storedProfileId != "custom") { logger.error("handleAppStop did not flush custom profile id"); return false; }
+    if (Toybox.Application.Storage.getValue(STORAGE_KEY_CUSTOM_HALF_DURATION) != 600) {
+        logger.error("handleAppStop did not flush custom half duration");
+        return false;
+    }
+
+    var snapshot = PersistedGameSnapshot.fromDict(Toybox.Application.Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+    if (snapshot == null) { logger.error("handleAppStop did not flush pending snapshot"); return false; }
     return snapshot.homeScore == 5 && snapshot.lastEvents != null && snapshot.lastEvents.size() == 1;
 }

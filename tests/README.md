@@ -2,16 +2,22 @@
 
 Quick steps to build and run the unit tests in the simulator.
 
-1. Build the test PRG including unit tests. From the project root run the SDK `monkeyc` compiler (replace `<SDK_BIN>` with your SDK bin path):
+1. Build the app PRG and test PRG together with the local helper:
 
 ```bash
-"<SDK_BIN>/monkeyc" -f test_monkey.jungle -o bin/rugbytimer-test.prg -d fenix6 -y <DEVELOPER_KEY> -w --unit-test
+./scripts/validate-local.sh
 ```
 
-2. Launch the simulator and run the tests with `monkeydo` (or use the Monkey C extension Test Explorer in VS Code):
+2. Or build only the test PRG including unit tests. From the project root run the SDK `monkeyc` compiler (replace `<SDK_BIN>` with your SDK bin path):
 
 ```bash
-"<SDK_BIN>/monkeydo" bin/rugbytimer-test.prg /t
+"<SDK_BIN>/monkeyc" -f test_monkey.jungle -o bin/tests.prg -d fenix6 -y <DEVELOPER_KEY> -w --unit-test
+```
+
+3. Launch the simulator and run the tests with `monkeydo` (or use the Monkey C extension Test Explorer in VS Code). This SDK build expects a simulator device id before `-t`:
+
+```bash
+"<SDK_BIN>/monkeydo" bin/tests.prg 1 -t
 ```
 
 Notes:
@@ -22,4 +28,5 @@ Notes:
 Recommended workflow:
 - Use the VS Code Monkey C Test Explorer to run and iterate tests quickly.
 - Run `monkeyc` with `--unit-test` on CI to produce a test PRG and execute it with `monkeydo` in the simulator.
-- Or use `scripts/run-tests.sh`, which now builds the test PRG with `--unit-test`.
+- Or use `scripts/run-tests.sh`, which builds the test PRG with `--unit-test` and prints the matching simulator command.
+- Or use `scripts/validate-local.sh` to build both the app PRG and the unit-test PRG before printing the same simulator command.

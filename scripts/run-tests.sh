@@ -6,9 +6,10 @@ SDK="${CONNECTIQ_SDK:-/Users/600171959/Library/Application Support/Garmin/Connec
 KEY="${DEVELOPER_KEY:-/Users/600171959/developer_key}"
 OUT="bin/tests.prg"
 DEVICE="${TEST_DEVICE:-fenix6}"
+SIM_DEVICE_ID="${SIM_DEVICE_ID:-1}"
 
 echo "Building test PRG..."
 "$SDK/bin/monkeyc" -f test_monkey.jungle -o "$OUT" -d "$DEVICE" -y "$KEY" -w --unit-test
 echo "Built $OUT"
 
-echo "Run with: \"$SDK/bin/monkeydo\" \"$OUT\" /t"
+echo "Run with: \"$SDK/bin/monkeydo\" \"$OUT\" \"$SIM_DEVICE_ID\" -t"

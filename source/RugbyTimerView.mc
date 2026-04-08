@@ -182,10 +182,6 @@ class RugbyTimerView extends WatchUi.View {
             dc.drawText(width / 2, hintY + hintLineGap, hintFont, loadString(Rez.Strings.Hint_Select_Start), Graphics.TEXT_JUSTIFY_CENTER);
             return;
         }
-        if (model.gameState == STATE_PLAYING) {
-            dc.drawText(width / 2, hintY, hintFont, loadString(Rez.Strings.Hint_Select_Pause), Graphics.TEXT_JUSTIFY_CENTER);
-            return;
-        }
         if (model.gameState == STATE_PAUSED) {
             return;
         }

@@ -10,14 +10,12 @@ using Toybox.Timer;
  * `RugbyTimerDelegate` so the delegate remains centered on hardware input.
  */
 /**
- * Shared helper for menu/delegate failures in the match-menu stack.
+ * Shared failure handler for menu/delegate paths in the match-menu stack.
  */
-class RugbyMenuSupport {
-    static function handleMenuDelegateFailure(context) {
-        System.println("Menu delegate failure (" + context + ")");
-        WatchUi.requestUpdate();
-        return true;
-    }
+function handleMenuDelegateFailure(context) {
+    System.println("Menu delegate failure (" + context + ")");
+    WatchUi.requestUpdate();
+    return true;
 }
 
 /**
@@ -79,7 +77,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
             }
             WatchUi.popView(WatchUi.SLIDE_DOWN);
         } catch (ex) {
-            RugbyMenuSupport.handleMenuDelegateFailure("main_select");
+            handleMenuDelegateFailure("main_select");
         }
     }
 
@@ -112,7 +110,7 @@ class ScoreTeamDelegate extends WatchUi.Menu2InputDelegate {
             var isHome = (item.getId() == :team_home);
             WatchUi.pushView(new ScoreTypeMenu(isHome), new ScoreTypeDelegate(model, isHome), WatchUi.SLIDE_UP);
         } catch (ex) {
-            RugbyMenuSupport.handleMenuDelegateFailure("score_team_select");
+            handleMenuDelegateFailure("score_team_select");
         }
     }
 
@@ -159,7 +157,7 @@ class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
             WatchUi.popView(WatchUi.SLIDE_DOWN);
             WatchUi.requestUpdate();
         } catch (ex) {
-            RugbyMenuSupport.handleMenuDelegateFailure("score_type_select");
+            handleMenuDelegateFailure("score_type_select");
         }
     }
 

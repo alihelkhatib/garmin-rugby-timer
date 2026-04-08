@@ -125,6 +125,7 @@ function test_promote_to_custom_on_change(logger as Test.Logger) as Lang.Boolean
     if (model.matchProfileId == "custom") { logger.error("unexpectedly already custom"); return false; }
 
     model.setHalfDuration(999);
+    model.flushPendingCustomProfileSave();
     if (model.matchProfileId != "custom") { logger.error("matchProfileId not promoted to custom"); return false; }
     var stored = Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID);
     if (stored != "custom") { logger.error("matchProfileId not written to Storage"); return false; }

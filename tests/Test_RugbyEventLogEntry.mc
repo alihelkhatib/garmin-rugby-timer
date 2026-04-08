@@ -2,10 +2,10 @@ using Toybox.Test;
 using Toybox.Lang;
 
 /*
-Unit tests for EventLogEntry formatting and round-trip behavior.
+Unit tests for event-log payload formatting and round-trip behavior.
 
-Purpose: verify the typed event-log wrapper preserves stored values and emits
-the human-readable strings expected by the log viewer/export path.
+Purpose: verify `RugbyTimerEventLog` preserves stored values and emits the
+human-readable strings expected by the log viewer/export path.
 */
 (:test)
 function test_eventLogEntry_roundtrip_and_display(logger as Test.Logger) as Lang.Boolean {

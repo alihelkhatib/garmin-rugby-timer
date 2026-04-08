@@ -17,11 +17,9 @@ class TestMenuItem {
 
 class TestMatchProfileDelegate {
     var model;
-    var pendingProfileId;
 
     function initialize(m) {
         model = m;
-        pendingProfileId = null;
     }
 
     function resolveProfileId(itemId) {
@@ -31,14 +29,6 @@ class TestMatchProfileDelegate {
     function onSelect(item) {
         var profileId = resolveProfileId(item.getId());
         if (profileId == null) { return; }
-        pendingProfileId = profileId;
-        // Simulate timer callback immediately in headless tests
-        applyPendingProfile();
-    }
-
-    function applyPendingProfile() {
-        var profileId = pendingProfileId;
-        pendingProfileId = null;
         if (model == null || profileId == null) { return; }
         if (model.gameState != STATE_IDLE) {
             // Idle-only enforcement — do nothing when in-game
@@ -134,6 +124,7 @@ function test_ui_toggle_format_promotes_to_custom(logger as Test.Logger) as Lang
     if (model.matchProfileId == "custom") { return false; }
 
     model.setFormatFamily(true);
+    model.flushPendingCustomProfileSave();
     return (model.matchProfileId == "custom") && (Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID) == "custom");
 }
 

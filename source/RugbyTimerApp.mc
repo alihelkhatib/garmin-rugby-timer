@@ -82,11 +82,3 @@ class RugbyTimerApp extends Application.AppBase {
         return [menu, new RugbySettingsMenuDelegate(menu, false)];
     }
 }
-
-/**
- * Returns the application instance.
- * @return The application instance
- */
-function getApp() {
-    return Application.getApp();
-}

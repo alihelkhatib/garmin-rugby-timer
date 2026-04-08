@@ -164,8 +164,7 @@ class MatchProfileMenu extends WatchUi.Menu2 {
 }
 
 /**
- * Applies profile changes after the picker closes so the idle screen can redraw
- * cleanly before model state is mutated.
+ * Applies the selected preset synchronously, then closes the picker.
  */
 class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
     var menu;

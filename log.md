@@ -1,3 +1,22 @@
+## [2026-04-08] Stabilize persistence, debounce hot paths, and simplify snapshot plumbing
+
+- Fixed the root cause of the persistent `Save failed` notice: live match snapshots now serialize score history and event log entries as plain Storage-safe dictionaries with string keys/values, while still accepting the older symbol-based payloads on restore.
+- Debounced high-frequency Storage writes on the watch: score/card actions now coalesce snapshot saves for 300 ms, idle custom-profile edits now defer Storage writes until flush points, and lifecycle-critical paths (`start/pause/resume`, halftime/full-time, explicit save/reset/end, app stop) flush pending work immediately.
+- Simplified the architecture without collapsing the whole app back into one file: removed `RugbySnapshotService`, `ScoreEvent`, `EventLogEntry`, and `PersistedStatePair`, and moved the tiny payload/orchestration logic into `RugbyGameModel`, `RugbyScoringService`, `RugbyTimerEventLog`, and `RugbyTimerPersistence`.
+- Kept the main countdown visually stable when starting a match by reserving the same lower hint band in idle and playing states, and added `tests/Test_RugbyTimerRendererLayout.mc` to lock that regression down.
+- Updated stale tests to the new debounced custom-profile behavior and added new regression coverage for save-failure removal, app-stop flushes, deferred custom-profile writes, and idle key-path responsiveness.
+- Refreshed `docs/CODEBASE_AUDIT.md`, `tests/TEST_TRACEABILITY.md`, `tests/README.md`, and `project_technical_document.md` so the repo documentation now matches the simplified persistence/input architecture instead of the deleted wrapper layer.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed). Simulator execution is reachable again with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" 1 -t"`, but terminal-visible full-suite output is still intermittent in this environment.
+
+## [2026-04-08] Restore build validation path and add layout regression coverage
+
+- Restored the missing `Hint_Select_Pause` string resource so both the app build and the unit-test build can compile again after the revert.
+- Updated `source/RugbyTimerRenderer.mc` so idle and playing states reserve the same bottom hint space, keeping the main countdown vertically stable when the match starts.
+- Added `tests/Test_RugbyTimerRendererLayout.mc` to cover countdown-anchor stability and card-row-driven vertical layout shifts without requiring the WatchUi runtime.
+- Updated `scripts/run-tests.sh` to print the correct simulator command shape for this SDK and restored `scripts/validate-local.sh` as a one-command local validation entrypoint.
+- Built successfully with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f monkey.jungle -o /tmp/rugbytimer-build.prg -d fenix6 -y /Users/600171959/developer_key -w` and `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeyc" -f test_monkey.jungle -o /tmp/rugbytimer-tests.prg -d fenix6 -y /Users/600171959/developer_key -w --unit-test"` (both passed).
+- Ran `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" 1 -t"` against the simulator. The harness now executes tests, but the suite is currently red: 21 passed, 27 failed, and 1 errored. The main failure clusters are profile/settings expectations, typed-wrapper round-trips, and persistence/card flows that hit `UnexpectedTypeException: Given value cannot be serialized`.
+
 ## [2026-04-03] Centralize storage keys and force rugby activity recording
 
 - Added `source/RugbyStorageKeys.mc` and rewired active persistence/profile/settings/test helpers to use centralized Storage key names instead of repeating string literals.

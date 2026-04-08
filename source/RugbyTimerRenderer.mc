@@ -114,13 +114,20 @@ class RugbyTimerRenderer {
             hintLines = 1;
         }
 
+        // Reserve the same bottom-band height in idle and normal match play so the
+        // main countdown does not jump when the second idle hint line disappears.
+        var reservedHintLines = hintLines;
+        if (!isLocked && (model.gameState == STATE_IDLE || model.gameState == STATE_PLAYING)) {
+            reservedHintLines = 2;
+        }
+
         var hintLineHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.hintFont, height * 0.04);
         var hintLineGap = hintLineHeight + (height * 0.012);
         var hintHeight = 0;
-        if (hintLines > 0) {
+        if (reservedHintLines > 0) {
             hintHeight = hintLineHeight;
-            if (hintLines > 1) {
-                hintHeight = hintHeight + ((hintLines - 1) * hintLineGap);
+            if (reservedHintLines > 1) {
+                hintHeight = hintHeight + ((reservedHintLines - 1) * hintLineGap);
             }
         }
 

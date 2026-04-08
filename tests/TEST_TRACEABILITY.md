@@ -12,8 +12,19 @@ Format: Requirement ID — Short description — Test(s) (file::function) — St
 - **FR-006** — Enforce minimum duration of 1 minute (clamp) — Planned: add unit test for picker/accept path — Not Covered
 - **FR-007** — Defaults when no saved value (7 min for 7s, 40 min for 15s) — `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults` — Covered
 - **FR-008** — Chosen half-length fixed once match starts — `tests/Test_RugbySettings_UI.mc::test_ui_select_profile_while_playing_is_blocked` — Partially Covered
-- **FR-009** — Countdown updates immediately after user confirms duration (idle) — Planned: integration test — Not Covered
+- **FR-009** — Countdown updates immediately after user confirms duration (idle) — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — Partially Covered
 - **FR-010** — Persist last-selected game type (`lastGameType`/`matchProfileId`) — `tests/Test_RugbyMatchProfiles.mc::test_migrateLegacyProfile_defaults`, `tests/Test_RugbyMatchProfiles.mc::test_model_initialize_restores_stored_profile_id` — Covered
+
+Persistence and hot-path regressions:
+
+- **PERSIST-001** — Recording a try persists a live snapshot without surfacing `Save failed`. — `tests/Test_RugbyTimerPersistence.mc::test_recordTry_persists_without_save_failure` — Covered
+- **PERSIST-002** — Recording a yellow card persists a live snapshot without surfacing `Save failed`. — `tests/Test_RugbyTimerPersistence.mc::test_recordYellowCard_persists_without_save_failure` — Covered
+- **PERSIST-003** — Debounced snapshot saves flush when an immediate persist is requested. — `tests/Test_RugbyGameModelServices.mc::test_debounced_snapshot_save_flushes_on_immediate_persist` — Covered
+- **PERSIST-004** — Pending snapshot and custom-profile writes flush on app stop. — `tests/Test_RugbyGameModelServices.mc::test_handleAppStop_flushes_pending_snapshot_and_custom_profile` — Covered
+- **PERSIST-005** — Score-history payloads remain backward-compatible with legacy symbol payloads. — `tests/Test_RugbyTypedEntries.mc::test_scoreEvent_roundtrip`, `tests/Test_RugbyTypedEntries.mc::test_scoreEvent_legacy_symbol_payload_is_supported` — Covered
+- **PERSIST-006** — Event-log payloads remain backward-compatible with legacy symbol payloads. — `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display`, `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_legacy_payload_is_supported` — Covered
+- **RESP-001** — Custom profile writes are deferred during repeated idle edits and only hit Storage on flush. — `tests/Test_RugbyGameModelServices.mc::test_custom_settings_writes_defer_until_flush` — Covered
+- **RESP-002** — Idle hardware keys still adjust the timer even when the normal action gate is closed. — `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — Covered
 
 Card timers (requirements discovered from history and conversation):
 
@@ -22,7 +33,12 @@ Card timers (requirements discovered from history and conversation):
 - **CARDS-003** — Timers for card entries are synchronized to the model's suspension clock so their remaining time decreases with the game timer. — `tests/Test_RugbyTimerCards_advanced.mc::test_yellow_timer_sync_with_suspension` — Covered
 - **CARDS-004** — Under 7s rules, red cards are permanent (flag set) and still increment the red label counter. — `tests/Test_RugbyTimerCards_advanced.mc::test_red_permanent_in_7s_sets_flag_and_increments_counter` — Covered
 
-Next steps: add UI/integration tests that assert the visual stacking order (rendered y positions) and end-to-end behavior via the simulator Test Explorer or a simulator-driven script.
+Layout regressions:
+
+- **LAYOUT-001** — Main countdown stays anchored when the match transitions from idle to playing without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_idle_and_playing` — Covered
+- **LAYOUT-002** — Visible sanction rows push the main countdown downward when additional vertical space is needed. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_moves_down_for_visible_card_rows` — Covered
+
+Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 
 Additional unit tests added (cards/timing):
 
@@ -41,12 +57,14 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyGameModelServices.mc::test_saveGame_wrapper_writes_summary` — verifies the save facade still persists the final summary
 - `tests/Test_RugbyGameModelServices.mc::test_preset_switching_updates_selected_profile_and_timer` — verifies built-in preset switching updates the selected profile and timing values
 - `tests/Test_RugbyGameModelServices.mc::test_settings_mutation_order_stays_custom_and_persists_values` — verifies custom-setting mutation order preserves expected custom profile values
+- `tests/Test_RugbyGameModelServices.mc::test_handleAppStop_flushes_pending_snapshot_and_custom_profile` — verifies lifecycle shutdown flushes both pending debounced match saves and pending custom-profile writes
 - `tests/Test_RugbyTypedEntries.mc::test_cardEntry_roundtrip_and_invalid_input` — verifies card wrapper roundtrip and invalid-input guard path
-- `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — verifies event-log wrapper roundtrip and display formatting
+- `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — verifies event-log payload roundtrip and display formatting
 - `tests/Test_RugbySettings_UI.mc::test_settings_support_profile_resolution_and_clamp` — verifies extracted pure settings helper behavior
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps` — verifies extracted delegate idle-minute rule
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_overlayKeyMapping` — verifies extracted overlay key routing
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_presetHoldKeys` — verifies hold-to-preset key gating
+- `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — verifies idle UP/DOWN changes bypass the in-match action throttle path
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — verifies serialized sanction-timer wrapper roundtrip
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — verifies persisted snapshot wrapper roundtrip
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — verifies renderer/timing typed adapter construction
@@ -80,12 +98,15 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyGameModelServices.mc::test_saveGame_wrapper_writes_summary` — Verifies the snapshot facade still writes `lastGameSummary` via the public model method.
 - `tests/Test_RugbyGameModelServices.mc::test_preset_switching_updates_selected_profile_and_timer` — Verifies sequential preset changes apply the expected built-in timing values.
 - `tests/Test_RugbyGameModelServices.mc::test_settings_mutation_order_stays_custom_and_persists_values` — Verifies custom-setting mutations remain on the custom profile and persist the final expected values.
+- `tests/Test_RugbyGameModelServices.mc::test_handleAppStop_flushes_pending_snapshot_and_custom_profile` — Verifies app-stop lifecycle handling flushes deferred persistence work before recording shutdown.
 - `tests/Test_RugbyTypedEntries.mc::test_cardEntry_roundtrip_and_invalid_input` — Verifies the typed card wrapper preserves fields and safely rejects non-dictionary input.
-- `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — Verifies event-log entries roundtrip through the wrapper and format the saved menu/export label correctly.
+- `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_roundtrip_and_display` — Verifies event-log entries roundtrip through the storage-safe payload format and format the saved menu/export label correctly.
+- `tests/Test_RugbyEventLogEntry.mc::test_eventLogEntry_legacy_payload_is_supported` — Verifies older symbol-keyed event-log payloads still format correctly after the serialization cleanup.
 - `tests/Test_RugbySettings_UI.mc::test_settings_support_profile_resolution_and_clamp` — Verifies the extracted settings helper resolves preset ids and clamps picker values without needing the WatchUi runtime.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_idleMinuteAdjustment_clamps` — Verifies the extracted delegate helper clamps idle half-minute adjustments to the supported 1..99 range.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_overlayKeyMapping` — Verifies overlay hardware keys map to the correct logical conversion/penalty actions.
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegateSupport_presetHoldKeys` — Verifies only MENU and UP arm the hold-to-preset shortcut.
+- `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — Verifies idle UP/DOWN key events still mutate the model immediately even when the normal action gate would block in-match actions.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — Verifies serialized sanction-timer adapters preserve timing/label/id fields.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — Verifies the persisted game snapshot adapter preserves key scoreboard/state fields.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — Verifies the typed render-layout/font/card-info and timer-update adapters are constructed as expected.
@@ -95,7 +116,7 @@ Detailed test purposes (file::function -> purpose):
 Status key: Covered = automated unit test present; Partially Covered = test covers some aspects; Planned = test should be added.
 
 Next steps:
-- Add UI/behavior/integration tests for Settings and picker flows (FR-001, FR-002, FR-003, FR-005, FR-006, FR-008, FR-009).
+- Add UI/behavior/integration tests for Settings and picker flows (FR-001, FR-002, FR-003, FR-005, FR-006, FR-008, FR-009 visual redraw confirmation).
 - Expand `Test_RugbyMatchProfiles` to assert `matchProfileId` persistence paths and `lastGameType` semantics.
 - Keep this file updated as tests are added or requirements change.
 
