@@ -114,10 +114,10 @@ class RugbyTimerRenderer {
             hintLines = 1;
         }
 
-        // Reserve the same bottom-band height in idle and normal match play so the
-        // main countdown does not jump when the second idle hint line disappears.
+        // Reserve the same bottom-band height across idle, playing, and paused so the
+        // main countdown does not jump when hint/state text appears or disappears.
         var reservedHintLines = hintLines;
-        if (!isLocked && (model.gameState == STATE_IDLE || model.gameState == STATE_PLAYING)) {
+        if (!isLocked && (model.gameState == STATE_IDLE || model.gameState == STATE_PLAYING || model.gameState == STATE_PAUSED)) {
             reservedHintLines = 2;
         }
 
@@ -262,7 +262,7 @@ class RugbyTimerRenderer {
     static function renderCardRow(dc, labelX, timerX, rowY, labelFont, valueFont, labelColor, labelText, valueText) {
         dc.setColor(labelColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(labelX, rowY, labelFont, labelText, Graphics.TEXT_JUSTIFY_RIGHT);
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.setColor(labelColor, Graphics.COLOR_TRANSPARENT);
         dc.drawText(timerX, rowY, valueFont, valueText, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
@@ -300,9 +300,11 @@ class RugbyTimerRenderer {
             var awayLine = 0;
             var homeX = width / 4;
             var awayX = (3 * width) / 4;
-            var cardFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
-            var valueFont = cardFont;
-            var maxFontHeight = RugbyTimerRenderer.getFontHeightSafe(dc, cardFont, height * 0.04);
+            var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
+            var valueFont = width <= 260 ? Graphics.FONT_TINY : Graphics.FONT_SMALL;
+            var maxLabelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.04);
+            var maxValueHeight = RugbyTimerRenderer.getFontHeightSafe(dc, valueFont, height * 0.045);
+            var maxFontHeight = (maxValueHeight > maxLabelHeight) ? maxValueHeight : maxLabelHeight;
             lineStep = maxFontHeight + (height * 0.016);
             var labelGap = width * 0.016;
             var timerGap = width * 0.026;
@@ -331,7 +333,7 @@ class RugbyTimerRenderer {
                     homeLabelX,
                     homeTimerX,
                     cardsY + homeLine * lineStep,
-                    cardFont,
+                    labelFont,
                     valueFont,
                     Graphics.COLOR_YELLOW,
                     label,
@@ -359,7 +361,7 @@ class RugbyTimerRenderer {
                     awayLabelX,
                     awayTimerX,
                     cardsY + awayLine * lineStep,
-                    cardFont,
+                    labelFont,
                     valueFont,
                     Graphics.COLOR_YELLOW,
                     label2,
@@ -375,7 +377,7 @@ class RugbyTimerRenderer {
                     homeLabelX,
                     homeTimerX,
                     cardsY + homeLine * lineStep,
-                    cardFont,
+                    labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
                     redPermHomeLabel,
@@ -403,7 +405,7 @@ class RugbyTimerRenderer {
                         homeLabelX,
                         homeTimerX,
                         cardsY + homeLine * lineStep,
-                        cardFont,
+                        labelFont,
                         valueFont,
                         Graphics.COLOR_RED,
                         redHomeLabel,
@@ -420,7 +422,7 @@ class RugbyTimerRenderer {
                     awayLabelX,
                     awayTimerX,
                     cardsY + awayLine * lineStep,
-                    cardFont,
+                    labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
                     redPermAwayLabel,
@@ -448,7 +450,7 @@ class RugbyTimerRenderer {
                         awayLabelX,
                         awayTimerX,
                         cardsY + awayLine * lineStep,
-                        cardFont,
+                        labelFont,
                         valueFont,
                         Graphics.COLOR_RED,
                         redAwayLabel,

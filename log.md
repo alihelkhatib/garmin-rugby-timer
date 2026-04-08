@@ -1,3 +1,10 @@
+## [2026-04-08] Increase card-timer emphasis and lock paused layout with active cards
+
+- Increased the effective readability of the sanction clock without changing the overall UI structure: the card value field now uses the slightly larger compact-font tier where available, and the timer/status text now matches the card color instead of switching back to white.
+- Fixed the remaining non-hacky layout bug when pausing with active sanctions on screen. The root cause was that playing and paused states were still reserving different hidden lower-band heights once card rows existed, so the countdown had two different legal anchors. The renderer now applies one shared lower-band reservation contract for idle/playing/paused.
+- Expanded `tests/Test_RugbyTimerRendererLayout.mc` again with a playing-vs-paused-with-cards regression so the anchored countdown behavior is protected even when sanction rows are visible.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
+
 ## [2026-04-08] Stabilize paused countdown layout and improve card-timer readability
 
 - Fixed the remaining countdown drift when pausing a match by reserving the same lower state-text band in `STATE_PLAYING` and `STATE_PAUSED`, matching the earlier idle/playing hint-band stabilization.
