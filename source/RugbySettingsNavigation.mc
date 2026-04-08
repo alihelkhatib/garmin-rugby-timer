@@ -65,6 +65,10 @@ class RugbySettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
     }
 
     function closeSettingsRoot() {
+        var app = Application.getApp() as RugbyTimerApp;
+        if (app != null && app.model != null) {
+            app.model.flushPendingCustomProfileSave();
+        }
         if (embeddedInApp) {
             WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
             WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
@@ -188,6 +192,7 @@ class MatchProfileDelegate extends WatchUi.Menu2InputDelegate {
             return;
         }
 
+        app.model.flushPendingCustomProfileSave();
         app.model.setMatchProfile(profileId);
         app.model.gameTime = 0;
         app.model.elapsedTime = 0;

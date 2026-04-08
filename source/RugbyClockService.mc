@@ -11,6 +11,7 @@ using Toybox.System;
 class RugbyClockService {
     static function startGame(model) {
         if (model.gameState == STATE_IDLE) {
+            model.flushPendingCustomProfileSave();
             var now = System.getTimer();
             model.gameState = STATE_PLAYING;
             model.gameStartTime = now;
@@ -23,7 +24,7 @@ class RugbyClockService {
             model.thirtySecondAlerted = false;
             RugbyRecordingService.startRecording(model);
             RugbyTimerTiming.triggerMatchStartVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -35,7 +36,7 @@ class RugbyClockService {
             model.lastPauseReminderTime = now;
             model.lastUpdate = now;
             RugbyTimerTiming.triggerPauseVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -49,7 +50,7 @@ class RugbyClockService {
                 model.gameStartTime = model.lastUpdate - (model.gameTime * 1000.0f);
             }
             RugbyTimerTiming.triggerResumeVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -62,7 +63,7 @@ class RugbyClockService {
             model.lastPauseReminderTime = now;
             model.lastUpdate = now;
             RugbyTimerTiming.triggerPauseVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -89,7 +90,7 @@ class RugbyClockService {
                 RugbyRecordingService.startRecording(model);
             }
             RugbyTimerTiming.triggerResumeVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -98,7 +99,7 @@ class RugbyClockService {
         model.lastPauseReminderTime = null;
         model.lastUpdate = System.getTimer();
         RugbyRecordingService.startRecording(model);
-        RugbySnapshotService.persistState(model);
+        model.persistState();
     }
 
     static function enterHalfTime(model) {
@@ -106,11 +107,12 @@ class RugbyClockService {
         model.lastPauseReminderTime = null;
         model.lastUpdate = System.getTimer();
         RugbyTimerTiming.triggerHalfTimeVibe();
-        RugbySnapshotService.persistState(model);
+        model.persistState();
     }
 
     static function startSecondHalf(model) {
         if (model.gameState == STATE_HALFTIME) {
+            model.flushPendingCustomProfileSave();
             model.halfNumber = 2;
             model.gameTime = 0;
             model.countdownRemaining = model.countdownTimer;
@@ -121,7 +123,7 @@ class RugbyClockService {
             RugbyRecordingService.startRecording(model);
             model.thirtySecondAlerted = false;
             RugbyTimerTiming.triggerMatchStartVibe();
-            RugbySnapshotService.persistState(model);
+            model.persistState();
         }
     }
 
@@ -131,7 +133,7 @@ class RugbyClockService {
         model.lastUpdate = null;
         RugbyRecordingService.stopRecording(model);
         RugbyTimerTiming.triggerFullTimeVibe();
-        RugbySnapshotService.persistState(model);
+        model.persistState();
         RugbySnapshotService.finalizeGame(model);
         RugbyTimerCards.clearCardTimers(model);
     }

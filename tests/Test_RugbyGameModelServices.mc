@@ -91,3 +91,47 @@ function test_settings_mutation_order_stays_custom_and_persists_values(logger as
     if (stored == null) { logger.error("stored custom missing"); return false; }
     return model.matchProfileId == "custom" && stored.halfDuration == 600 && stored.conversionTime == 45 && stored.is7s == true;
 }
+
+(:test)
+function test_custom_settings_writes_defer_until_flush(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.setMatchProfile("15s");
+
+    model.setHalfDuration(600);
+    if (Toybox.Application.Storage.getValue(STORAGE_KEY_CUSTOM_HALF_DURATION) != null) {
+        logger.error("custom half duration should not write immediately");
+        return false;
+    }
+    if (Toybox.Application.Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID) == "custom") {
+        logger.error("matchProfileId should not flip immediately during deferred save");
+        return false;
+    }
+
+    model.flushPendingCustomProfileSave();
+    return Toybox.Application.Storage.getValue(STORAGE_KEY_CUSTOM_HALF_DURATION) == 600
+        && Toybox.Application.Storage.getValue(STORAGE_KEY_MATCH_PROFILE_ID) == "custom";
+}
+
+(:test)
+function test_debounced_snapshot_save_flushes_on_immediate_persist(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.lastUpdate = System.getTimer();
+    model.useConversionTimer = false;
+
+    model.recordTry(true);
+    if (Toybox.Application.Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) != null) {
+        logger.error("snapshot write should be deferred");
+        return false;
+    }
+
+    model.persistState();
+    var snapshot = PersistedGameSnapshot.fromDict(Toybox.Application.Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+    if (snapshot == null) { logger.error("persistState did not flush debounced snapshot"); return false; }
+    return snapshot.homeScore == 5 && snapshot.lastEvents != null && snapshot.lastEvents.size() == 1;
+}

@@ -3,6 +3,7 @@ using Toybox.System;
 using Toybox.ActivityRecording;
 using Toybox.Activity;
 using Toybox.Lang;
+using Toybox.Timer;
 
 // Represents the game state
 enum {
@@ -53,6 +54,16 @@ class RugbyGameModel {
     var session;
     // One-shot UI/log status text about runtime failures or recording support/failure
     var statusMessage;
+    // One-shot timer used to coalesce rapid live snapshot writes
+    var pendingPersistTimer;
+    // Tracks whether a debounced snapshot save is pending
+    var pendingPersistRequested;
+    // One-shot timer used to coalesce repeated custom profile writes
+    var pendingCustomProfileTimer;
+    // The custom-profile snapshot waiting to be flushed to storage
+    var pendingCustomProfile;
+    // The pending stored profile id that should be written with delayed settings
+    var pendingStoredProfileId;
     // A boolean indicating if the game is a 7s or 15s match
     var is7s;
     // The selected preset/profile id
@@ -145,12 +156,18 @@ class RugbyGameModel {
     const PENALTY_KICK_TIME = 60;    // 60 seconds for penalty kicks
     const MAX_TRACK_POINTS = 200;
     const STATE_SAVE_INTERVAL_MS = 5000;
+    const DEBOUNCED_SAVE_INTERVAL_MS = 300;
     
     /**
      * Initializes the game model.
      * Loads settings from storage and initializes the game state.
      */
     function initialize() {
+        pendingPersistTimer = null;
+        pendingPersistRequested = false;
+        pendingCustomProfileTimer = null;
+        pendingCustomProfile = null;
+        pendingStoredProfileId = null;
         matchProfileId = RugbyMatchProfiles.getStoredProfileId();
         var activeProfile = RugbyMatchProfiles.getProfile(matchProfileId);
         var activeProfileEntry = MatchProfileEntry.fromDict(activeProfile);
@@ -243,6 +260,86 @@ class RugbyGameModel {
         return consumeStatusMessage();
     }
 
+    function cancelPendingPersistState() {
+        pendingPersistRequested = false;
+        if (pendingPersistTimer != null) {
+            pendingPersistTimer.stop();
+            pendingPersistTimer = null;
+        }
+    }
+
+    function schedulePersistState() {
+        pendingPersistRequested = true;
+        if (pendingPersistTimer == null) {
+            pendingPersistTimer = new Timer.Timer();
+        } else {
+            pendingPersistTimer.stop();
+        }
+        pendingPersistTimer.start(method(:flushPendingPersistState), DEBOUNCED_SAVE_INTERVAL_MS, false);
+    }
+
+    function flushPendingPersistState() {
+        if (pendingPersistTimer != null) {
+            pendingPersistTimer.stop();
+            pendingPersistTimer = null;
+        }
+        if (!pendingPersistRequested) {
+            return;
+        }
+        pendingPersistRequested = false;
+        RugbySnapshotService.persistState(self);
+    }
+
+    function buildPendingCustomProfile() {
+        var label = Storage.getValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL);
+        if (label == null) { label = "Custom"; }
+        return RugbyMatchProfiles.createProfile(
+            "custom",
+            label,
+            is7s,
+            countdownTimer,
+            conversionTime,
+            kickoffTime,
+            penaltyKickTime,
+            useConversionTimer,
+            usePenaltyTimer
+        );
+    }
+
+    function scheduleCustomProfileSave() {
+        pendingCustomProfile = buildPendingCustomProfile();
+        if (matchProfileId != null) {
+            pendingStoredProfileId = matchProfileId;
+        }
+        if (pendingCustomProfileTimer == null) {
+            pendingCustomProfileTimer = new Timer.Timer();
+        } else {
+            pendingCustomProfileTimer.stop();
+        }
+        pendingCustomProfileTimer.start(method(:flushPendingCustomProfileSave), DEBOUNCED_SAVE_INTERVAL_MS, false);
+    }
+
+    function flushPendingCustomProfileSave() {
+        if (pendingCustomProfileTimer != null) {
+            pendingCustomProfileTimer.stop();
+            pendingCustomProfileTimer = null;
+        }
+        if (pendingCustomProfile != null) {
+            RugbyMatchProfiles.storeCustomProfile(pendingCustomProfile);
+            pendingCustomProfile = null;
+        }
+        if (pendingStoredProfileId != null) {
+            Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, pendingStoredProfileId);
+            pendingStoredProfileId = null;
+        }
+    }
+
+    function saveCurrentSettingsAsCustomProfileNow() {
+        pendingCustomProfile = buildPendingCustomProfile();
+        pendingStoredProfileId = "custom";
+        flushPendingCustomProfileSave();
+    }
+
     /**
      * This method is called periodically to update the game state.
      */
@@ -255,6 +352,7 @@ class RugbyGameModel {
      * the same change is not immediately written again by the periodic timer.
      */
     function persistState() {
+        cancelPendingPersistState();
         RugbySnapshotService.persistState(self);
     }
 
@@ -264,6 +362,8 @@ class RugbyGameModel {
      * resumed after the app process exits.
      */
     function handleAppStop() {
+        flushPendingCustomProfileSave();
+        cancelPendingPersistState();
         RugbySnapshotService.handleAppStop(self);
     }
 
@@ -325,6 +425,8 @@ class RugbyGameModel {
      * Called when the match ends or is reset to start fresh state.
      */
     function resetGame() {
+        flushPendingCustomProfileSave();
+        cancelPendingPersistState();
         RugbySnapshotService.resetGame(self);
     }
 
@@ -348,6 +450,7 @@ class RugbyGameModel {
         // Always update countdownRemaining to match the new profile timer
         countdownRemaining = countdownTimer;
         if (persist) {
+            flushPendingCustomProfileSave();
             Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
             if (matchProfileId == "custom") {
                 RugbyMatchProfiles.storeCustomProfile(entry.toDict());
@@ -361,8 +464,9 @@ class RugbyGameModel {
      * @param profileId The profile identifier
      */
     function setMatchProfile(profileId) {
+        flushPendingCustomProfileSave();
         if (profileId == "custom" && !RugbyMatchProfiles.hasStoredCustomProfile()) {
-            saveCurrentSettingsAsCustomProfile();
+            saveCurrentSettingsAsCustomProfileNow();
         }
         applyProfile(RugbyMatchProfiles.getProfile(profileId), true);
     }
@@ -443,14 +547,13 @@ class RugbyGameModel {
 
     function promoteToCustomProfile() {
         if (matchProfileId != "custom") {
-            saveCurrentSettingsAsCustomProfile();
             matchProfileId = "custom";
-            Storage.setValue(STORAGE_KEY_MATCH_PROFILE_ID, matchProfileId);
+            pendingStoredProfileId = "custom";
         }
     }
 
     function saveCurrentSettingsAsCustomProfile() {
-        RugbyMatchProfiles.storeCustomProfile(buildCurrentProfile("custom"));
+        scheduleCustomProfileSave();
     }
 
     function buildCurrentProfile(profileId) {
@@ -507,6 +610,8 @@ class RugbyGameModel {
      * Attempt to resume a persisted match session.
      */
     function saveGame() {
+        flushPendingCustomProfileSave();
+        cancelPendingPersistState();
         RugbySnapshotService.saveGame(self);
     }
 
@@ -636,7 +741,7 @@ class RugbyGameModel {
         } else {
             awayScore = (awayScore + delta < 0) ? 0 : awayScore + delta;
         }
-        persistState();
+        schedulePersistState();
     }
     
     /**

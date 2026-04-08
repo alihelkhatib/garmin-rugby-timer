@@ -213,6 +213,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.countdownTimer, 1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
                 return true;
             }
 
@@ -289,13 +290,17 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function onNextPage() {
         try {
             var view = Application.getApp().rugbyView;
-            if (view.isLocked || !view.isActionAllowed()) {
+            if (view.isLocked) {
                 return true;
             }
             // Physical DOWN should shorten the idle half length by one minute.
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.countdownTimer, -1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
+                return true;
+            }
+            if (!view.isActionAllowed()) {
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {
@@ -333,13 +338,17 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 suppressNextUpMenuAction = false;
                 return true;
             }
-            if (view.isLocked || !view.isActionAllowed()) {
+            if (view.isLocked) {
                 return true;
             }
             // Physical UP should lengthen the idle half length by one minute.
             if (model.gameState == STATE_IDLE) {
                 var newMinutes = RugbyTimerInputSupport.getAdjustedIdleMinutes(model.countdownTimer, 1);
                 model.setHalfDuration(newMinutes * 60);
+                WatchUi.requestUpdate();
+                return true;
+            }
+            if (!view.isActionAllowed()) {
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {

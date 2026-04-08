@@ -30,7 +30,7 @@ class RugbyScoringService {
             RugbyClockService.startConversionCountdown(model);
         }
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Try");
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 
     static function recordConversion(model, isHome) {
@@ -46,7 +46,7 @@ class RugbyScoringService {
         if (model.gameState == STATE_CONVERSION) {
             RugbyClockService.resumePlay(model);
         } else {
-            RugbySnapshotService.persistState(model);
+            model.schedulePersistState();
         }
     }
 
@@ -64,7 +64,7 @@ class RugbyScoringService {
             RugbyClockService.startPenaltyCountdown(model);
         }
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Penalty Goal");
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 
     static function recordDropGoal(model, isHome) {
@@ -76,7 +76,7 @@ class RugbyScoringService {
         RugbyScoringService.addEvent(model, :drop, isHome);
         RugbyScoringService.trimEvents(model);
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Drop Goal");
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 
     static function recordPenaltyTry(model, isHome) {
@@ -88,7 +88,7 @@ class RugbyScoringService {
         RugbyScoringService.addEvent(model, :penalty_try, isHome);
         RugbyScoringService.trimEvents(model);
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Penalty Try");
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 
     static function undoLastEvent(model) {
@@ -97,7 +97,7 @@ class RugbyScoringService {
         }
         var eventEntry = ScoreEvent.fromDict(model.lastEvents.remove(model.lastEvents.size() - 1));
         if (eventEntry == null) {
-            RugbySnapshotService.persistState(model);
+            model.schedulePersistState();
             return true;
         }
         var isHome = eventEntry.isHome;
@@ -136,7 +136,7 @@ class RugbyScoringService {
                 if (model.awayScore < 0) { model.awayScore = 0; }
             }
         }
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
         return true;
     }
 }

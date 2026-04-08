@@ -11,7 +11,7 @@ class RugbyDisciplineService {
         }
         var duration = model.getYellowCardDuration();
         var cardId = RugbyTimerCards.allocateYellowCardId(model, isHome);
-        var label = "Y" + cardId.toString();
+        var label = "Y" + cardId.toString() + " ";
         var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(model.suspensionTime, duration, label, cardId);
         if (isHome) {
             model.yellowHomeTimes.add(entry);
@@ -21,7 +21,7 @@ class RugbyDisciplineService {
             model.yellowAwayTotal = model.yellowAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 
     static function recordRedCard(model, isHome) {
@@ -30,7 +30,7 @@ class RugbyDisciplineService {
         }
         var redDuration = model.getRedCardDuration();
         var cardId = RugbyTimerCards.allocateRedCardId(model, isHome);
-        var label = "R" + cardId.toString();
+        var label = "R" + cardId.toString() + " ";
         if (model.usesSevensCardRules()) {
             if (isHome) {
                 model.redHomePermanent = true;
@@ -53,6 +53,6 @@ class RugbyDisciplineService {
             model.redAwayTotal = model.redAwayTotal + 1;
         }
         RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Red Card (" + label + ")" + (model.usesSevensCardRules() ? " (permanent)" : ""));
-        RugbySnapshotService.persistState(model);
+        model.schedulePersistState();
     }
 }
