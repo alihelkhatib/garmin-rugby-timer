@@ -69,32 +69,18 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return A dictionary of layout values
      */
-    static function calculateLayout(dc, fonts, width, height) {
-        // Compute a measured header band for the elapsed timer, team labels, scores,
-        // and center metadata so the top stack stays stable on round screens.
-        var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
-        var timerHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.timerFont, height * 0.035);
-        var labelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.035);
-        var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.scoreFont, height * 0.12);
-        var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.04);
-        var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.045);
-
-        var topSafeInset = height * 0.06;
-        var rowGap = height * 0.01;
-        var groupGap = height * 0.014;
-
-        var gameTimerY = topSafeInset + (timerHeight / 2);
-        var teamLabelY = gameTimerY + (timerHeight / 2) + rowGap + (labelHeight / 2);
-        var scoreY = teamLabelY + (labelHeight / 2) + rowGap + (scoreHeight / 2);
-        var halfY = scoreY + (scoreHeight / 2) + groupGap + (halfHeight / 2);
-        var triesY = halfY + (halfHeight / 2) + rowGap + (triesHeight / 2);
-
-        var headerBottomY = triesY + (triesHeight / 2);
-        var cardsY = headerBottomY + (height * 0.05);
+    static function calculateLayout(height) {
+        // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
+        // and the state/hint section so each renders consistently across devices.
+        var scoreY = height * 0.10;
+        var halfY = height * 0.18;
+        var gameTimerY = halfY * 0.5;
+        var triesY = halfY + height * 0.06;
+        var cardsY = height * 0.31;
         var stateBaseY = height * 0.86;
         var hintBaseY = height * 0.93;
         var iconY = height * 0.04;
-        return RugbyRenderLayout.create(teamLabelY, scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY);
+        return RugbyRenderLayout.create(scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY);
     }
 
     static function getFontHeightSafe(dc, font, fallback) {
@@ -150,13 +136,13 @@ class RugbyTimerRenderer {
         var bottomPadding = height * 0.08;
         var afterCountdownGap = stateHeight > 0 ? height * 0.02 : height * 0.015;
         var afterStateGap = (stateHeight > 0 && hintHeight > 0) ? height * 0.015 : 0;
-        var minCountdownY = layout.cardsY + height * 0.02;
+        var minCountdownY = layout.triesY + height * 0.08;
         var preferredCountdownY = cardStackBottom + topPadding;
+        var maxCountdownY = height - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
+
         if (preferredCountdownY < minCountdownY) {
             preferredCountdownY = minCountdownY;
         }
-        var maxCountdownY = height - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
-
         if (preferredCountdownY > maxCountdownY) {
             preferredCountdownY = maxCountdownY;
         }
@@ -182,13 +168,18 @@ class RugbyTimerRenderer {
      * @param scoreY The Y position of the scores
      * @param height The height of the screen
      */
-    static function renderScores(dc, model, width, scoreFont, scoreY, teamLabelY) {
+    static function renderScores(dc, model, width, scoreFont, scoreY, height) {
         var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
+        var labelOffset = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.035) + (height * 0.01);
+        var labelY = scoreY - labelOffset;
+        if (labelY < 0) {
+            labelY = 0;
+        }
 
         dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 4, teamLabelY, labelFont, "HOME", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(width / 4, labelY, labelFont, "HOME", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-        dc.drawText((3 * width) / 4, teamLabelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText((3 * width) / 4, labelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
@@ -322,9 +313,8 @@ class RugbyTimerRenderer {
             var awayLine = 0;
             var homeX = width / 4;
             var awayX = (3 * width) / 4;
-            var sharedCardFont = width <= 260 ? Graphics.FONT_TINY : Graphics.FONT_SMALL;
-            var labelFont = sharedCardFont;
-            var valueFont = sharedCardFont;
+            var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
+            var valueFont = width <= 260 ? Graphics.FONT_TINY : Graphics.FONT_SMALL;
             var maxLabelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.04);
             var maxValueHeight = RugbyTimerRenderer.getFontHeightSafe(dc, valueFont, height * 0.045);
             var maxFontHeight = (maxValueHeight > maxLabelHeight) ? maxValueHeight : maxLabelHeight;

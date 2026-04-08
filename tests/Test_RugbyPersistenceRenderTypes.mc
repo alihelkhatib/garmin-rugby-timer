@@ -31,9 +31,9 @@ function test_persistedGameSnapshot_roundtrip(logger as Test.Logger) as Lang.Boo
 (:test)
 function test_renderTypes_and_timerUpdateResult(logger as Test.Logger) as Lang.Boolean {
     var fonts = RugbyRenderFonts.create(1, 2, 3, 4, 5, 6, 7);
-    var layout = RugbyRenderLayout.create(10, 20, 30, 40, 50, 60, 70, 80, 90);
+    var layout = RugbyRenderLayout.create(10, 20, 30, 40, 50, 60, 70, 80);
     var cardInfo = RugbyRenderedCardInfo.create(2, 12, 100);
     var content = RugbyMainContentLayout.create(120, 140, 160, 18);
     var update = RugbyTimerUpdateResult.create([], true);
-    return fonts.countdownFont == 5 && layout.teamLabelY == 10 && layout.cardsY == 60 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
+    return fonts.countdownFont == 5 && layout.cardsY == 50 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
 }
