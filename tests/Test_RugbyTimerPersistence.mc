@@ -29,7 +29,49 @@ function test_recordYellowCard_pauses_live_match_and_tracks_totals(logger as Tes
 
     var yellowTimes = model.yellowHomeTimes;
     var first = CardEntry.fromDict(yellowTimes.remove(0));
-    return first != null && first.label == "Y1" && first.duration == model.getYellowCardDuration();
+    return first != null && first.label != null && first.label.find("Y1") == 0 && first.duration == model.getYellowCardDuration();
+}
+
+(:test)
+function test_recordTry_persists_without_save_failure(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.lastUpdate = System.getTimer();
+    model.useConversionTimer = false;
+
+    model.recordTry(true);
+
+    if (model.consumeStatusMessage() != null) { logger.error("recordTry should not raise save failure"); return false; }
+    var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+    if (snapshot == null) { logger.error("recordTry did not persist snapshot"); return false; }
+    if (snapshot.lastEvents == null || snapshot.lastEvents.size() != 1) { logger.error("recordTry did not persist history"); return false; }
+
+    var storedEvents = snapshot.lastEvents as Lang.Array;
+    var storedEvent = ScoreEvent.fromDict(storedEvents[0]);
+    return storedEvent != null && storedEvent.eventType == "try" && storedEvent.isHome == true;
+}
+
+(:test)
+function test_recordYellowCard_persists_without_save_failure(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+
+    var model = new RugbyGameModel();
+    model.initialize();
+    model.gameState = STATE_PLAYING;
+    model.lastUpdate = System.getTimer();
+    model.suspensionTime = 75;
+
+    model.recordYellowCard(true);
+
+    if (model.consumeStatusMessage() != null) { logger.error("recordYellowCard should not raise save failure"); return false; }
+    var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+    if (snapshot == null) { logger.error("recordYellowCard did not persist snapshot"); return false; }
+    return snapshot.yellowHomeTimes != null && snapshot.yellowHomeTimes.size() == 1;
 }
 
 (:test)

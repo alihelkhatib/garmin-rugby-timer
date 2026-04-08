@@ -14,3 +14,13 @@ function test_eventLogEntry_roundtrip_and_display(logger as Test.Logger) as Lang
     if (entry == null) { logger.error("EventLogEntry.fromDict returned null"); return false; }
     return entry.toDisplayString() == "01:23 – Home Try";
 }
+
+(:test)
+function test_eventLogEntry_legacy_payload_is_supported(logger as Test.Logger) as Lang.Boolean {
+    var entry = EventLogEntry.fromDict({
+        :time => "01:23",
+        :desc => "Home Try"
+    });
+    if (entry == null) { logger.error("legacy EventLogEntry payload not restored"); return false; }
+    return entry.toDisplayString() == "01:23 – Home Try";
+}

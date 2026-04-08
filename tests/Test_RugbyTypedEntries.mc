@@ -23,7 +23,17 @@ function test_scoreEvent_roundtrip(logger as Test.Logger) as Lang.Boolean {
     var raw = ScoreEvent.create(:penalty_try, true).toDict();
     var entry = ScoreEvent.fromDict(raw);
     if (entry == null) { logger.error("ScoreEvent.fromDict returned null"); return false; }
-    return entry.eventType == :penalty_try && entry.isHome == true;
+    return entry.eventType == "penalty_try" && entry.isHome == true;
+}
+
+(:test)
+function test_scoreEvent_legacy_symbol_payload_is_supported(logger as Test.Logger) as Lang.Boolean {
+    var entry = ScoreEvent.fromDict({
+        :type => :penalty_try,
+        :home => true
+    });
+    if (entry == null) { logger.error("legacy ScoreEvent payload not restored"); return false; }
+    return entry.eventType == "penalty_try" && entry.isHome == true;
 }
 
 (:test)
