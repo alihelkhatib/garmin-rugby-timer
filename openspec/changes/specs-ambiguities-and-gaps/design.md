@@ -19,8 +19,8 @@ This design proposes concrete, testable decisions for the ambiguous areas surfac
 - Implementation: `RugbyDisciplineService` holds per-format duration table; `RugbyTimerTiming` consumes durations to start suspension timers.
 
 3) Conversion countdown
-- Recommendation: default = 60 seconds, configurable via Settings key `conversionTimeoutSeconds`.
-- Implementation: overlay uses `conversionTimeoutSeconds` for its secondary countdown; tests assert overlay pauses main countdown and resumes correctly.
+- Recommendation: default = 90 seconds for 15s matches and 30 seconds for 7s matches. Expose these as per-game-type settings (e.g., `conversionTimeoutSeconds15s` and `conversionTimeoutSeconds7s`) or a single `conversionTimeoutSeconds` read through the current game-type context so they are configurable via Settings.
+- Implementation: overlay reads the current game type and uses the corresponding conversion timeout; tests assert overlay pauses the main countdown for the configured timeout and resumes correctly.
 
 4) Export & timestamps
 - Recommendation: use ISO8601 (UTC) for `recordedAt` and each GPS point `timestamp` to avoid timezone ambiguity.
