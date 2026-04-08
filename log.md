@@ -5,6 +5,12 @@
 - Added `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom` to lock the compact-round overflow regression down.
 - Validated with `./scripts/validate-local.sh` on April 8, 2026. App build and unit-test build both passed.
 
+## [2026-04-08] Separate the score band from center metadata
+
+- Fixed a round-layout regression from the hybrid layout refactor where `Half 1` and `OT / OT` had been packed back into the score band, letting the big score digits and idle countdown visually collide on-device.
+- Updated `source/RugbyTimerRenderer.mc` so the score row gets its own reserved band before the center metadata, and added a renderer regression in `tests/Test_RugbyTimerRendererLayout.mc` to keep the center metadata out of the score lane.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
+
 ## [2026-04-08] Introduce hybrid XML layout scaffolding and safe-area renderer bands
 
 - Replaced the placeholder `resources/layouts/layout.xml` shell with three device-family layouts: compact round, large round, and rectangular. Each layout now carries a `RugbyLayoutGuideDrawable` instance so the watch app can pull family-specific safe-area and band-spacing metadata from XML during `onLayout()`.

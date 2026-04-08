@@ -155,6 +155,10 @@ function test_calculateLayout_keeps_header_inside_safe_band(logger as Test.Logge
         logger.error("header or score anchors escaped safe content");
         return false;
     }
+    if (!(layout.halfY > layout.scoreY + 10 && layout.triesY > layout.halfY)) {
+        logger.error("center metadata drifted into the score band");
+        return false;
+    }
 
     return true;
 }

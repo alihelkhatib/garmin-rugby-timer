@@ -96,20 +96,17 @@ class RugbyTimerRenderer {
         var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.scoreFont, height * 0.10);
         var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.03);
         var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.03);
-        var metaGap = headerGap * 0.45;
+        var metaGap = headerGap * 0.7;
         var gameTimerY = safeTop;
         var teamLabelY = gameTimerY + timerHeight + headerGap;
-        var scoreY = teamLabelY + labelHeight + (headerGap * 0.6);
-        // Keep the center metadata inside the score band on compact round layouts so
-        // the header does not push the main countdown off the screen.
-        var halfY = scoreY + (scoreHeight * 0.34);
+        var scoreY = teamLabelY + labelHeight + (headerGap * 0.8);
+        // Reserve a dedicated score band before the center metadata so the score digits
+        // never collide with the half/tries rows on compact round watches.
+        var scoreBandBottomY = scoreY + scoreHeight + (height * 0.025);
+        var halfY = scoreBandBottomY;
         var triesY = halfY + halfHeight + metaGap;
-        var scoreBottomY = scoreY + scoreHeight;
         var metaBottomY = triesY + triesHeight;
-        var headerBottomY = scoreBottomY;
-        if (metaBottomY > headerBottomY) {
-            headerBottomY = metaBottomY;
-        }
+        var headerBottomY = metaBottomY;
 
         layout.safeLeft = safeLeft;
         layout.safeRight = safeRight;
