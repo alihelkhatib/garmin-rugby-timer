@@ -32,15 +32,21 @@ function test_persistedGameSnapshot_roundtrip(logger as Test.Logger) as Lang.Boo
 function test_renderTypes_and_timerUpdateResult(logger as Test.Logger) as Lang.Boolean {
     var fonts = RugbyRenderFonts.create(1, 2, 3, 4, 5, 6, 7);
     var layout = RugbyRenderLayout.create();
+    layout.family = "compact_round";
     layout.safeTop = 10;
     layout.teamLabelY = 20;
     layout.scoreY = 30;
+    layout.homeTriesX = 15;
+    layout.awayTriesX = 85;
     layout.cardsY = 50;
     layout.stateBaseY = 60;
     layout.hintBaseY = 70;
     layout.iconY = 80;
+    layout.showIcons = true;
+    layout.showElapsedTimer = true;
+    layout.showTries = true;
     var cardInfo = RugbyRenderedCardInfo.create(2, 12, 100);
     var content = RugbyMainContentLayout.create(120, 140, 160, 18);
     var update = RugbyTimerUpdateResult.create([], true);
-    return fonts.countdownFont == 5 && layout.teamLabelY == 20 && layout.cardsY == 50 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
+    return fonts.countdownFont == 5 && layout.family == "compact_round" && layout.homeTriesX == 15 && layout.showTries == true && layout.cardsY == 50 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
 }

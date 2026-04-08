@@ -155,8 +155,16 @@ function test_calculateLayout_keeps_header_inside_safe_band(logger as Test.Logge
         logger.error("header or score anchors escaped safe content");
         return false;
     }
-    if (!(layout.halfY > layout.scoreY + 10 && layout.triesY > layout.halfY)) {
-        logger.error("center metadata drifted into the score band");
+    if (!(layout.halfY > layout.scoreY + 10)) {
+        logger.error("half row drifted into the score band");
+        return false;
+    }
+    if (!(layout.homeTriesX < layout.homeScoreX && layout.awayTriesX > layout.awayScoreX)) {
+        logger.error("tries were not anchored beside their score columns");
+        return false;
+    }
+    if (!(layout.triesY > layout.scoreY && layout.triesY < layout.halfY)) {
+        logger.error("tries did not stay in the score-adjacent band");
         return false;
     }
 
@@ -177,6 +185,25 @@ function test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom(logger a
 
     if (countdownBottom > safeBottomLimit) {
         logger.error("idle countdown overflowed safe bottom");
+        return false;
+    }
+
+    return true;
+}
+
+(:test)
+function test_getUrgentCardEntry_picks_lowest_remaining_time(logger as Test.Logger) as Lang.Boolean {
+    var urgent = RugbyTimerRenderer.getUrgentCardEntry([
+        { "startTime" => 0, "duration" => 600, "remaining" => 540, "label" => "Y2", "cardId" => 2, "vibeTriggered" => false },
+        { "startTime" => 0, "duration" => 600, "remaining" => 120, "label" => "Y1", "cardId" => 1, "vibeTriggered" => false }
+    ], 0);
+
+    if (urgent == null) {
+        logger.error("urgent card entry was null");
+        return false;
+    }
+    if (urgent.label != "Y1") {
+        logger.error("urgent card selection ignored the lowest remaining time");
         return false;
     }
 

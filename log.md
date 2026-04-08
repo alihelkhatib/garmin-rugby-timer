@@ -1,3 +1,11 @@
+## [2026-04-08] Apply UI spec priorities to the live match screen
+
+- Reworked the compact-round scoreboard and countdown layout in `source/RugbyTimerRenderer.mc` to match the new UI spec instead of the earlier hybrid-header draft. The gray elapsed timer remains above the score band, `HOME` / `AWAY` stay smaller as support labels, tries now render beside their respective score columns, and the half row sits below the score band without colliding with the idle countdown.
+- Tightened compact-round safe-area usage and added low-priority hide behavior so the renderer uses more of the visible screen before sacrificing countdown/score readability. Icons and tries can now yield before the main lanes are forced into overlap.
+- Changed main-screen card rendering to urgency-first behavior: the nearest-expiring timed sanction per team is now the guaranteed visible card row, while permanent red dismissals are lower priority on the main screen when a timed sanction is active.
+- Expanded `tests/Test_RugbyTimerRendererLayout.mc` with score-adjacent tries checks and urgent-card selection coverage, and updated `tests/Test_RugbyPersistenceRenderTypes.mc` for the richer layout carrier.
+- Validated with `./scripts/validate-local.sh` on April 8, 2026 (app build and unit-test build both passed). Also ran `monkeydo`; the suite remains red in the same older non-layout/profile/card baseline areas, but the new renderer regressions executed inside that run.
+
 ## [2026-04-08] Align the UI spec with final scoreboard and card priorities
 
 - Revised `docs/UI_SPEC.md` again so it now reflects the final visual hierarchy decisions: countdown and scores are co-primary, the gray elapsed timer stays above the score band, `HOME` / `AWAY` are smaller support labels, tries live beside their respective scores, and the main screen must guarantee visibility of the nearest-expiring timed sanction.

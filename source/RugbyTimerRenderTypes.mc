@@ -52,6 +52,7 @@ class RugbyMainContentLayoutCacheEntry {
 }
 
 class RugbyRenderLayout {
+    var family;
     var safeLeft;
     var safeRight;
     var safeTop;
@@ -61,6 +62,8 @@ class RugbyRenderLayout {
     var centerX;
     var homeScoreX;
     var awayScoreX;
+    var homeTriesX;
+    var awayTriesX;
     var homeCardAnchorX;
     var awayCardAnchorX;
     var scoreY;
@@ -74,6 +77,9 @@ class RugbyRenderLayout {
     var hintBaseY;
     var lowerBandTopY;
     var iconY;
+    var showIcons;
+    var showElapsedTimer;
+    var showTries;
 
     static function create() {
         return new RugbyRenderLayout();

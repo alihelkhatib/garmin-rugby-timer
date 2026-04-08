@@ -70,6 +70,13 @@ class RugbyTimerRenderer {
         return Graphics.FONT_SMALL;
     }
 
+    static function chooseCompactScoreFont(width) {
+        if (width <= 240) {
+            return Graphics.FONT_LARGE;
+        }
+        return Graphics.FONT_NUMBER_MEDIUM;
+    }
+
     /**
      * Compute the safe content bounds and measured bands for the live match screen.
      * @param dc The device context
@@ -91,23 +98,56 @@ class RugbyTimerRenderer {
         var cardsGap = height * guide.cardsGapPct;
         var lowerBandGap = height * guide.lowerBandGapPct;
         var labelFont = RugbyTimerRenderer.chooseTeamLabelFont(width);
+        var scoreFont = fonts.scoreFont;
+        if (guide.family == "compact_round") {
+            scoreFont = RugbyTimerRenderer.chooseCompactScoreFont(width);
+        }
         var timerHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.timerFont, height * 0.04);
         var labelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.03);
-        var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.scoreFont, height * 0.10);
+        var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, scoreFont, height * 0.10);
         var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.03);
-        var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.03);
-        var metaGap = headerGap * 0.7;
+        var compactRound = guide.family == "compact_round";
+        var showIcons = true;
+        var showElapsedTimer = true;
+        var showTries = true;
         var gameTimerY = safeTop;
         var teamLabelY = gameTimerY + timerHeight + headerGap;
+        if (!showElapsedTimer) {
+            teamLabelY = safeTop;
+        }
         var scoreY = teamLabelY + labelHeight + (headerGap * 0.8);
-        // Reserve a dedicated score band before the center metadata so the score digits
-        // never collide with the half/tries rows on compact round watches.
-        var scoreBandBottomY = scoreY + scoreHeight + (height * 0.025);
-        var halfY = scoreBandBottomY;
-        var triesY = halfY + halfHeight + metaGap;
-        var metaBottomY = triesY + triesHeight;
-        var headerBottomY = metaBottomY;
+        var scoreBandBottomY = scoreY + scoreHeight;
+        var triesY = scoreY + (scoreHeight * 0.42);
+        var halfY = scoreBandBottomY + (height * 0.015);
+        var halfBottomY = halfY + halfHeight;
+        var headerBottomY = halfBottomY;
 
+        // Apply the spec's low-priority hide order on compact round screens before
+        // allowing the primary score/countdown lanes to degrade further.
+        if (compactRound) {
+            var previewHeaderBottom = halfBottomY;
+            var previewHintHeight = (RugbyTimerRenderer.getFontHeightSafe(dc, fonts.hintFont, height * 0.04) * 2) + (height * 0.012);
+            var previewCountdownHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.countdownFont, height * 0.22);
+            var availableCountdownTop = safeBottom - previewHintHeight - previewCountdownHeight - (height * 0.04);
+            if (previewHeaderBottom + (height * 0.02) > availableCountdownTop) {
+                showIcons = false;
+            }
+            if (previewHeaderBottom + (height * 0.015) > availableCountdownTop) {
+                showTries = false;
+            }
+            if (previewHeaderBottom > availableCountdownTop) {
+                showElapsedTimer = false;
+                teamLabelY = safeTop;
+                scoreY = teamLabelY + labelHeight + (headerGap * 0.6);
+                scoreBandBottomY = scoreY + scoreHeight;
+                triesY = scoreY + (scoreHeight * 0.42);
+                halfY = scoreBandBottomY + (height * 0.012);
+                halfBottomY = halfY + halfHeight;
+            }
+            headerBottomY = halfBottomY;
+        }
+
+        layout.family = guide.family;
         layout.safeLeft = safeLeft;
         layout.safeRight = safeRight;
         layout.safeTop = safeTop;
@@ -115,8 +155,10 @@ class RugbyTimerRenderer {
         layout.contentWidth = contentWidth;
         layout.contentHeight = contentHeight;
         layout.centerX = safeLeft + (contentWidth / 2);
-        layout.homeScoreX = safeLeft + (contentWidth * 0.24);
-        layout.awayScoreX = safeRight - (contentWidth * 0.24);
+        layout.homeScoreX = safeLeft + (contentWidth * 0.21);
+        layout.awayScoreX = safeRight - (contentWidth * 0.21);
+        layout.homeTriesX = safeLeft + (contentWidth * 0.08);
+        layout.awayTriesX = safeRight - (contentWidth * 0.08);
         layout.homeCardAnchorX = safeLeft + (contentWidth * guide.cardInsetPct);
         layout.awayCardAnchorX = safeRight - (contentWidth * guide.cardInsetPct);
         layout.gameTimerY = gameTimerY;
@@ -130,6 +172,9 @@ class RugbyTimerRenderer {
         layout.stateBaseY = layout.lowerBandTopY;
         layout.hintBaseY = safeBottom - RugbyTimerRenderer.getFontHeightSafe(dc, fonts.hintFont, height * 0.04);
         layout.iconY = safeTop;
+        layout.showIcons = showIcons;
+        layout.showElapsedTimer = showElapsedTimer;
+        layout.showTries = showTries;
         return layout;
     }
 
@@ -182,11 +227,11 @@ class RugbyTimerRenderer {
         }
 
         var cardStackBottom = cardInfo.cardsY + (cardInfo.rows * cardInfo.lineStep);
-        var topPadding = height * 0.035;
+        var topPadding = height * 0.03;
         var bottomPadding = height * 0.02;
         var afterCountdownGap = stateHeight > 0 ? height * 0.02 : height * 0.015;
         var afterStateGap = (stateHeight > 0 && hintHeight > 0) ? height * 0.015 : 0;
-        var minCountdownY = layout.headerBottomY + (height * 0.025);
+        var minCountdownY = layout.headerBottomY + (height * 0.02);
         var preferredCountdownY = cardStackBottom + topPadding;
         var maxCountdownY = layout.safeBottom - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
 
@@ -233,8 +278,12 @@ class RugbyTimerRenderer {
         dc.drawText(layout.awayScoreX, layout.teamLabelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(layout.homeScoreX, layout.scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(layout.awayScoreX, layout.scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        var compactScoreFont = scoreFont;
+        if (layout.family == "compact_round") {
+            compactScoreFont = RugbyTimerRenderer.chooseCompactScoreFont(width);
+        }
+        dc.drawText(layout.homeScoreX, layout.scoreY, compactScoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.awayScoreX, layout.scoreY, compactScoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     /**
@@ -246,6 +295,9 @@ class RugbyTimerRenderer {
      * @param gameTimerY The Y position of the timer
      */
     static function renderGameTimer(dc, model, layout, timerFont) {
+        if (!layout.showElapsedTimer) {
+            return;
+        }
         var gameStr = RugbyTimerTiming.formatTime(model.elapsedTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(layout.centerX, layout.gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
@@ -265,8 +317,10 @@ class RugbyTimerRenderer {
     static function renderHalfAndTries(dc, model, layout, halfFont, triesFont) {
         var halfStr = "Half " + model.halfNumber.toString();
         dc.drawText(layout.centerX, layout.halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
-        var triesText = model.homeTries.toString() + "T / " + model.awayTries.toString() + "T";
-        dc.drawText(layout.centerX, layout.triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
+        if (layout.showTries) {
+            dc.drawText(layout.homeTriesX, layout.triesY, triesFont, model.homeTries.toString() + "T", Graphics.TEXT_JUSTIFY_LEFT);
+            dc.drawText(layout.awayTriesX, layout.triesY, triesFont, model.awayTries.toString() + "T", Graphics.TEXT_JUSTIFY_RIGHT);
+        }
     }
 
     /**
@@ -278,7 +332,7 @@ class RugbyTimerRenderer {
      * @param scoreY The Y position of the lock indicator
      */
     static function renderLockIndicator(dc, layout, lockIcon) {
-        if (lockIcon != null) {
+        if (layout.showIcons && lockIcon != null) {
             var iconX = layout.safeRight;
             try {
                 iconX = iconX - lockIcon.getWidth();
@@ -298,6 +352,9 @@ class RugbyTimerRenderer {
      * @param iconY The Y position of the icon
      */
     static function renderPlayPauseIndicator(dc, model, layout, playIcon, pauseIcon) {
+        if (!layout.showIcons) {
+            return;
+        }
         var icon = playIcon;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_IDLE) {
             icon = pauseIcon;
@@ -330,6 +387,57 @@ class RugbyTimerRenderer {
         dc.drawText(timerX, rowY, valueFont, valueText, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
+    static function getUrgentCardEntry(entries, timerNow) {
+        if (entries == null) {
+            return null;
+        }
+        var bestEntry = null;
+        var bestRemaining = null;
+        for (var i = 0; i < entries.size(); i = i + 1) {
+            var entry = CardEntry.fromDict(entries[i]);
+            if (entry == null) {
+                continue;
+            }
+            var remaining = entry.remaining;
+            if (!RugbyTimerCards.isNumeric(remaining)) {
+                remaining = RugbyTimerCards.getEntryRemaining(entry, timerNow);
+            }
+            if (bestRemaining == null || remaining < bestRemaining) {
+                bestRemaining = remaining;
+                bestEntry = entry;
+                bestEntry.remaining = remaining;
+            }
+        }
+        return bestEntry;
+    }
+
+    static function renderUrgentTeamCard(dc, model, rowY, labelFont, valueFont, labelX, timerX, cardEntry, cardColor) {
+        if (cardEntry == null) {
+            return false;
+        }
+        var prefix = "Y";
+        var fallbackId = 1;
+        if (cardColor == Graphics.COLOR_RED) {
+            prefix = "R";
+        }
+        if (cardEntry.cardId instanceof Lang.Number || cardEntry.cardId instanceof Lang.Float) {
+            fallbackId = cardEntry.cardId;
+        }
+        var label = RugbyTimerRenderer.canonicalCardLabel(cardEntry.label, prefix, fallbackId);
+        RugbyTimerRenderer.renderCardRow(
+            dc,
+            labelX,
+            timerX,
+            rowY,
+            labelFont,
+            valueFont,
+            cardColor,
+            label,
+            model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(cardEntry.remaining))
+        );
+        return true;
+    }
+
     /**
      * Renders the card timers.
      * @param dc The device context
@@ -349,19 +457,23 @@ class RugbyTimerRenderer {
         if (!(timerNow instanceof Lang.Number) && !(timerNow instanceof Lang.Float)) {
             timerNow = 0;
         }
-        var visibleYellowHome = model.yellowHomeTimes.size();
-        var visibleYellowAway = model.yellowAwayTimes.size();
-        var visibleRedHome = model.redHomePermanent ? 1 : model.redHomeTimes.size();
-        var visibleRedAway = model.redAwayPermanent ? 1 : model.redAwayTimes.size();
-            var homeCardRows = visibleYellowHome + visibleRedHome;
-        var awayCardRows = visibleYellowAway + visibleRedAway;
-        if (homeCardRows > 2) { homeCardRows = 2; }
-        if (awayCardRows > 2) { awayCardRows = 2; }
+        var urgentHomeYellow = RugbyTimerRenderer.getUrgentCardEntry(model.yellowHomeTimes as Lang.Array, timerNow);
+        var urgentAwayYellow = RugbyTimerRenderer.getUrgentCardEntry(model.yellowAwayTimes as Lang.Array, timerNow);
+        var urgentHomeRed = null;
+        if (!model.redHomePermanent) {
+            urgentHomeRed = RugbyTimerRenderer.getUrgentCardEntry(model.redHomeTimes as Lang.Array, timerNow);
+        }
+        var urgentAwayRed = null;
+        if (!model.redAwayPermanent) {
+            urgentAwayRed = RugbyTimerRenderer.getUrgentCardEntry(model.redAwayTimes as Lang.Array, timerNow);
+        }
+        var homeCardRows = 0;
+        if (urgentHomeYellow != null || urgentHomeRed != null || model.redHomePermanent) { homeCardRows = 1; }
+        var awayCardRows = 0;
+        if (urgentAwayYellow != null || urgentAwayRed != null || model.redAwayPermanent) { awayCardRows = 1; }
         var maxCardRows = (homeCardRows > awayCardRows) ? homeCardRows : awayCardRows;
         var lineStep = height * 0.065;
         if (maxCardRows > 0) {
-            var homeLine = 0;
-            var awayLine = 0;
             var width = layout.safeRight - layout.safeLeft;
             var homeX = layout.homeCardAnchorX;
             var awayX = layout.awayCardAnchorX;
@@ -377,153 +489,49 @@ class RugbyTimerRenderer {
             var homeTimerX = homeX + timerGap;
             var awayLabelX = awayX - labelGap;
             var awayTimerX = awayX + timerGap;
-            var homeVisibleCount = 0;
-            var awayVisibleCount = 0;
-            var homeYellowEntries = model.yellowHomeTimes as Lang.Array;
-            for (var i = 0; i < homeYellowEntries.size(); i = i + 1) {
-                if (homeVisibleCount >= 2) {
-                    break;
-                }
-                var entry = CardEntry.fromDict(homeYellowEntries[i]);
-                if (entry == null) {
-                    continue;
-                }
-                var y = entry.remaining;
-                if (!(y instanceof Lang.Number) && !(y instanceof Lang.Float)) {
-                    y = RugbyTimerCards.getEntryRemaining(entry, timerNow);
-                }
-                var label = RugbyTimerRenderer.canonicalCardLabel(entry.label, "Y", homeLine + 1);
-                RugbyTimerRenderer.renderCardRow(
-                    dc,
-                    homeLabelX,
-                    homeTimerX,
-                    layout.cardsY + homeLine * lineStep,
-                    labelFont,
-                    valueFont,
-                    Graphics.COLOR_YELLOW,
-                    label,
-                    model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y))
-                );
-                homeVisibleCount += 1;
-                homeLine += 1;
+            var homeBest = urgentHomeYellow;
+            var homeBestColor = Graphics.COLOR_YELLOW;
+            if (urgentHomeRed != null && (homeBest == null || urgentHomeRed.remaining < homeBest.remaining)) {
+                homeBest = urgentHomeRed;
+                homeBestColor = Graphics.COLOR_RED;
             }
-            var awayYellowEntries = model.yellowAwayTimes as Lang.Array;
-            for (var i = 0; i < awayYellowEntries.size(); i = i + 1) {
-                if (awayVisibleCount >= 2) {
-                    break;
-                }
-                var entry = CardEntry.fromDict(awayYellowEntries[i]);
-                if (entry == null) {
-                    continue;
-                }
-                var y2 = entry.remaining;
-                if (!(y2 instanceof Lang.Number) && !(y2 instanceof Lang.Float)) {
-                    y2 = RugbyTimerCards.getEntryRemaining(entry, timerNow);
-                }
-                var label2 = RugbyTimerRenderer.canonicalCardLabel(entry.label, "Y", awayLine + 1);
-                RugbyTimerRenderer.renderCardRow(
-                    dc,
-                    awayLabelX,
-                    awayTimerX,
-                    layout.cardsY + awayLine * lineStep,
-                    labelFont,
-                    valueFont,
-                    Graphics.COLOR_YELLOW,
-                    label2,
-                    model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y2))
-                );
-                awayVisibleCount += 1;
-                awayLine += 1;
+            var awayBest = urgentAwayYellow;
+            var awayBestColor = Graphics.COLOR_YELLOW;
+            if (urgentAwayRed != null && (awayBest == null || urgentAwayRed.remaining < awayBest.remaining)) {
+                awayBest = urgentAwayRed;
+                awayBestColor = Graphics.COLOR_RED;
             }
-            if (model.redHomePermanent && homeVisibleCount < 2) {
+
+            var homeRendered = RugbyTimerRenderer.renderUrgentTeamCard(dc, model, layout.cardsY, labelFont, valueFont, homeLabelX, homeTimerX, homeBest, homeBestColor);
+            if (!homeRendered && model.redHomePermanent) {
                 var redPermHomeLabel = model.redHomeLabelCounter > 0 ? "R" + model.redHomeLabelCounter.toString() : "R";
                 RugbyTimerRenderer.renderCardRow(
                     dc,
                     homeLabelX,
                     homeTimerX,
-                    layout.cardsY + homeLine * lineStep,
+                    layout.cardsY,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
                     redPermHomeLabel,
                     "PERM"
                 );
-                homeVisibleCount += 1;
-                homeLine += 1;
-            } else {
-                var redHomeEntries = model.redHomeTimes as Lang.Array;
-                for (var i = 0; i < redHomeEntries.size(); i = i + 1) {
-                    if (homeVisibleCount >= 2) {
-                        break;
-                    }
-                    var redHomeEntry = CardEntry.fromDict(redHomeEntries[i]);
-                    if (redHomeEntry == null) {
-                        continue;
-                    }
-                    var redHomeRem = redHomeEntry.remaining;
-                    if (!(redHomeRem instanceof Lang.Number) && !(redHomeRem instanceof Lang.Float)) {
-                        redHomeRem = RugbyTimerCards.getEntryRemaining(redHomeEntry, timerNow);
-                    }
-                    var redHomeLabel = RugbyTimerRenderer.canonicalCardLabel(redHomeEntry.label, "R", i + 1);
-                    RugbyTimerRenderer.renderCardRow(
-                        dc,
-                        homeLabelX,
-                        homeTimerX,
-                        layout.cardsY + homeLine * lineStep,
-                        labelFont,
-                        valueFont,
-                        Graphics.COLOR_RED,
-                        redHomeLabel,
-                        model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redHomeRem))
-                    );
-                    homeVisibleCount += 1;
-                    homeLine += 1;
-                }
             }
-            if (model.redAwayPermanent && awayVisibleCount < 2) {
+
+            var awayRendered = RugbyTimerRenderer.renderUrgentTeamCard(dc, model, layout.cardsY, labelFont, valueFont, awayLabelX, awayTimerX, awayBest, awayBestColor);
+            if (!awayRendered && model.redAwayPermanent) {
                 var redPermAwayLabel = model.redAwayLabelCounter > 0 ? "R" + model.redAwayLabelCounter.toString() : "R";
                 RugbyTimerRenderer.renderCardRow(
                     dc,
                     awayLabelX,
                     awayTimerX,
-                    layout.cardsY + awayLine * lineStep,
+                    layout.cardsY,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
                     redPermAwayLabel,
                     "PERM"
                 );
-                awayVisibleCount += 1;
-                awayLine += 1;
-            } else {
-                var redAwayEntries = model.redAwayTimes as Lang.Array;
-                for (var i = 0; i < redAwayEntries.size(); i = i + 1) {
-                    if (awayVisibleCount >= 2) {
-                        break;
-                    }
-                    var redAwayEntry = CardEntry.fromDict(redAwayEntries[i]);
-                    if (redAwayEntry == null) {
-                        continue;
-                    }
-                    var redAwayRem = redAwayEntry.remaining;
-                    if (!(redAwayRem instanceof Lang.Number) && !(redAwayRem instanceof Lang.Float)) {
-                        redAwayRem = RugbyTimerCards.getEntryRemaining(redAwayEntry, timerNow);
-                    }
-                    var redAwayLabel = RugbyTimerRenderer.canonicalCardLabel(redAwayEntry.label, "R", i + 1);
-                    RugbyTimerRenderer.renderCardRow(
-                        dc,
-                        awayLabelX,
-                        awayTimerX,
-                        layout.cardsY + awayLine * lineStep,
-                        labelFont,
-                        valueFont,
-                        Graphics.COLOR_RED,
-                        redAwayLabel,
-                        model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redAwayRem))
-                    );
-                    awayVisibleCount += 1;
-                    awayLine += 1;
-                }
             }
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }

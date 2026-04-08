@@ -58,9 +58,9 @@ class RugbyLayoutSupport {
         }
         if (family == "compact_round") {
             guide.family = "compact_round";
-            guide.safeTopPct = 0.12;
-            guide.safeBottomPct = 0.10;
-            guide.safeSidePct = 0.12;
+            guide.safeTopPct = 0.09;
+            guide.safeBottomPct = 0.08;
+            guide.safeSidePct = 0.10;
             guide.headerGapPct = 0.012;
             guide.cardsGapPct = 0.028;
             guide.stateGapPct = 0.020;
