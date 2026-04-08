@@ -2051,3 +2051,12 @@
 - Re-anchored tries from the score columns instead of placing them as loose header metadata, which keeps them visually attached to the correct team when they are allowed to appear.
 - Expanded regression coverage for the idle-hints setting default/persistence and for compact-round font-emphasis rules.
 - Pending validation for this change set: `./scripts/validate-local.sh` and a simulator pass.
+
+## [2026-04-08] XML-first live screen refactor
+
+- Replaced the old layout-guide approach with family-specific XML layouts for the main live screen and conversion/penalty overlay. The view now binds dynamic text/color/visibility into drawable IDs instead of recalculating scoreboard/countdown geometry every frame.
+- Reduced `RugbyTimerRenderer` to presentation helpers only, retired `RugbyLayoutGuideDrawable`, and kept only the small play/pause and lock icons in code because this Garmin layout schema rejected positioned bitmap drawables in XML.
+- Updated renderer/layout tests to cover family/layout selection and presentation mapping instead of manual geometry math.
+- 2026-04-08 validation build: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs (warnings only: container-analysis warnings in `RugbyTimerRenderer.mc` and `RugbyTimerView.mc`).
+- 2026-04-08 simulator unit-test run: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" "1" -t` -> FAILED with a broad existing suite baseline (`passed=23, failed=46, errors=1`), so the refactor is compile-validated but not yet backed by a clean green simulator suite from this workspace.
+- 2026-04-08 layout-safety test rebuild: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs after adding headless XML layout safety checks for off-screen, bezel-risk, and overlap regressions (warnings only: existing container-analysis warnings in production files plus the new test helper loops).
