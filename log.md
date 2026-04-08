@@ -1,3 +1,11 @@
+## [2026-04-08] Stabilize paused countdown layout and improve card-timer readability
+
+- Fixed the remaining countdown drift when pausing a match by reserving the same lower state-text band in `STATE_PLAYING` and `STATE_PAUSED`, matching the earlier idle/playing hint-band stabilization.
+- Reworked sanction rows for easier on-watch scanning without a broad font-size increase: labels now render as compact colored tokens (`Y1`, `R1`) and the time/status value renders separately in white (`9:48`, `PERM`) around a shared column anchor.
+- Slightly increased card row spacing and trimmed all rendered card labels to their compact canonical form so older stored labels with stray spaces still display cleanly.
+- Expanded `tests/Test_RugbyTimerRendererLayout.mc` with a playing-vs-paused countdown-anchor regression test, and updated `project_technical_document.md` plus `tests/TEST_TRACEABILITY.md` to document the new layout/readability contract.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
+
 ## [2026-04-08] Stabilize persistence, debounce hot paths, and simplify snapshot plumbing
 
 - Fixed the root cause of the persistent `Save failed` notice: live match snapshots now serialize score history and event log entries as plain Storage-safe dictionaries with string keys/values, while still accepting the older symbol-based payloads on restore.

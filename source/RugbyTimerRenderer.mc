@@ -99,7 +99,7 @@ class RugbyTimerRenderer {
     static function calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, isLocked) {
         var countdownHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.countdownFont, height * 0.22);
         var stateHeight = 0;
-        if (model.gameState == STATE_PAUSED) {
+        if (model.gameState == STATE_PAUSED || model.gameState == STATE_PLAYING) {
             stateHeight = RugbyTimerRenderer.getFontHeightSafe(dc, Graphics.FONT_SMALL, height * 0.06);
         } else if (model.gameState == STATE_HALFTIME || model.gameState == STATE_ENDED) {
             stateHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.stateFont, height * 0.05);
@@ -243,6 +243,29 @@ class RugbyTimerRenderer {
         }
     }
 
+    static function canonicalCardLabel(label, prefix, fallbackId) {
+        if (label instanceof Lang.String) {
+            var normalized = label;
+            while (normalized.length() > 0 && normalized.substring(0, 1) == " ") {
+                normalized = normalized.substring(1, normalized.length());
+            }
+            while (normalized.length() > 0 && normalized.substring(normalized.length() - 1, normalized.length()) == " ") {
+                normalized = normalized.substring(0, normalized.length() - 1);
+            }
+            if (normalized.length() > 0) {
+                return normalized;
+            }
+        }
+        return prefix + fallbackId.toString();
+    }
+
+    static function renderCardRow(dc, labelX, timerX, rowY, labelFont, valueFont, labelColor, labelText, valueText) {
+        dc.setColor(labelColor, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(labelX, rowY, labelFont, labelText, Graphics.TEXT_JUSTIFY_RIGHT);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(timerX, rowY, valueFont, valueText, Graphics.TEXT_JUSTIFY_LEFT);
+    }
+
     /**
      * Renders the card timers.
      * @param dc The device context
@@ -278,9 +301,15 @@ class RugbyTimerRenderer {
             var homeX = width / 4;
             var awayX = (3 * width) / 4;
             var cardFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
-            var cardFontRed = cardFont;
+            var valueFont = cardFont;
             var maxFontHeight = RugbyTimerRenderer.getFontHeightSafe(dc, cardFont, height * 0.04);
-            lineStep = maxFontHeight + (height * 0.010);
+            lineStep = maxFontHeight + (height * 0.016);
+            var labelGap = width * 0.016;
+            var timerGap = width * 0.026;
+            var homeLabelX = homeX - labelGap;
+            var homeTimerX = homeX + timerGap;
+            var awayLabelX = awayX - labelGap;
+            var awayTimerX = awayX + timerGap;
             var homeVisibleCount = 0;
             var awayVisibleCount = 0;
             var homeYellowEntries = model.yellowHomeTimes as Lang.Array;
@@ -296,12 +325,18 @@ class RugbyTimerRenderer {
                 if (!(y instanceof Lang.Number) && !(y instanceof Lang.Float)) {
                     y = RugbyTimerCards.getEntryRemaining(entry, timerNow);
                 }
-                var label = entry.label;
-                if (label == null) {
-                    label = "Y" + (homeLine + 1).toString();
-                }
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(homeX, cardsY + homeLine * lineStep, cardFont, label + ":" + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y)), Graphics.TEXT_JUSTIFY_CENTER);
+                var label = RugbyTimerRenderer.canonicalCardLabel(entry.label, "Y", homeLine + 1);
+                RugbyTimerRenderer.renderCardRow(
+                    dc,
+                    homeLabelX,
+                    homeTimerX,
+                    cardsY + homeLine * lineStep,
+                    cardFont,
+                    valueFont,
+                    Graphics.COLOR_YELLOW,
+                    label,
+                    model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y))
+                );
                 homeVisibleCount += 1;
                 homeLine += 1;
             }
@@ -318,19 +353,34 @@ class RugbyTimerRenderer {
                 if (!(y2 instanceof Lang.Number) && !(y2 instanceof Lang.Float)) {
                     y2 = RugbyTimerCards.getEntryRemaining(entry, timerNow);
                 }
-                var label2 = entry.label;
-                if (label2 == null) {
-                    label2 = "Y" + (awayLine + 1).toString();
-                }
-                dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-                dc.drawText(awayX, cardsY + awayLine * lineStep, cardFont, label2 + ":" + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y2)), Graphics.TEXT_JUSTIFY_CENTER);
+                var label2 = RugbyTimerRenderer.canonicalCardLabel(entry.label, "Y", awayLine + 1);
+                RugbyTimerRenderer.renderCardRow(
+                    dc,
+                    awayLabelX,
+                    awayTimerX,
+                    cardsY + awayLine * lineStep,
+                    cardFont,
+                    valueFont,
+                    Graphics.COLOR_YELLOW,
+                    label2,
+                    model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(y2))
+                );
                 awayVisibleCount += 1;
                 awayLine += 1;
             }
             if (model.redHomePermanent && homeVisibleCount < 2) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                var redPermHomeLabel = model.redHomeLabelCounter > 0 ? "R" + model.redHomeLabelCounter.toString() + ":PERM" : "R:PERM";
-                dc.drawText(homeX, cardsY + homeLine * lineStep, cardFontRed, redPermHomeLabel, Graphics.TEXT_JUSTIFY_CENTER);
+                var redPermHomeLabel = model.redHomeLabelCounter > 0 ? "R" + model.redHomeLabelCounter.toString() : "R";
+                RugbyTimerRenderer.renderCardRow(
+                    dc,
+                    homeLabelX,
+                    homeTimerX,
+                    cardsY + homeLine * lineStep,
+                    cardFont,
+                    valueFont,
+                    Graphics.COLOR_RED,
+                    redPermHomeLabel,
+                    "PERM"
+                );
                 homeVisibleCount += 1;
                 homeLine += 1;
             } else {
@@ -347,20 +397,35 @@ class RugbyTimerRenderer {
                     if (!(redHomeRem instanceof Lang.Number) && !(redHomeRem instanceof Lang.Float)) {
                         redHomeRem = RugbyTimerCards.getEntryRemaining(redHomeEntry, timerNow);
                     }
-                    var redHomeLabel = redHomeEntry.label;
-                    if (redHomeLabel == null) {
-                        redHomeLabel = "R" + (i + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(homeX, cardsY + homeLine * lineStep, cardFontRed, redHomeLabel + ":" + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redHomeRem)), Graphics.TEXT_JUSTIFY_CENTER);
+                    var redHomeLabel = RugbyTimerRenderer.canonicalCardLabel(redHomeEntry.label, "R", i + 1);
+                    RugbyTimerRenderer.renderCardRow(
+                        dc,
+                        homeLabelX,
+                        homeTimerX,
+                        cardsY + homeLine * lineStep,
+                        cardFont,
+                        valueFont,
+                        Graphics.COLOR_RED,
+                        redHomeLabel,
+                        model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redHomeRem))
+                    );
                     homeVisibleCount += 1;
                     homeLine += 1;
                 }
             }
             if (model.redAwayPermanent && awayVisibleCount < 2) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                var redPermAwayLabel = model.redAwayLabelCounter > 0 ? "R" + model.redAwayLabelCounter.toString() + ":PERM" : "R:PERM";
-                dc.drawText(awayX, cardsY + awayLine * lineStep, cardFontRed, redPermAwayLabel, Graphics.TEXT_JUSTIFY_CENTER);
+                var redPermAwayLabel = model.redAwayLabelCounter > 0 ? "R" + model.redAwayLabelCounter.toString() : "R";
+                RugbyTimerRenderer.renderCardRow(
+                    dc,
+                    awayLabelX,
+                    awayTimerX,
+                    cardsY + awayLine * lineStep,
+                    cardFont,
+                    valueFont,
+                    Graphics.COLOR_RED,
+                    redPermAwayLabel,
+                    "PERM"
+                );
                 awayVisibleCount += 1;
                 awayLine += 1;
             } else {
@@ -377,12 +442,18 @@ class RugbyTimerRenderer {
                     if (!(redAwayRem instanceof Lang.Number) && !(redAwayRem instanceof Lang.Float)) {
                         redAwayRem = RugbyTimerCards.getEntryRemaining(redAwayEntry, timerNow);
                     }
-                    var redAwayLabel = redAwayEntry.label;
-                    if (redAwayLabel == null) {
-                        redAwayLabel = "R" + (i + 1).toString();
-                    }
-                    dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_TRANSPARENT);
-                    dc.drawText(awayX, cardsY + awayLine * lineStep, cardFontRed, redAwayLabel + ":" + model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redAwayRem)), Graphics.TEXT_JUSTIFY_CENTER);
+                    var redAwayLabel = RugbyTimerRenderer.canonicalCardLabel(redAwayEntry.label, "R", i + 1);
+                    RugbyTimerRenderer.renderCardRow(
+                        dc,
+                        awayLabelX,
+                        awayTimerX,
+                        cardsY + awayLine * lineStep,
+                        cardFont,
+                        valueFont,
+                        Graphics.COLOR_RED,
+                        redAwayLabel,
+                        model.formatShortTime(RugbyTimerTiming.getDisplayCountdownSeconds(redAwayRem))
+                    );
                     awayVisibleCount += 1;
                     awayLine += 1;
                 }

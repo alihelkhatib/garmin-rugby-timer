@@ -36,7 +36,8 @@ Card timers (requirements discovered from history and conversation):
 Layout regressions:
 
 - **LAYOUT-001** — Main countdown stays anchored when the match transitions from idle to playing without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_idle_and_playing` — Covered
-- **LAYOUT-002** — Visible sanction rows push the main countdown downward when additional vertical space is needed. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_moves_down_for_visible_card_rows` — Covered
+- **LAYOUT-002** — Main countdown stays anchored when the match transitions from playing to paused without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused` — Covered
+- **LAYOUT-003** — Visible sanction rows push the main countdown downward when additional vertical space is needed. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_moves_down_for_visible_card_rows` — Covered
 
 Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 

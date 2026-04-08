@@ -14,7 +14,7 @@
 - `RugbyScoringService.mc`: Owns score-history payload normalization for persisted `lastEvents`. Stored events now use plain serializable dictionaries with string keys and values, while legacy symbol-based payloads remain readable for backward compatibility.
 - `RugbyTimerEventLog.mc`: Owns event-log payload normalization and formatting. Stored entries now persist as `{ "time" => "MM:SS", "description" => String }`, and legacy `:time` / `:desc` payloads are still accepted on restore/display.
 - `RugbyTimerDelegate.mc`, `RugbyTimerMenus.mc`, `RugbyTimerInputSupport.mc`: Handle hardware input, menu navigation, and pure button-routing rules. Idle UP/DOWN edits now bypass the broader action throttle so timer changes feel immediate on the watch.
-- `RugbyTimerView.mc` and `RugbyTimerRenderer.mc`: The view orchestrates redraws and overlay state, while the renderer owns layout math and drawing. Idle and playing states reserve the same lower hint band so the main countdown stays vertically stable when a match starts.
+- `RugbyTimerView.mc` and `RugbyTimerRenderer.mc`: The view orchestrates redraws and overlay state, while the renderer owns layout math and drawing. Idle and playing states reserve the same lower hint band, and playing and paused states reserve the same state-text band, so the main countdown stays vertically stable when a match starts or is paused.
 - `RugbyTimerTiming.mc`, `RugbyTimerCards.mc`, `RugbyTimerOverlay.mc`: Own shared timing loops, sanction timer math, and special overlay rendering/hints.
 - `RugbySettingsMenu.mc`, `RugbySettingsNavigation.mc`, `RugbySettingsPickers.mc`, `RugbySettingsSupport.mc`, `RugbyMatchProfiles.mc`: Own idle-only configuration, preset selection, picker helpers, and custom-profile persistence/migration.
 - Boundary types that still add value: `MatchProfileEntry.mc`, `CardEntry.mc`, `MatchSummaryEntry.mc`, `PersistedGameSnapshot.mc`, `PersistedCardTimerEntry.mc`, and `RugbyTimerRenderTypes.mc`.
@@ -22,9 +22,10 @@
 
 ## Layout Math Notes
 - `baseTimerY` is the preferred vertical anchor for the large clocks. `candidateTimerY` is a measured fallback that shifts to avoid card rows. The renderer clamps the final `countdownY` between a minimum safe zone and a lower-state/hint boundary.
-- `stateY` and `hintY` define the lower text band for half/state text and hint copy. The renderer reserves that band consistently between idle and playing so the main countdown does not drift when the idle second hint line disappears.
+- `stateY` and `hintY` define the lower text band for half/state text and hint copy. The renderer reserves those bands consistently between idle/playing and playing/paused so the main countdown does not drift when those labels appear or disappear.
 - Card timers render in simple home/away columns under each score lane. Only the first two active sanctions per team are shown at once to keep the primary timer layout readable on round Fenix displays.
 - Overlay screens keep the main countdown visible near the top and center the special timer below it so the overlay does not collide with the scoreboard.
+- Card timers now render as split rows with a compact colored label token (`Y1`, `R1`) and a separate white time/status field (`9:48`, `PERM`) around a shared anchor. This is intentionally easier to scan than one centered `label:time` string without requiring a larger font.
 
 ## Key Behaviors
 - Idle setup: the app opens directly on the main timer screen. UP/DOWN change the half length immediately, MENU also increments the idle timer, and holding UP or MENU opens the preset picker.

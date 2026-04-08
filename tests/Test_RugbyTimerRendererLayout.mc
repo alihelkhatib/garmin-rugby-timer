@@ -55,6 +55,25 @@ function test_mainContentLayout_keeps_countdown_stable_between_idle_and_playing(
 }
 
 (:test)
+function test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused(logger as Test.Logger) as Lang.Boolean {
+    var height = 240;
+    var dc = new TestLayoutDeviceContext(120, 16, 12);
+    var fonts = RugbyRenderFonts.create("score", "tries", "half", "timer", "countdown", "state", "hint");
+    var layout = RugbyTimerRenderer.calculateLayout(height);
+    var cardInfo = RugbyRenderedCardInfo.create(0, 18, layout.cardsY);
+
+    var playingLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, new TestLayoutModel(STATE_PLAYING), fonts, layout, cardInfo, height, false);
+    var pausedLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, new TestLayoutModel(STATE_PAUSED), fonts, layout, cardInfo, height, false);
+
+    if (playingLayout.countdownY != pausedLayout.countdownY) {
+        logger.error("countdownY drifted from " + playingLayout.countdownY.format("%.2f") + " to " + pausedLayout.countdownY.format("%.2f"));
+        return false;
+    }
+
+    return true;
+}
+
+(:test)
 function test_mainContentLayout_moves_down_for_visible_card_rows(logger as Test.Logger) as Lang.Boolean {
     var height = 260;
     var dc = new TestLayoutDeviceContext(72, 16, 12);
