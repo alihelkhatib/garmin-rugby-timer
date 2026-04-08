@@ -22,6 +22,7 @@
 
 ## Layout Math Notes
 - The top scoreboard is now a measured header band. The elapsed timer, `HOME` / `AWAY`, score digits, `Half #`, and tries line each get their own lane based on actual font heights plus explicit gaps.
+- The elapsed timer row is intentionally biased slightly farther down from the top safe inset than the first measured-header pass, which gives it more breathing room from the round bezel while keeping the rest of the header stack aligned.
 - `cardsY` is now the measured handoff point below that header band, not just a percentage guess. The main countdown is anchored below the header/card handoff and above the reserved lower state/hint band.
 - `stateY` and `hintY` define the lower text band for half/state text and hint copy. The renderer reserves those bands consistently between idle/playing and playing/paused, including when card rows are present, so the main countdown does not drift when those labels appear or disappear.
 - The score band now includes explicit `HOME` / `AWAY` labels above the score digits with team-distinct colors, but those labels live inside the measured header instead of being offset upward from the score row.
