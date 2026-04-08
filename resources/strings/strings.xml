@@ -2,7 +2,6 @@
     <string id="AppName">Rugby Timer</string>
     <string id="Hint_Select_Start">SELECT: Start</string>
     <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
-    <string id="Hint_Select_Pause">SELECT: Pause</string>
     <string id="Hint_Select_Resume">SELECT: Resume</string>
     <string id="Hint_Locked">LOCKED</string>
 
