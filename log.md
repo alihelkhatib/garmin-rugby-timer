@@ -1,3 +1,10 @@
+## [2026-04-08] Tighten the main-screen UI spec into a review gate
+
+- Rewrote `docs/UI_SPEC.md` so it now reads as a strict contract for the live match screen rather than a general design note. The updated version narrows scope to the main screen, defines explicit band ownership, encodes the agreed tight-space compression order, and treats countdown and score readability as co-primary protected lanes.
+- Strengthened the acceptance model in the spec with review-blocking invariants and a family-level manual acceptance checklist for idle, playing, paused, stacked-card, halftime, and overlay states.
+- Updated `project_technical_document.md` so it points to `docs/UI_SPEC.md` as the decision-complete UI contract.
+- No runtime code changed in this step.
+
 ## [2026-04-08] Rebalance compact-round header depth so the main countdown stays visible
 
 - Corrected the compact-round layout math after the first hybrid safe-area pass proved too tall in practice. The root issue was that the center metadata (`Half 1`, tries) was being stacked below the score row, which made the measured header consume too much of a 240×240 screen and forced the main countdown off the bottom.

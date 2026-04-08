@@ -1,244 +1,331 @@
-# UI Specification
+# Main-Screen UI Specification
 
 ## Purpose
 
-This document defines the intended visual and interaction contract for the live
-match UI. It exists to remove ambiguity from layout work, make future visual
-changes easier to review, and give renderer changes a stable target across
-supported Garmin watch families.
+This document is the canonical contract for the live match screen.
 
-This spec is intentionally practical rather than aspirational. It describes the
-current intended behavior for the app, especially the main match screen.
+Its job is to remove ambiguity from layout work. A renderer change should be
+reviewable against this document without relying on screenshots, memory, or
+taste alone.
 
-## Supported Device Families
+Scope for this version:
 
-- `compact_round`: 240x240-class round watches such as fēnix 6.
-- `large_round`: larger round watches such as newer fēnix 7/8 variants.
-- `rectangular`: vívoactive-style rectangular watches.
+- live match screen only
+- all supported device families
+- visual hierarchy, band ownership, spacing priorities, and acceptance rules
 
-The app should optimize by family, not by one-off per-device nudges, unless a
-specific device proves exceptional.
+Out of scope for this version:
 
-## Main Screen Goals
+- menus
+- settings screens
+- export/history views
+- screenshot-golden workflow
 
-The main screen must optimize for quick referee use under time pressure.
+## Device Families
 
-Primary goals, in order:
+The live match screen is specified by family, not by one-off per-device tuning.
 
-1. The main countdown must always be readable at a glance.
-2. Score ownership must be obvious with no need to infer left/right teams.
-3. Match state changes must not cause distracting vertical jumps.
-4. Active sanctions must be visible without overpowering the main countdown.
-5. The layout must remain inside the safe visible area on round watches.
+- `compact_round`: 240x240-class round watches such as fēnix 6
+- `large_round`: newer/larger round watches
+- `rectangular`: vívoactive-style rectangular watches
 
-## Visual Hierarchy
+Requirement:
 
-From highest to lowest importance:
+- the app may tune layout by family
+- the app must not rely on ad hoc per-device nudges unless a device is proven
+  exceptional and the exception is documented separately
 
-1. Main countdown
-2. Scores
-3. Match state text such as `PAUSED`
-4. Team identity labels `HOME` / `AWAY`
-5. Match metadata `elapsed timer`, `Half`, `tries`
-6. Card timers
-7. Idle hints
-8. Icons such as play/pause and lock
+## Visual Priority
 
-If space becomes tight, lower-priority content must compress before higher-
-priority content moves or overlaps.
+The main match screen uses this strict priority order:
 
-## Main Screen Structure
+1. Main countdown and scores are co-primary
+2. Match state text is secondary
+3. Team identity labels are required support for the score columns
+4. Elapsed timer, half text, and tries text are tertiary metadata
+5. Card rows are important but subordinate to the primary lanes
+6. Idle hints and status hints are low priority
+7. Icons are lowest priority
 
-The live match screen is divided into three measured bands:
+Pass/fail interpretation:
 
-### 1. Header band
+- co-primary means countdown readability and score readability must both be
+  preserved
+- lower-priority content must compress before primary content is allowed to
+  degrade
 
-Contains:
+## Screen Bands
 
-- elapsed match timer
-- team labels
-- score digits
-- half text
-- tries text
+The live match screen is divided into three measured bands.
 
-Rules:
+### Header band
 
-- `HOME` and `AWAY` must remain above their respective score columns.
-- Team labels must stay inside the safe top band on round watches.
-- Score digits must never overlap the half/tries metadata.
-- Half/tries metadata must sit below the score band, not inside the score row.
-- Header spacing should be measured from font heights, not guessed from raw
-  percentages alone.
+Required rows:
 
-### 2. Main content band
+- elapsed timer row
+- `HOME` / `AWAY` row
+- score row
+- center metadata row(s) below the score band
 
-Contains:
+Requirements:
 
-- card timer rows
+- `HOME` stays above the left score column
+- `AWAY` stays above the right score column
+- team labels must stay inside the safe top band
+- score digits must never overlap any center metadata
+- center metadata must never sit inside the score digits
+- header spacing must be measured from actual font heights and safe content
+  bounds, not raw screen-height percentages alone
+
+### Main content band
+
+Required content:
+
+- card rows
 - main countdown
 
-Rules:
+Requirements:
 
-- The countdown is centered and visually dominant.
-- Card rows anchor under their respective team columns.
-- Card rows may push the countdown downward when required, but only from the
-  measured card/header relationship.
-- The countdown must not overlap card rows.
+- the countdown remains centered and visually dominant
+- card rows anchor beneath their respective team columns
+- card rows may push the countdown downward only when visible card-row count and
+  measured spacing require it
+- countdown placement must come from measured band boundaries, not incidental
+  state-label appearance
+- the countdown must never overlap cards
 
-### 3. Lower band
+### Lower band
 
-Contains:
+Required content:
 
 - state text such as `PAUSED`, `HALF TIME`, `GAME ENDED`
-- idle hint text
-- locked hint text
+- idle hints
+- locked hint
 
-Rules:
+Requirements:
 
-- Idle, playing, and paused must reserve compatible lower-band space so the main
-  countdown does not shift when state text appears or disappears.
-- Hints may disappear by state, but their reserved layout contract must remain
-  stable where countdown anchoring depends on it.
+- idle, playing, and paused must reserve a compatible lower-band contract
+- state text appearing or disappearing must not change countdown Y by itself
+- hint visibility may vary by state, but the layout contract used for countdown
+  anchoring must remain stable
 
-## Scoreboard Rules
+## Tight-Space Compression Order
 
-- Left score column is always `HOME`.
-- Right score column is always `AWAY`.
-- Score digits are always white.
-- `HOME` uses blue.
-- `AWAY` uses yellow.
-- Team labels are informational and must never be more visually dominant than
-  the score digits.
-- Scores must remain readable even when the match is idle at `40:00`, `10:00`,
-  or other large pre-start values in the center.
+When space becomes tight, the screen must degrade in this order:
 
-## Countdown Rules
+1. Compress low-priority spacing
+2. Compress metadata spacing and metadata placement
+3. Compress card-row breathing room if still safe
+4. Preserve both countdown readability and score readability
 
-- The countdown is the most important visual element on the screen.
-- The countdown must not shift vertically when:
-  - idle transitions to playing
-  - playing transitions to paused
-  - paused transitions back to playing
-- The countdown may move only when the number of visible sanction rows changes
-  and the measured layout genuinely requires more vertical space.
-- The countdown must remain fully visible within the safe content area.
+Forbidden interpretations:
 
-## Card Timer Rules
+- do not protect scores first at the expense of the countdown
+- do not protect the countdown first at the expense of scores
+- do not solve tight space by letting metadata drift into the score row
 
-- Only the first two active sanctions per team are shown at once.
-- Card rows use split fields:
-  - label token such as `Y1` or `R1`
-  - timer/status such as `9:59` or `PERM`
-- Label and timer must use the same font tier at minimum.
-- Timer text should not be rendered smaller than the label token.
-- Yellow card rows use yellow text.
-- Red card rows use red text.
-- Permanent red cards use `PERM`.
-- Card rows should improve scanability through spacing, alignment, and color
-  rather than through decorative boxes.
+Balanced-compromise rule:
 
-## Icons
+- scores and countdown are both protected lanes
+- tertiary metadata yields before either primary lane is allowed to degrade
 
-- Play/pause icon sits in the upper-left safe area.
-- Lock icon sits in the upper-right safe area.
-- Icons must not collide with team labels or elapsed timer.
-- Icons are useful but lower priority than text content.
+## Scoreboard Contract
 
-## Idle Screen Contract
+Requirements:
 
-The idle state must clearly communicate:
+- left score column is always `HOME`
+- right score column is always `AWAY`
+- full `HOME` / `AWAY` wording is required for this version
+- score digits are white
+- `HOME` label is blue
+- `AWAY` label is yellow
+- team labels must remain less visually dominant than the score digits
+- score columns must stay recognizable even when the center countdown reads
+  large pre-start values such as `40:00` or `10:00`
+- the score lane must remain visually separate from `Half` and tries metadata
+
+Review-blocking failures:
+
+- score digits overlap metadata
+- team labels clip into the bezel
+- team ownership becomes ambiguous at a glance
+
+## Countdown Contract
+
+Requirements:
+
+- the countdown is visually dominant
+- the countdown must remain fully visible inside the safe content area
+- the countdown must not shift vertically when:
+  - idle becomes playing
+  - playing becomes paused
+  - paused becomes playing
+- the countdown may move only when visible card-row count changes and the
+  measured layout genuinely requires extra space
+
+Review-blocking failures:
+
+- countdown overlaps header content
+- countdown overlaps cards
+- countdown overlaps the lower band
+- pause/resume changes countdown Y without a card-row-count change
+
+## Card Row Contract
+
+Requirements:
+
+- only the first two active sanctions per team are shown at once
+- rows use split fields
+  - label token such as `Y1` / `R1`
+  - timer or status such as `9:59` / `PERM`
+- timer/status text must not be smaller than the label token
+- yellow rows use yellow text
+- red rows use red text
+- permanent red cards use `PERM`
+- card rows must remain legible, but they are subordinate to the countdown and
+  score lanes
+- legibility should come from spacing, alignment, and color before decorative
+  chrome is considered
+
+Review-blocking failures:
+
+- timer text is smaller than its label token
+- card rows intrude into the score lane
+- card rows intrude into the main countdown lane
+
+## State Contracts
+
+### Idle
+
+Must communicate:
 
 - selected starting half duration
-- which score belongs to which team
+- team ownership
 - how to adjust the timer
 - how to start
 
-Rules:
+Requirements:
 
-- `UP/DOWN: +1/-1` and `SELECT: Start` must remain readable.
-- Idle hints must not overlap the countdown.
-- Idle setup changes must feel immediate on hardware.
+- idle hints remain readable
+- idle hints do not overlap the countdown
+- idle adjustments feel immediate on hardware
 
-## Playing Screen Contract
+### Playing
 
-The playing state must prioritize:
+Must communicate:
 
 - countdown
 - score
 - elapsed timer
 - visible sanctions
 
-Rules:
+Requirements:
 
-- No instructional hint should displace the countdown.
-- The layout should feel stable even as the elapsed timer and card timers update.
+- no instructional hint may displace the countdown
+- the layout must remain visually stable as timers update
 
-## Paused Screen Contract
+### Paused
 
-The paused state must communicate pause clearly without reflowing the screen.
+Must communicate:
 
-Rules:
+- pause state clearly
 
-- `PAUSED` must be obvious.
-- Showing `PAUSED` must not shift the main countdown relative to the same
-  playing layout.
-- Active card timers may remain visible and must not cause a separate paused-only
-  countdown jump.
+Requirements:
 
-## Overlay Contract
+- `PAUSED` is visually obvious
+- showing `PAUSED` must not shift the countdown relative to the equivalent
+  playing state
+- active card rows must not create a separate paused-only countdown jump
 
-Conversion and penalty overlays are special modes.
+### Overlay states
 
-Rules:
+Includes:
 
-- The main countdown remains visible.
-- The special timer and message may take center emphasis.
-- Overlay content must not permanently alter the underlying main-screen layout
-  contract.
+- conversion overlay
+- penalty overlay
+
+Requirements:
+
+- the main countdown remains visible
+- the special timer/message may take temporary emphasis
+- overlay rendering must not redefine the underlying main-screen layout
+  contract
 
 ## Cross-Device Rules
 
-- Use one layout strategy per family, not ad hoc per-screen offsets.
-- Round devices should reserve more top and side safe area than rectangular
-  devices.
-- Rectangular devices may use more of the screen width, but must preserve the
-  same information hierarchy.
-- The same state should feel recognizably the same across all device families.
+Requirements:
+
+- round families reserve more top and side safe area than rectangular layouts
+- rectangular layouts may use more width but must preserve the same hierarchy
+- the same state should feel recognizably the same across all families
+- family adaptation is allowed; family-specific meaning changes are not
 
 ## Non-Negotiable Invariants
 
-These are review-blocking failures:
+Any of the following is a review-blocking defect:
 
-- score digits overlap any other text
-- countdown overlaps any other text
+- score digits overlap metadata
+- countdown overlaps header, cards, or lower-band content
 - `HOME` / `AWAY` clip into the bezel
-- pause/resume changes countdown Y without a card-row-count change
 - center metadata appears inside the score digits
-- card timer text is smaller than its label token
+- pause/resume changes countdown Y without a card-row-count change
+- card timer typography drops below label size
 - important text renders outside the safe visible area
 
-## Manual Acceptance States
+## Manual Acceptance Checklist
 
-The following states should be checked on at least one device from each family:
+The following states must be checked on at least one device from each family.
+
+### Idle
 
 1. Idle with no cards
+
+### Playing
+
 2. Playing with no cards
-3. Paused with no cards
-4. Playing with one yellow card
-5. Paused with one yellow card
-6. Playing with two visible cards on one side
+3. Playing with one visible card
+4. Playing with two visible cards on one side
+
+### Paused
+
+5. Paused with no cards
+6. Paused with one visible card
+
+### Other states
+
 7. Halftime
-8. Conversion overlay
+8. Conversion or penalty overlay
+
+Required family coverage:
+
+- `compact_round`
+- `large_round`
+- `rectangular`
+
+## Test Mapping Expectations
+
+This spec is intended to map cleanly to renderer regressions.
+
+Minimum regression categories:
+
+- stable countdown anchor across idle/playing/paused
+- safe header bounds
+- metadata below the score band
+- card timer typography floor
+
+If the implementation cannot be validated against those categories, the spec is
+still too vague.
 
 ## Change Policy
 
-Any change to the main match UI should update this spec if it changes:
+Any change to the main match screen must update this document if it changes:
 
-- visual hierarchy
+- visual priority
 - band ownership
 - safe-area rules
-- typography rules
+- typography floors
 - state-specific layout guarantees
+- acceptance expectations
 
-If a change cannot be explained clearly in this document, the change is
-probably still too ambiguous.
+If a proposed UI change cannot be explained clearly in this document, it is too
+ambiguous to be considered complete.

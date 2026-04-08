@@ -5,7 +5,7 @@
 - Language: Monkey C (Garmin Connect IQ)
 - Target platforms: compiler-validated Garmin fēnix 6/7/8/E families plus vívoactive 5/6, with related tactix/quatix/Enduro variants covered where Garmin maps them onto the same Connect IQ product ids.
 - Purpose: Rugby match timing, scoring, discipline tracking, GPS `SPORT_RUGBY` recording, overlay dialogs for conversions/penalties, event logging, and data persistence/export.
-- Canonical UI reference: `docs/UI_SPEC.md` defines the intended main-screen hierarchy, safe-area expectations, and non-negotiable layout invariants for future visual work.
+- Canonical UI reference: `docs/UI_SPEC.md` is the decision-complete contract for the live match screen. It defines priority order, band ownership, safe-area expectations, and review-blocking layout invariants for future visual work.
 
 ## Architecture
 - `RugbyTimerApp.mc`: App entry point and provider for the main view/delegate pair.
