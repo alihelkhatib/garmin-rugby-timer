@@ -1,3 +1,11 @@
+## [2026-04-08] Align the UI spec with final scoreboard and card priorities
+
+- Revised `docs/UI_SPEC.md` again so it now reflects the final visual hierarchy decisions: countdown and scores are co-primary, the gray elapsed timer stays above the score band, `HOME` / `AWAY` are smaller support labels, tries live beside their respective scores, and the main screen must guarantee visibility of the nearest-expiring timed sanction.
+- Replaced the older generic “show up to two sanctions” framing in the spec with an urgency-first rule, and documented that permanent red dismissals are lower priority than timed-card visibility on the main screen.
+- Tightened the spec’s degradation policy with the explicit low-priority hide order: icons first, then tries, then elapsed timer.
+- Updated `project_technical_document.md` so it points to the spec as the source of truth for the new card-urgency and scoreboard-priority rules.
+- No runtime code changed in this step.
+
 ## [2026-04-08] Tighten the main-screen UI spec into a review gate
 
 - Rewrote `docs/UI_SPEC.md` so it now reads as a strict contract for the live match screen rather than a general design note. The updated version narrows scope to the main screen, defines explicit band ownership, encodes the agreed tight-space compression order, and treats countdown and score readability as co-primary protected lanes.

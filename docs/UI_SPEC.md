@@ -41,9 +41,9 @@ The main match screen uses this strict priority order:
 
 1. Main countdown and scores are co-primary
 2. Match state text is secondary
-3. Team identity labels are required support for the score columns
-4. Elapsed timer, half text, and tries text are tertiary metadata
-5. Card rows are important but subordinate to the primary lanes
+3. Card rows are important but subordinate to the primary lanes
+4. Team identity labels are required support for the score columns
+5. Elapsed timer and tries are tertiary metadata
 6. Idle hints and status hints are low priority
 7. Icons are lowest priority
 
@@ -53,6 +53,8 @@ Pass/fail interpretation:
   preserved
 - lower-priority content must compress before primary content is allowed to
   degrade
+- state text outranks hints and icons
+- card urgency outranks lower-priority metadata
 
 ## Screen Bands
 
@@ -65,15 +67,21 @@ Required rows:
 - elapsed timer row
 - `HOME` / `AWAY` row
 - score row
-- center metadata row(s) below the score band
+- tries positioned beside their respective score columns in lower-emphasis text
 
 Requirements:
 
+- the elapsed real-time timer remains gray
+- the elapsed real-time timer stays above the score band; it may sit centered
+  above the scores
 - `HOME` stays above the left score column
 - `AWAY` stays above the right score column
 - team labels must stay inside the safe top band
-- score digits must never overlap any center metadata
-- center metadata must never sit inside the score digits
+- team labels are smaller support labels and should rely on color plus position
+  more than text size for quick recognition
+- score digits must never overlap tries or other metadata
+- tries must remain beside their respective scores and must never sit inside the
+  score digits
 - header spacing must be measured from actual font heights and safe content
   bounds, not raw screen-height percentages alone
 
@@ -87,9 +95,13 @@ Required content:
 Requirements:
 
 - the countdown remains centered and visually dominant
+- the nearest-expiring timed sanction must remain visible on the main screen
+- additional timed sanctions may be shown only when space safely allows
+- permanent red dismissals are lower priority than timed-card visibility and may
+  be hidden from the main screen if needed
 - card rows anchor beneath their respective team columns
-- card rows may push the countdown downward only when visible card-row count and
-  measured spacing require it
+- card rows may push the countdown downward only when visible urgent-card
+  content and measured spacing require it
 - countdown placement must come from measured band boundaries, not incidental
   state-label appearance
 - the countdown must never overlap cards
@@ -116,7 +128,8 @@ When space becomes tight, the screen must degrade in this order:
 1. Compress low-priority spacing
 2. Compress metadata spacing and metadata placement
 3. Compress card-row breathing room if still safe
-4. Preserve both countdown readability and score readability
+4. Hide lowest-priority items before shrinking primary lanes
+5. Preserve both countdown readability and score readability
 
 Forbidden interpretations:
 
@@ -128,6 +141,10 @@ Balanced-compromise rule:
 
 - scores and countdown are both protected lanes
 - tertiary metadata yields before either primary lane is allowed to degrade
+- explicit hide order is:
+  - icons first
+  - then tries
+  - then elapsed timer
 
 ## Scoreboard Contract
 
@@ -140,13 +157,17 @@ Requirements:
 - `HOME` label is blue
 - `AWAY` label is yellow
 - team labels must remain less visually dominant than the score digits
+- team labels should be smaller than the score digits
 - score columns must stay recognizable even when the center countdown reads
   large pre-start values such as `40:00` or `10:00`
-- the score lane must remain visually separate from `Half` and tries metadata
+- tries belong to their respective score columns, beside the score in smaller
+  text
+- the score lane must remain visually separate from tries and all other metadata
 
 Review-blocking failures:
 
 - score digits overlap metadata
+- tries collide with score digits
 - team labels clip into the bezel
 - team ownership becomes ambiguous at a glance
 
@@ -155,6 +176,7 @@ Review-blocking failures:
 Requirements:
 
 - the countdown is visually dominant
+- the countdown and scores remain the dominant readable lanes
 - the countdown must remain fully visible inside the safe content area
 - the countdown must not shift vertically when:
   - idle becomes playing
@@ -174,10 +196,12 @@ Review-blocking failures:
 
 Requirements:
 
-- only the first two active sanctions per team are shown at once
 - rows use split fields
   - label token such as `Y1` / `R1`
   - timer or status such as `9:59` / `PERM`
+- the nearest-expiring timed sanction must remain visible whenever any timed
+  sanction is active
+- additional timed sanctions may be shown if safe space remains
 - timer/status text must not be smaller than the label token
 - yellow rows use yellow text
 - red rows use red text
@@ -189,6 +213,9 @@ Requirements:
 
 Review-blocking failures:
 
+- the nearest-expiring timed sanction is hidden while a lower-priority sanction
+  remains visible
+- permanent red presentation outranks an urgent timed sanction
 - timer text is smaller than its label token
 - card rows intrude into the score lane
 - card rows intrude into the main countdown lane
@@ -223,6 +250,7 @@ Requirements:
 
 - no instructional hint may displace the countdown
 - the layout must remain visually stable as timers update
+- the elapsed timer remains gray and above the score band
 
 ### Paused
 
@@ -270,6 +298,10 @@ Any of the following is a review-blocking defect:
 - center metadata appears inside the score digits
 - pause/resume changes countdown Y without a card-row-count change
 - card timer typography drops below label size
+- tries beside scores collide with score digits
+- the nearest-expiring timed sanction is not visible while a timed sanction is
+  active
+- a permanent red marker outranks an urgent timed sanction
 - important text renders outside the safe visible area
 
 ## Manual Acceptance Checklist
@@ -283,18 +315,19 @@ The following states must be checked on at least one device from each family.
 ### Playing
 
 2. Playing with no cards
-3. Playing with one visible card
-4. Playing with two visible cards on one side
+3. Playing with one timed card
+4. Playing with multiple timed cards so urgency visibility can be checked
+5. Playing with a permanent red plus a timed card
 
 ### Paused
 
-5. Paused with no cards
-6. Paused with one visible card
+6. Paused with no cards
+7. Paused with one timed card
 
 ### Other states
 
-7. Halftime
-8. Conversion or penalty overlay
+8. Halftime
+9. Conversion or penalty overlay
 
 Required family coverage:
 
@@ -310,8 +343,10 @@ Minimum regression categories:
 
 - stable countdown anchor across idle/playing/paused
 - safe header bounds
-- metadata below the score band
+- tries adjacent to score columns without entering the score digits
 - card timer typography floor
+- nearest-expiring timed sanction visibility
+- low-priority hide order under compact-round pressure
 
 If the implementation cannot be validated against those categories, the spec is
 still too vague.
