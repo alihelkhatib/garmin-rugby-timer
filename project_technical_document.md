@@ -23,6 +23,7 @@
 ## Layout Math Notes
 - `baseTimerY` is the preferred vertical anchor for the large clocks. `candidateTimerY` is a measured fallback that shifts to avoid card rows. The renderer clamps the final `countdownY` between a minimum safe zone and a lower-state/hint boundary.
 - `stateY` and `hintY` define the lower text band for half/state text and hint copy. The renderer reserves those bands consistently between idle/playing and playing/paused, including when card rows are present, so the main countdown does not drift when those labels appear or disappear.
+- The score band now includes explicit `HOME` / `AWAY` labels above the score digits with team-distinct colors, using measured vertical spacing so the labels stay readable without colliding with the icon row or half indicator.
 - Card timers render in simple home/away columns under each score lane. Only the first two active sanctions per team are shown at once to keep the primary timer layout readable on round Fenix displays.
 - Overlay screens keep the main countdown visible near the top and center the special timer below it so the overlay does not collide with the scoreboard.
 - Card timers now render as split rows with a compact colored label token (`Y1`, `R1`) and a separate same-color time/status field (`9:48`, `PERM`) around a shared anchor. The timer field uses the slightly larger card value font on compact layouts so the sanction clock is easier to read at a glance without changing the overall screen structure.

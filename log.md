@@ -1,3 +1,10 @@
+## [2026-04-08] Add explicit home and away score labels
+
+- Added `HOME` and `AWAY` labels above the respective score digits in `source/RugbyTimerRenderer.mc` so the score columns are easier to parse at a glance on-watch.
+- Used distinct team colors for the labels and measured their vertical offset from the score digits so they sit cleanly between the top icon row and the main score band instead of relying on a hardcoded visual nudge.
+- Updated `project_technical_document.md` to document the new score-band readability treatment.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
+
 ## [2026-04-08] Increase card-timer emphasis and lock paused layout with active cards
 
 - Increased the effective readability of the sanction clock without changing the overall UI structure: the card value field now uses the slightly larger compact-font tier where available, and the timer/status text now matches the card color instead of switching back to white.

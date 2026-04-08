@@ -131,7 +131,7 @@ class RugbyTimerView extends WatchUi.View {
         var fonts = cachedFonts;
         var layout = cachedLayout;
 
-        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY);
+        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY, height);
         RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY);
         RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts.halfFont, fonts.triesFont, layout.halfY, layout.triesY);
         RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout.iconY, cachedPlayIcon, cachedPauseIcon);

@@ -166,8 +166,21 @@ class RugbyTimerRenderer {
      * @param width The width of the screen
      * @param scoreFont The font to use for the scores
      * @param scoreY The Y position of the scores
+     * @param height The height of the screen
      */
-    static function renderScores(dc, model, width, scoreFont, scoreY) {
+    static function renderScores(dc, model, width, scoreFont, scoreY, height) {
+        var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
+        var labelOffset = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.035) + (height * 0.01);
+        var labelY = scoreY - labelOffset;
+        if (labelY < 0) {
+            labelY = 0;
+        }
+
+        dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(width / 4, labelY, labelFont, "HOME", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
+        dc.drawText((3 * width) / 4, labelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
+
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
         dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
