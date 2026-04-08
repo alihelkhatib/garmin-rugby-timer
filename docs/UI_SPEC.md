@@ -146,6 +146,23 @@ Balanced-compromise rule:
   - then tries
   - then elapsed timer
 
+Compact-round detail modes:
+
+- `critical-only`: scores, countdown, urgent timed cards, and essential state
+  text only
+- `critical-plus-elapsed`: adds the gray elapsed timer above the score band
+- `critical-plus-elapsed-half`: adds the half row below the score band
+- `full-compact`: adds per-team tries beside the score columns only if safe
+  space still remains
+
+Compact-round recovery order:
+
+- when no timed sanction is active and measured space returns, metadata comes
+  back in this order:
+  - elapsed timer
+  - then half
+  - then tries
+
 ## Scoreboard Contract
 
 Requirements:
@@ -202,6 +219,8 @@ Requirements:
 - the nearest-expiring timed sanction must remain visible whenever any timed
   sanction is active
 - additional timed sanctions may be shown if safe space remains
+- when a timed sanction is active on compact round, the renderer must drop to
+  `critical-only` before shrinking the countdown or score lanes
 - timer/status text must not be smaller than the label token
 - yellow rows use yellow text
 - red rows use red text
@@ -210,6 +229,8 @@ Requirements:
   score lanes
 - legibility should come from spacing, alignment, and color before decorative
   chrome is considered
+- permanent red dismissals are lower priority than timed sanctions on the main
+  compact-round screen and may be omitted while timed sanctions are active
 
 Review-blocking failures:
 

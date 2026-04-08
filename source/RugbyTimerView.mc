@@ -21,6 +21,7 @@ class RugbyTimerView extends WatchUi.View {
     var cachedFonts;
     // Cached layout information
     var cachedLayout;
+    var cachedGuide;
 
     // A boolean indicating if the screen is locked
     var isLocked;
@@ -81,8 +82,8 @@ class RugbyTimerView extends WatchUi.View {
         var height = dc.getHeight();
         cachedFonts = RugbyTimerRenderer.chooseFonts(width);
         var family = RugbyLayoutSupport.applyMainLayout(self, dc, width, height);
-        var guide = RugbyLayoutSupport.resolveGuide(self, family);
-        cachedLayout = RugbyTimerRenderer.calculateLayout(dc, width, height, cachedFonts, guide);
+        cachedGuide = RugbyLayoutSupport.resolveGuide(self, family);
+        cachedLayout = RugbyTimerRenderer.calculateLayout(dc, width, height, cachedFonts, cachedGuide, model);
         RugbyTimerRenderer.invalidateMainLayoutCache();
     }
 
@@ -130,7 +131,8 @@ class RugbyTimerView extends WatchUi.View {
 
         // Use cached fonts and layout
         var fonts = cachedFonts;
-        var layout = cachedLayout;
+        var layout = RugbyTimerRenderer.calculateLayout(dc, width, height, fonts, cachedGuide, model);
+        cachedLayout = layout;
 
         RugbyTimerRenderer.renderScores(dc, model, layout, fonts.scoreFont, width);
         RugbyTimerRenderer.renderGameTimer(dc, model, layout, fonts.timerFont);

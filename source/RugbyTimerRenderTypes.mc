@@ -53,6 +53,7 @@ class RugbyMainContentLayoutCacheEntry {
 
 class RugbyRenderLayout {
     var family;
+    var compactDetailMode;
     var safeLeft;
     var safeRight;
     var safeTop;
@@ -79,6 +80,7 @@ class RugbyRenderLayout {
     var iconY;
     var showIcons;
     var showElapsedTimer;
+    var showHalf;
     var showTries;
 
     static function create() {

@@ -86,7 +86,56 @@ class RugbyTimerRenderer {
      * @param guide The XML-backed layout guide
      * @return The measured layout values
      */
-    static function calculateLayout(dc, width, height, fonts, guide) {
+    static function hasTimedCompactCards(model) {
+        if (model == null) {
+            return false;
+        }
+        var timerNow = model.suspensionTime;
+        if (!RugbyTimerCards.isNumeric(timerNow)) {
+            timerNow = 0;
+        }
+        var timedGroups = [
+            model.yellowHomeTimes,
+            model.yellowAwayTimes,
+            model.redHomePermanent ? null : model.redHomeTimes,
+            model.redAwayPermanent ? null : model.redAwayTimes
+        ];
+        for (var i = 0; i < timedGroups.size(); i = i + 1) {
+            var urgent = RugbyTimerRenderer.getUrgentCardEntry(timedGroups[i] as Lang.Array, timerNow);
+            if (urgent != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static function hasVisibleCompactSanctions(model) {
+        if (RugbyTimerRenderer.hasTimedCompactCards(model)) {
+            return true;
+        }
+        if (model == null) {
+            return false;
+        }
+        return model.redHomePermanent || model.redAwayPermanent;
+    }
+
+    static function chooseCompactDetailMode(model, contentWidth, contentHeight) {
+        if (RugbyTimerRenderer.hasTimedCompactCards(model)) {
+            return "critical-only";
+        }
+        if (contentHeight >= 220 && contentWidth >= 205) {
+            return "full-compact";
+        }
+        if (contentHeight >= 206) {
+            return "critical-plus-elapsed-half";
+        }
+        if (contentHeight >= 176) {
+            return "critical-plus-elapsed";
+        }
+        return "critical-only";
+    }
+
+    static function calculateLayout(dc, width, height, fonts, guide, model) {
         var layout = RugbyRenderLayout.create();
         var safeLeft = width * guide.safeSidePct;
         var safeRight = width - safeLeft;
@@ -106,48 +155,66 @@ class RugbyTimerRenderer {
         var labelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.03);
         var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, scoreFont, height * 0.10);
         var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.03);
+        var sanctionLineHeight = RugbyTimerRenderer.getFontHeightSafe(dc, Graphics.FONT_XTINY, height * 0.04) + (height * 0.016);
         var compactRound = guide.family == "compact_round";
         var showIcons = true;
         var showElapsedTimer = true;
+        var showHalf = true;
         var showTries = true;
-        var gameTimerY = safeTop;
-        var teamLabelY = gameTimerY + timerHeight + headerGap;
-        if (!showElapsedTimer) {
-            teamLabelY = safeTop;
+        var compactDetailMode = "standard";
+        if (compactRound) {
+            compactDetailMode = RugbyTimerRenderer.chooseCompactDetailMode(model, contentWidth, contentHeight);
+            showIcons = false;
+            showElapsedTimer = compactDetailMode != "critical-only";
+            showHalf = compactDetailMode == "critical-plus-elapsed-half" || compactDetailMode == "full-compact";
+            showTries = compactDetailMode == "full-compact";
         }
-        var scoreY = teamLabelY + labelHeight + (headerGap * 0.8);
+        var gameTimerY = safeTop;
+        var teamLabelY = safeTop;
+        if (showElapsedTimer) {
+            teamLabelY = gameTimerY + timerHeight + headerGap;
+        }
+        var scoreGap = headerGap * 0.6;
+        if (!showElapsedTimer) {
+            scoreGap = headerGap * 0.35;
+        }
+        var scoreY = teamLabelY + labelHeight + scoreGap;
         var scoreBandBottomY = scoreY + scoreHeight;
         var triesY = scoreY + (scoreHeight * 0.42);
         var halfY = scoreBandBottomY + (height * 0.015);
-        var halfBottomY = halfY + halfHeight;
-        var headerBottomY = halfBottomY;
+        var headerBottomY = scoreBandBottomY;
+        if (showHalf) {
+            headerBottomY = halfY + halfHeight;
+        }
 
-        // Apply the spec's low-priority hide order on compact round screens before
-        // allowing the primary score/countdown lanes to degrade further.
         if (compactRound) {
-            var previewHeaderBottom = halfBottomY;
-            var previewHintHeight = (RugbyTimerRenderer.getFontHeightSafe(dc, fonts.hintFont, height * 0.04) * 2) + (height * 0.012);
+            var previewRows = RugbyTimerRenderer.hasVisibleCompactSanctions(model) ? 1 : 0;
+            var previewMiddleRoom = safeBottom - (height * guide.lowerBandGapPct) - (headerBottomY + cardsGap) - (previewRows * sanctionLineHeight);
             var previewCountdownHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.countdownFont, height * 0.22);
-            var availableCountdownTop = safeBottom - previewHintHeight - previewCountdownHeight - (height * 0.04);
-            if (previewHeaderBottom + (height * 0.02) > availableCountdownTop) {
-                showIcons = false;
-            }
-            if (previewHeaderBottom + (height * 0.015) > availableCountdownTop) {
+            if (compactDetailMode == "full-compact" && previewMiddleRoom < previewCountdownHeight + (height * 0.04)) {
+                compactDetailMode = "critical-plus-elapsed-half";
                 showTries = false;
             }
-            if (previewHeaderBottom > availableCountdownTop) {
+            if (compactDetailMode == "critical-plus-elapsed-half" && previewMiddleRoom < previewCountdownHeight + (height * 0.055)) {
+                compactDetailMode = "critical-plus-elapsed";
+                showHalf = false;
+                headerBottomY = scoreBandBottomY;
+            }
+            if (compactDetailMode == "critical-plus-elapsed" && previewMiddleRoom < previewCountdownHeight + (height * 0.07)) {
+                compactDetailMode = "critical-only";
                 showElapsedTimer = false;
                 teamLabelY = safeTop;
-                scoreY = teamLabelY + labelHeight + (headerGap * 0.6);
+                scoreY = teamLabelY + labelHeight + (headerGap * 0.35);
                 scoreBandBottomY = scoreY + scoreHeight;
                 triesY = scoreY + (scoreHeight * 0.42);
-                halfY = scoreBandBottomY + (height * 0.012);
-                halfBottomY = halfY + halfHeight;
+                showHalf = false;
+                showTries = false;
+                headerBottomY = scoreBandBottomY;
             }
-            headerBottomY = halfBottomY;
         }
 
         layout.family = guide.family;
+        layout.compactDetailMode = compactDetailMode;
         layout.safeLeft = safeLeft;
         layout.safeRight = safeRight;
         layout.safeTop = safeTop;
@@ -174,6 +241,7 @@ class RugbyTimerRenderer {
         layout.iconY = safeTop;
         layout.showIcons = showIcons;
         layout.showElapsedTimer = showElapsedTimer;
+        layout.showHalf = showHalf;
         layout.showTries = showTries;
         return layout;
     }
@@ -315,8 +383,10 @@ class RugbyTimerRenderer {
      * @param triesY The Y position of the tries
      */
     static function renderHalfAndTries(dc, model, layout, halfFont, triesFont) {
-        var halfStr = "Half " + model.halfNumber.toString();
-        dc.drawText(layout.centerX, layout.halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
+        if (layout.showHalf) {
+            var halfStr = "Half " + model.halfNumber.toString();
+            dc.drawText(layout.centerX, layout.halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
+        }
         if (layout.showTries) {
             dc.drawText(layout.homeTriesX, layout.triesY, triesFont, model.homeTries.toString() + "T", Graphics.TEXT_JUSTIFY_LEFT);
             dc.drawText(layout.awayTriesX, layout.triesY, triesFont, model.awayTries.toString() + "T", Graphics.TEXT_JUSTIFY_RIGHT);
@@ -401,6 +471,9 @@ class RugbyTimerRenderer {
             var remaining = entry.remaining;
             if (!RugbyTimerCards.isNumeric(remaining)) {
                 remaining = RugbyTimerCards.getEntryRemaining(entry, timerNow);
+            }
+            if (!RugbyTimerCards.isNumeric(remaining) || remaining <= 0) {
+                continue;
             }
             if (bestRemaining == null || remaining < bestRemaining) {
                 bestRemaining = remaining;

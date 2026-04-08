@@ -1,3 +1,12 @@
+## [2026-04-08] Enforce hard compact-round layout priorities
+
+- Reworked `source/RugbyTimerRenderer.mc` and `source/RugbyTimerView.mc` so compact-round layout is chosen from live match state during rendering instead of being frozen at `onLayout()`. This lets timed sanctions immediately force a `critical-only` screen that protects the score and countdown lanes.
+- Added explicit compact-round detail modes: `critical-only`, `critical-plus-elapsed`, `critical-plus-elapsed-half`, and `full-compact`. On 240×240 round screens, metadata now recovers in the agreed order: elapsed timer first, then half, then tries.
+- Made the half row truly optional on compact round, aligned the compact-round XML safe-area guide with the fallback guide, and kept icons suppressed there before sacrificing primary content.
+- Hardened urgent-card selection so expired entries do not outrank live timed sanctions, and preserved urgency-first behavior over permanent red markers.
+- Expanded `tests/Test_RugbyTimerRendererLayout.mc`, updated `tests/Test_RugbyPersistenceRenderTypes.mc`, and refreshed `tests/TEST_TRACEABILITY.md` plus `docs/UI_SPEC.md` to match the new priority contract.
+- Pending validation for this change set: `./scripts/validate-local.sh` and a follow-up `monkeydo` run.
+
 ## [2026-04-08] Apply UI spec priorities to the live match screen
 
 - Reworked the compact-round scoreboard and countdown layout in `source/RugbyTimerRenderer.mc` to match the new UI spec instead of the earlier hybrid-header draft. The gray elapsed timer remains above the score band, `HOME` / `AWAY` stay smaller as support labels, tries now render beside their respective score columns, and the half row sits below the score band without colliding with the idle countdown.

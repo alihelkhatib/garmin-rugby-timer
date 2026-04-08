@@ -42,6 +42,9 @@ Layout regressions:
 - **LAYOUT-005** — The measured score header stays inside the safe top band on compact round layouts. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_keeps_header_inside_safe_band` — Covered
 - **LAYOUT-006** — Device-family fallback guides resolve stable safe-area values for compact round, large round, and rectangular layouts. — `tests/Test_RugbyLayoutSupport.mc::*` — Covered
 - **LAYOUT-007** — The idle countdown remains fully inside the safe bottom bound on compact round layouts. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom` — Covered
+- **LAYOUT-008** — Compact-round metadata returns in priority order: elapsed, then half, then tries. — `tests/Test_RugbyTimerRendererLayout.mc::test_compactDetailMode_recovers_metadata_in_priority_order` — Covered
+- **LAYOUT-009** — Timed sanctions force compact round into `critical-only` mode so optional metadata drops before the primary lanes shrink. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_compact_round_uses_critical_only_for_timed_cards` — Covered
+- **LAYOUT-010** — Urgent sanction selection ignores expired entries and keeps the nearest live timed sanction visible. — `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_picks_lowest_remaining_time`, `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_skips_expired_entries` — Covered
 
 Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 

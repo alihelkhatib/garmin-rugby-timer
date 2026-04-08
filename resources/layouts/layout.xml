@@ -2,9 +2,9 @@
     <layout id="MainLayoutCompactRound" background="Graphics.COLOR_BLACK">
         <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
             <param name="family">"compact_round"</param>
-            <param name="safeTopPct">0.12</param>
-            <param name="safeBottomPct">0.10</param>
-            <param name="safeSidePct">0.12</param>
+            <param name="safeTopPct">0.09</param>
+            <param name="safeBottomPct">0.08</param>
+            <param name="safeSidePct">0.10</param>
             <param name="headerGapPct">0.012</param>
             <param name="cardsGapPct">0.028</param>
             <param name="stateGapPct">0.020</param>
