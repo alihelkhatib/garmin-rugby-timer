@@ -80,7 +80,7 @@ class RugbyTimerView extends WatchUi.View {
         setLayout(Rez.Layouts.MainLayout(dc));
         // Calculate and cache fonts and layout once
         cachedFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
-        cachedLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
+        cachedLayout = RugbyTimerRenderer.calculateLayout(dc, cachedFonts, dc.getWidth(), dc.getHeight());
         RugbyTimerRenderer.invalidateMainLayoutCache();
     }
 
@@ -131,7 +131,7 @@ class RugbyTimerView extends WatchUi.View {
         var fonts = cachedFonts;
         var layout = cachedLayout;
 
-        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY, height);
+        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY, layout.teamLabelY);
         RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY);
         RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts.halfFont, fonts.triesFont, layout.halfY, layout.triesY);
         RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout.iconY, cachedPlayIcon, cachedPauseIcon);

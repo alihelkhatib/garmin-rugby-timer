@@ -52,6 +52,7 @@ class RugbyMainContentLayoutCacheEntry {
 }
 
 class RugbyRenderLayout {
+    var teamLabelY;
     var scoreY;
     var halfY;
     var gameTimerY;
@@ -61,8 +62,9 @@ class RugbyRenderLayout {
     var hintBaseY;
     var iconY;
 
-    static function create(scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY) {
+    static function create(teamLabelY, scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY) {
         var layout = new RugbyRenderLayout();
+        layout.teamLabelY = teamLabelY;
         layout.scoreY = scoreY;
         layout.halfY = halfY;
         layout.gameTimerY = gameTimerY;

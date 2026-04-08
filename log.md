@@ -1,3 +1,11 @@
+## [2026-04-08] Redesign the score header and normalize card-row typography
+
+- Replaced the old percentage-only score-header layout with a measured header band in `source/RugbyTimerRenderer.mc`. The elapsed timer, `HOME` / `AWAY`, score row, half row, and tries row now use actual font heights plus explicit gaps, so the labels no longer clip into the top bezel.
+- Re-anchored the main countdown beneath that measured header/card handoff instead of using the older `triesY + percentage` minimum. This keeps the large countdown tied to stable layout bands rather than one-off offsets.
+- Normalized sanction-row typography so the label token and timer/status field use the same compact font tier on small screens; the card timer is no longer smaller than the label beside it.
+- Added a new headless renderer regression in `tests/Test_RugbyTimerRendererLayout.mc` to verify the score header keeps team labels inside the safe top band, and updated `tests/Test_RugbyPersistenceRenderTypes.mc` for the expanded measured layout model.
+- Validated with `./scripts/validate-local.sh` (app build and unit-test build both passed).
+
 ## [2026-04-08] Add explicit home and away score labels
 
 - Added `HOME` and `AWAY` labels above the respective score digits in `source/RugbyTimerRenderer.mc` so the score columns are easier to parse at a glance on-watch.

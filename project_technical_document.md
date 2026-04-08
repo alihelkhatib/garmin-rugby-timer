@@ -14,19 +14,20 @@
 - `RugbyScoringService.mc`: Owns score-history payload normalization for persisted `lastEvents`. Stored events now use plain serializable dictionaries with string keys and values, while legacy symbol-based payloads remain readable for backward compatibility.
 - `RugbyTimerEventLog.mc`: Owns event-log payload normalization and formatting. Stored entries now persist as `{ "time" => "MM:SS", "description" => String }`, and legacy `:time` / `:desc` payloads are still accepted on restore/display.
 - `RugbyTimerDelegate.mc`, `RugbyTimerMenus.mc`, `RugbyTimerInputSupport.mc`: Handle hardware input, menu navigation, and pure button-routing rules. Idle UP/DOWN edits now bypass the broader action throttle so timer changes feel immediate on the watch.
-- `RugbyTimerView.mc` and `RugbyTimerRenderer.mc`: The view orchestrates redraws and overlay state, while the renderer owns layout math and drawing. Idle, playing, and paused states now share one consistent lower-band reservation model, so the main countdown stays vertically stable when a match starts, pauses, or shows active cards.
+- `RugbyTimerView.mc` and `RugbyTimerRenderer.mc`: The view orchestrates redraws and overlay state, while the renderer owns layout math and drawing. The renderer now uses a measured score header band plus a stable lower-band reservation model, so the main countdown stays vertically stable when header content, pause state, or active cards change.
 - `RugbyTimerTiming.mc`, `RugbyTimerCards.mc`, `RugbyTimerOverlay.mc`: Own shared timing loops, sanction timer math, and special overlay rendering/hints.
 - `RugbySettingsMenu.mc`, `RugbySettingsNavigation.mc`, `RugbySettingsPickers.mc`, `RugbySettingsSupport.mc`, `RugbyMatchProfiles.mc`: Own idle-only configuration, preset selection, picker helpers, and custom-profile persistence/migration.
 - Boundary types that still add value: `MatchProfileEntry.mc`, `CardEntry.mc`, `MatchSummaryEntry.mc`, `PersistedGameSnapshot.mc`, `PersistedCardTimerEntry.mc`, and `RugbyTimerRenderTypes.mc`.
 - Validation tooling: `scripts/run-tests.sh` builds the test PRG and prints the correct simulator command; `scripts/validate-local.sh` builds both the app PRG and test PRG in one step.
 
 ## Layout Math Notes
-- `baseTimerY` is the preferred vertical anchor for the large clocks. `candidateTimerY` is a measured fallback that shifts to avoid card rows. The renderer clamps the final `countdownY` between a minimum safe zone and a lower-state/hint boundary.
+- The top scoreboard is now a measured header band. The elapsed timer, `HOME` / `AWAY`, score digits, `Half #`, and tries line each get their own lane based on actual font heights plus explicit gaps.
+- `cardsY` is now the measured handoff point below that header band, not just a percentage guess. The main countdown is anchored below the header/card handoff and above the reserved lower state/hint band.
 - `stateY` and `hintY` define the lower text band for half/state text and hint copy. The renderer reserves those bands consistently between idle/playing and playing/paused, including when card rows are present, so the main countdown does not drift when those labels appear or disappear.
-- The score band now includes explicit `HOME` / `AWAY` labels above the score digits with team-distinct colors, using measured vertical spacing so the labels stay readable without colliding with the icon row or half indicator.
+- The score band now includes explicit `HOME` / `AWAY` labels above the score digits with team-distinct colors, but those labels live inside the measured header instead of being offset upward from the score row.
 - Card timers render in simple home/away columns under each score lane. Only the first two active sanctions per team are shown at once to keep the primary timer layout readable on round Fenix displays.
 - Overlay screens keep the main countdown visible near the top and center the special timer below it so the overlay does not collide with the scoreboard.
-- Card timers now render as split rows with a compact colored label token (`Y1`, `R1`) and a separate same-color time/status field (`9:48`, `PERM`) around a shared anchor. The timer field uses the slightly larger card value font on compact layouts so the sanction clock is easier to read at a glance without changing the overall screen structure.
+- Card timers now render as split rows with a compact colored label token (`Y1`, `R1`) and a separate same-color time/status field (`9:48`, `PERM`) around a shared anchor. Label and timer now use the same compact font tier on small screens so the sanction clock is never smaller than the label beside it.
 
 ## Key Behaviors
 - Idle setup: the app opens directly on the main timer screen. UP/DOWN change the half length immediately, MENU also increments the idle timer, and holding UP or MENU opens the preset picker.
