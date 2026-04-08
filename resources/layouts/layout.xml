@@ -1,49 +1,88 @@
 <layouts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <layout id="MainLayoutCompactRound" background="Graphics.COLOR_BLACK">
-        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
-            <param name="family">"compact_round"</param>
-            <param name="safeTopPct">0.09</param>
-            <param name="safeBottomPct">0.08</param>
-            <param name="safeSidePct">0.10</param>
-            <param name="headerGapPct">0.012</param>
-            <param name="cardsGapPct">0.028</param>
-            <param name="stateGapPct">0.020</param>
-            <param name="hintGapPct">0.015</param>
-            <param name="iconInsetPct">0.050</param>
-            <param name="lowerBandGapPct">0.18</param>
-            <param name="cardInsetPct">0.23</param>
-        </drawable>
+        <label id="ElapsedTimer" text="" x="center" y="7%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
+        <label id="HomeLabel" text="HOME" x="26%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="AWAY" x="74%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="HomeScore" text="" x="26%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="AwayScore" text="" x="74%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeTries" text="" x="40%" y="34%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="AwayTries" text="" x="60%" y="34%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HalfText" text="" x="center" y="43%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeCardLabel" text="" x="left" y="50%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="HomeCardValue" text="" x="31%" y="50%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardLabel" text="" x="69%" y="50%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardValue" text="" x="right" y="50%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="Countdown" text="" x="center" y="57%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="StatusMessage" text="" x="center" y="70%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="StateLine1" text="" x="center" y="77%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="StateLine2" text="" x="center" y="83%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine1" text="" x="center" y="88%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine2" text="" x="center" y="93%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
     </layout>
 
     <layout id="MainLayoutLargeRound" background="Graphics.COLOR_BLACK">
-        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
-            <param name="family">"large_round"</param>
-            <param name="safeTopPct">0.10</param>
-            <param name="safeBottomPct">0.09</param>
-            <param name="safeSidePct">0.10</param>
-            <param name="headerGapPct">0.010</param>
-            <param name="cardsGapPct">0.025</param>
-            <param name="stateGapPct">0.018</param>
-            <param name="hintGapPct">0.014</param>
-            <param name="iconInsetPct">0.045</param>
-            <param name="lowerBandGapPct">0.17</param>
-            <param name="cardInsetPct">0.24</param>
-        </drawable>
+        <label id="ElapsedTimer" text="" x="center" y="start" font="Graphics.FONT_SYSTEM_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
+        <label id="HomeLabel" text="HOME" x="27%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="AWAY" x="73%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="HomeScore" text="" x="27%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="AwayScore" text="" x="73%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeTries" text="" x="40%" y="32%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
+        <label id="AwayTries" text="" x="60%" y="32%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_WHITE" />
+        <label id="HalfText" text="" x="center" y="20%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeCardLabel" text="" x="left" y="49%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="HomeCardValue" text="" x="25%" y="49%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardLabel" text="" x="70%" y="49%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardValue" text="" x="85%" y="49%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="Countdown" text="" x="center" y="56%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="StatusMessage" text="" x="center" y="69%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="StateLine1" text="" x="center" y="77%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="StateLine2" text="" x="center" y="83%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine1" text="" x="center" y="89%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine2" text="" x="center" y="94%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
     </layout>
 
     <layout id="MainLayoutRect" background="Graphics.COLOR_BLACK">
-        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
-            <param name="family">"rect"</param>
-            <param name="safeTopPct">0.06</param>
-            <param name="safeBottomPct">0.06</param>
-            <param name="safeSidePct">0.05</param>
-            <param name="headerGapPct">0.010</param>
-            <param name="cardsGapPct">0.025</param>
-            <param name="stateGapPct">0.018</param>
-            <param name="hintGapPct">0.014</param>
-            <param name="iconInsetPct">0.040</param>
-            <param name="lowerBandGapPct">0.16</param>
-            <param name="cardInsetPct">0.24</param>
-        </drawable>
+        <label id="ElapsedTimer" text="" x="center" y="5%" font="Graphics.FONT_SYSTEM_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
+        <label id="HomeLabel" text="HOME" x="24%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="AWAY" x="76%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="HomeScore" text="" x="24%" y="23%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="AwayScore" text="" x="76%" y="23%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeTries" text="" x="10%" y="30%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
+        <label id="AwayTries" text="" x="90%" y="30%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_WHITE" />
+        <label id="HalfText" text="" x="center" y="38%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="HomeCardLabel" text="" x="27%" y="47%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="HomeCardValue" text="" x="29%" y="47%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardLabel" text="" x="71%" y="47%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_RIGHT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="AwayCardValue" text="" x="73%" y="47%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="Countdown" text="" x="center" y="54%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="StatusMessage" text="" x="center" y="68%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_YELLOW" visible="false" />
+        <label id="StateLine1" text="" x="center" y="77%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="StateLine2" text="" x="center" y="84%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine1" text="" x="center" y="90%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+        <label id="HintLine2" text="" x="center" y="95%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" visible="false" />
+    </layout>
+
+    <layout id="OverlayLayoutCompactRound" background="Graphics.COLOR_BLACK">
+        <label id="OverlayMainCountdown" text="" x="center" y="9%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="OverlayStateLabel" text="" x="center" y="32%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayCountdown" text="" x="center" y="48%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayHint" text="" x="center" y="84%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
+        <label id="StatusMessage" text="" x="center" y="68%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
+    </layout>
+
+    <layout id="OverlayLayoutLargeRound" background="Graphics.COLOR_BLACK">
+        <label id="OverlayMainCountdown" text="" x="center" y="8%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="OverlayStateLabel" text="" x="center" y="30%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayCountdown" text="" x="center" y="46%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayHint" text="" x="center" y="84%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
+        <label id="StatusMessage" text="" x="center" y="67%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
+    </layout>
+
+    <layout id="OverlayLayoutRect" background="Graphics.COLOR_BLACK">
+        <label id="OverlayMainCountdown" text="" x="center" y="7%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+        <label id="OverlayStateLabel" text="" x="center" y="27%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayCountdown" text="" x="center" y="44%" font="Graphics.FONT_NUMBER_HOT" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_RED" />
+        <label id="OverlayHint" text="" x="center" y="84%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
+        <label id="StatusMessage" text="" x="center" y="66%" font="Graphics.FONT_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" visible="false" />
     </layout>
 </layouts>
