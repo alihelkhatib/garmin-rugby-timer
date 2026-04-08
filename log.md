@@ -1,3 +1,10 @@
+## [2026-04-08] Rebalance compact-round header depth so the main countdown stays visible
+
+- Corrected the compact-round layout math after the first hybrid safe-area pass proved too tall in practice. The root issue was that the center metadata (`Half 1`, tries) was being stacked below the score row, which made the measured header consume too much of a 240×240 screen and forced the main countdown off the bottom.
+- `source/RugbyTimerRenderer.mc` now keeps the center metadata inside the score band on compact round layouts and reduces the minimum countdown gap under the header. When vertical space is tight, the countdown now prefers staying on-screen instead of preserving an idealized gap budget.
+- Added `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom` to lock the compact-round overflow regression down.
+- Validated with `./scripts/validate-local.sh` on April 8, 2026. App build and unit-test build both passed.
+
 ## [2026-04-08] Introduce hybrid XML layout scaffolding and safe-area renderer bands
 
 - Replaced the placeholder `resources/layouts/layout.xml` shell with three device-family layouts: compact round, large round, and rectangular. Each layout now carries a `RugbyLayoutGuideDrawable` instance so the watch app can pull family-specific safe-area and band-spacing metadata from XML during `onLayout()`.

@@ -158,3 +158,23 @@ function test_calculateLayout_keeps_header_inside_safe_band(logger as Test.Logge
 
     return true;
 }
+
+(:test)
+function test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom(logger as Test.Logger) as Lang.Boolean {
+    var height = 240;
+    var width = 240;
+    var dc = new TestLayoutDeviceContext(72, 16, 12);
+    var parts = buildTestLayout(dc, width, height);
+    var fonts = parts.fonts;
+    var layout = parts.layout;
+    var main = RugbyTimerRenderer.calculateMainContentLayout(dc, new TestLayoutModel(STATE_IDLE), fonts, layout, RugbyRenderedCardInfo.create(0, 18, layout.cardsY), height, false);
+    var countdownBottom = main.countdownY + dc.getFontHeight("countdown");
+    var safeBottomLimit = layout.safeBottom - (height * 0.02);
+
+    if (countdownBottom > safeBottomLimit) {
+        logger.error("idle countdown overflowed safe bottom");
+        return false;
+    }
+
+    return true;
+}

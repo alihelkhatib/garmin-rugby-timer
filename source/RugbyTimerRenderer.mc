@@ -96,13 +96,20 @@ class RugbyTimerRenderer {
         var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.scoreFont, height * 0.10);
         var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.03);
         var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.03);
-        var smallGap = headerGap * 0.6;
+        var metaGap = headerGap * 0.45;
         var gameTimerY = safeTop;
         var teamLabelY = gameTimerY + timerHeight + headerGap;
-        var scoreY = teamLabelY + labelHeight + headerGap;
-        var halfY = scoreY + scoreHeight + smallGap;
-        var triesY = halfY + halfHeight + smallGap;
-        var headerBottomY = triesY + triesHeight;
+        var scoreY = teamLabelY + labelHeight + (headerGap * 0.6);
+        // Keep the center metadata inside the score band on compact round layouts so
+        // the header does not push the main countdown off the screen.
+        var halfY = scoreY + (scoreHeight * 0.34);
+        var triesY = halfY + halfHeight + metaGap;
+        var scoreBottomY = scoreY + scoreHeight;
+        var metaBottomY = triesY + triesHeight;
+        var headerBottomY = scoreBottomY;
+        if (metaBottomY > headerBottomY) {
+            headerBottomY = metaBottomY;
+        }
 
         layout.safeLeft = safeLeft;
         layout.safeRight = safeRight;
@@ -178,13 +185,20 @@ class RugbyTimerRenderer {
         }
 
         var cardStackBottom = cardInfo.cardsY + (cardInfo.rows * cardInfo.lineStep);
-        var topPadding = height * 0.05;
+        var topPadding = height * 0.035;
         var bottomPadding = height * 0.02;
         var afterCountdownGap = stateHeight > 0 ? height * 0.02 : height * 0.015;
         var afterStateGap = (stateHeight > 0 && hintHeight > 0) ? height * 0.015 : 0;
-        var minCountdownY = layout.headerBottomY + (height * 0.05);
+        var minCountdownY = layout.headerBottomY + (height * 0.025);
         var preferredCountdownY = cardStackBottom + topPadding;
         var maxCountdownY = layout.safeBottom - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
+
+        // On compact round screens the available middle band can be tighter than the
+        // ideal gap budget. In that case, keep the countdown on-screen rather than
+        // forcing it below the visible area.
+        if (maxCountdownY < minCountdownY) {
+            minCountdownY = maxCountdownY;
+        }
 
         if (preferredCountdownY < minCountdownY) {
             preferredCountdownY = minCountdownY;
