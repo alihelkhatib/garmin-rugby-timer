@@ -9,18 +9,15 @@ the human-readable strings expected by the log viewer/export path.
 */
 (:test)
 function test_eventLogEntry_roundtrip_and_display(logger as Test.Logger) as Lang.Boolean {
-    var raw = EventLogEntry.create("01:23", "Home Try").toDict();
-    var entry = EventLogEntry.fromDict(raw);
-    if (entry == null) { logger.error("EventLogEntry.fromDict returned null"); return false; }
-    return entry.toDisplayString() == "01:23 – Home Try";
+    var raw = RugbyTimerEventLog.createStoredEntry("01:23", "Home Try");
+    return RugbyTimerEventLog.formatStoredEntry(raw) == "01:23 – Home Try";
 }
 
 (:test)
 function test_eventLogEntry_legacy_payload_is_supported(logger as Test.Logger) as Lang.Boolean {
-    var entry = EventLogEntry.fromDict({
+    var legacy = {
         :time => "01:23",
         :desc => "Home Try"
-    });
-    if (entry == null) { logger.error("legacy EventLogEntry payload not restored"); return false; }
-    return entry.toDisplayString() == "01:23 – Home Try";
+    };
+    return RugbyTimerEventLog.formatStoredEntry(legacy) == "01:23 – Home Try";
 }

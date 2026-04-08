@@ -20,20 +20,19 @@ function test_matchProfileEntry_roundtrip(logger as Test.Logger) as Lang.Boolean
 
 (:test)
 function test_scoreEvent_roundtrip(logger as Test.Logger) as Lang.Boolean {
-    var raw = ScoreEvent.create(:penalty_try, true).toDict();
-    var entry = ScoreEvent.fromDict(raw);
-    if (entry == null) { logger.error("ScoreEvent.fromDict returned null"); return false; }
-    return entry.eventType == "penalty_try" && entry.isHome == true;
+    var raw = RugbyScoringService.createStoredEvent(:penalty_try, true);
+    return RugbyScoringService.getStoredEventType(raw) == "penalty_try"
+        && RugbyScoringService.isStoredEventHome(raw) == true;
 }
 
 (:test)
 function test_scoreEvent_legacy_symbol_payload_is_supported(logger as Test.Logger) as Lang.Boolean {
-    var entry = ScoreEvent.fromDict({
+    var legacy = {
         :type => :penalty_try,
         :home => true
-    });
-    if (entry == null) { logger.error("legacy ScoreEvent payload not restored"); return false; }
-    return entry.eventType == "penalty_try" && entry.isHome == true;
+    };
+    return RugbyScoringService.getStoredEventType(legacy) == "penalty_try"
+        && RugbyScoringService.isStoredEventHome(legacy) == true;
 }
 
 (:test)

@@ -12,6 +12,48 @@ const EVENT_LOG_STORAGE_KEY = STORAGE_KEY_EVENT_LOG_EXPORT;
  * gameplay model and from the menu/delegate code that exposes it.
  */
 class RugbyTimerEventLog {
+    static function createStoredEntry(time, description) {
+        return {
+            "time" => time,
+            "description" => description
+        };
+    }
+
+    static function getStoredEntryTime(raw) {
+        if (!(raw instanceof Lang.Dictionary)) {
+            return null;
+        }
+        var time = raw["time"];
+        if (time == null) {
+            time = raw[:time];
+        }
+        return time;
+    }
+
+    static function getStoredEntryDescription(raw) {
+        if (!(raw instanceof Lang.Dictionary)) {
+            return null;
+        }
+        var description = raw["description"];
+        if (description == null) {
+            description = raw["desc"];
+        }
+        if (description == null) {
+            description = raw[:description];
+        }
+        if (description == null) {
+            description = raw[:desc];
+        }
+        return description;
+    }
+
+    static function formatStoredEntry(raw) {
+        var time = RugbyTimerEventLog.getStoredEntryTime(raw);
+        var description = RugbyTimerEventLog.getStoredEntryDescription(raw);
+        if (time == null) { time = "--:--"; }
+        if (description == null) { description = ""; }
+        return time + " – " + description;
+    }
 
     static function buildEventLogLines(model) {
         var lines = [];
@@ -20,11 +62,11 @@ class RugbyTimerEventLog {
             return lines;
         }
         for (var i = 0; i < entries.size(); i = i + 1) {
-            var entry = EventLogEntry.fromDict(entries[i]);
-            if (entry == null) {
+            var line = RugbyTimerEventLog.formatStoredEntry(entries[i]);
+            if (line == null) {
                 continue;
             }
-            lines.add(entry.toDisplayString());
+            lines.add(line);
         }
         return lines;
     }
@@ -50,7 +92,7 @@ class RugbyTimerEventLog {
             model.eventLogEntries = [];
         }
         var timestamp = RugbyTimerTiming.formatTime(model.gameTime);
-        model.eventLogEntries.add(EventLogEntry.create(timestamp, description).toDict());
+        model.eventLogEntries.add(RugbyTimerEventLog.createStoredEntry(timestamp, description));
         if (model.eventLogEntries.size() > EVENT_LOG_LIMIT) {
             model.eventLogEntries.remove(0);
         }

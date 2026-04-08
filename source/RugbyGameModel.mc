@@ -287,7 +287,7 @@ class RugbyGameModel {
             return;
         }
         pendingPersistRequested = false;
-        RugbySnapshotService.persistState(self);
+        persistState();
     }
 
     function buildPendingCustomProfile() {
@@ -353,7 +353,13 @@ class RugbyGameModel {
      */
     function persistState() {
         cancelPendingPersistState();
-        RugbySnapshotService.persistState(self);
+        try {
+            RugbyTimerPersistence.saveState(self);
+            lastPersistTime = System.getTimer();
+        } catch (ex) {
+            System.println("Error persisting state: " + ex.getErrorMessage());
+            setStatusMessage("Save failed");
+        }
     }
 
     /**
@@ -364,7 +370,10 @@ class RugbyGameModel {
     function handleAppStop() {
         flushPendingCustomProfileSave();
         cancelPendingPersistState();
-        RugbySnapshotService.handleAppStop(self);
+        if (gameState != STATE_IDLE && gameState != STATE_ENDED) {
+            persistState();
+        }
+        RugbyRecordingService.stopRecording(self);
     }
 
     /**
@@ -427,7 +436,10 @@ class RugbyGameModel {
     function resetGame() {
         flushPendingCustomProfileSave();
         cancelPendingPersistState();
-        RugbySnapshotService.resetGame(self);
+        RugbyRecordingService.stopRecording(self);
+        resetMatchRuntimeState();
+        persistState();
+        Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
     }
 
     /**
@@ -612,7 +624,23 @@ class RugbyGameModel {
     function saveGame() {
         flushPendingCustomProfileSave();
         cancelPendingPersistState();
-        RugbySnapshotService.saveGame(self);
+        try {
+            RugbyTimerPersistence.finalizeGameData(self);
+            persistState();
+        } catch (ex) {
+            System.println("Error saving finished match: " + ex.getErrorMessage());
+            setStatusMessage("Save failed");
+        }
+    }
+
+    function finalizeGameData() {
+        try {
+            RugbyTimerPersistence.finalizeGameData(self);
+            Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
+        } catch (ex) {
+            System.println("Error finalizing game: " + ex.getErrorMessage());
+            setStatusMessage("Save failed");
+        }
     }
 
     /**
@@ -763,14 +791,14 @@ class RugbyGameModel {
      * Exports the event log to storage.
      */
     function exportEventLog() {
-        RugbySnapshotService.exportEventLog(self);
+        RugbyTimerEventLog.exportEventLog(self);
     }
 
     /**
      * Shows the event log screen.
      */
     function showEventLog() {
-        RugbySnapshotService.showEventLog(self);
+        RugbyTimerEventLog.showEventLog(self);
     }
 
     /**

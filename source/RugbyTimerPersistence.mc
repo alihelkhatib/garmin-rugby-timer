@@ -40,7 +40,12 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function saveState(model) {
-        var persistedStates = RugbyTimerPersistence.getPersistedStates(model);
+        var persistedGameState = model.gameState;
+        var persistedPausedState = model.pausedState;
+        if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
+            persistedGameState = STATE_PAUSED;
+            persistedPausedState = model.gameState;
+        }
         var snapshotElapsedTime = RugbyTimerPersistence.getSnapshotElapsedTime(model);
         var snapshotGameTime = RugbyTimerPersistence.getSnapshotGameTime(model);
         var snapshotSuspensionTime = RugbyTimerPersistence.getSnapshotSuspensionTime(model);
@@ -58,8 +63,8 @@ class RugbyTimerPersistence {
         snapshot.elapsedTime = snapshotElapsedTime;
         snapshot.countdownRemaining = snapshotCountdownRemaining;
         snapshot.countdownSeconds = snapshotCountdownSeconds;
-        snapshot.gameState = persistedStates.gameState;
-        snapshot.pausedState = persistedStates.pausedState;
+        snapshot.gameState = persistedGameState;
+        snapshot.pausedState = persistedPausedState;
         snapshot.matchProfileId = model.matchProfileId;
         snapshot.is7s = model.is7s;
         snapshot.countdownTimer = model.countdownTimer;
@@ -234,13 +239,6 @@ class RugbyTimerPersistence {
         if (model.redAwayTimes == null) {
             model.redAwayTimes = [];
         }
-    }
-
-    static function getPersistedStates(model) {
-        if (model.gameState == STATE_PLAYING || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY || model.gameState == STATE_KICKOFF) {
-            return PersistedStatePair.create(STATE_PAUSED, model.gameState);
-        }
-        return PersistedStatePair.create(model.gameState, model.pausedState);
     }
 
     static function getSnapshotGameTime(model) {

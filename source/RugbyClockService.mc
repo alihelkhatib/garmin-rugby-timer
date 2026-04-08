@@ -134,7 +134,7 @@ class RugbyClockService {
         RugbyRecordingService.stopRecording(model);
         RugbyTimerTiming.triggerFullTimeVibe();
         model.persistState();
-        RugbySnapshotService.finalizeGame(model);
+        model.finalizeGameData();
         RugbyTimerCards.clearCardTimers(model);
     }
 

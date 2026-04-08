@@ -5,8 +5,56 @@
  * bookkeeping in one place instead of spreading them across UI and model code.
  */
 class RugbyScoringService {
+    static function normalizeEventType(eventType) {
+        if (eventType == "try" || eventType == :try) {
+            return "try";
+        }
+        if (eventType == "conversion" || eventType == :conversion) {
+            return "conversion";
+        }
+        if (eventType == "penalty" || eventType == :penalty) {
+            return "penalty";
+        }
+        if (eventType == "drop" || eventType == :drop) {
+            return "drop";
+        }
+        if (eventType == "penalty_try" || eventType == :penalty_try) {
+            return "penalty_try";
+        }
+        return null;
+    }
+
+    static function createStoredEvent(eventType, isHome) {
+        return {
+            "type" => RugbyScoringService.normalizeEventType(eventType),
+            "isHome" => isHome == true
+        };
+    }
+
+    static function getStoredEventType(raw) {
+        if (!(raw instanceof Toybox.Lang.Dictionary)) {
+            return null;
+        }
+        var eventType = raw["type"];
+        if (eventType == null) {
+            eventType = raw[:type];
+        }
+        return RugbyScoringService.normalizeEventType(eventType);
+    }
+
+    static function isStoredEventHome(raw) {
+        if (!(raw instanceof Toybox.Lang.Dictionary)) {
+            return false;
+        }
+        var isHome = raw["isHome"];
+        if (isHome == null) {
+            isHome = raw[:home];
+        }
+        return isHome == true;
+    }
+
     static function addEvent(model, eventType, isHome) {
-        model.lastEvents.add(ScoreEvent.create(eventType, isHome).toDict());
+        model.lastEvents.add(RugbyScoringService.createStoredEvent(eventType, isHome));
     }
 
     static function trimEvents(model) {
@@ -95,13 +143,14 @@ class RugbyScoringService {
         if (model.lastEvents.size() == 0) {
             return false;
         }
-        var eventEntry = ScoreEvent.fromDict(model.lastEvents.remove(model.lastEvents.size() - 1));
-        if (eventEntry == null) {
+        var eventEntry = model.lastEvents.remove(model.lastEvents.size() - 1);
+        var eventType = RugbyScoringService.getStoredEventType(eventEntry);
+        if (eventType == null) {
             model.schedulePersistState();
             return true;
         }
-        var isHome = eventEntry.isHome;
-        if (eventEntry.eventType == "try") {
+        var isHome = RugbyScoringService.isStoredEventHome(eventEntry);
+        if (eventType == "try") {
             if (isHome) {
                 model.homeScore = model.homeScore - 5;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -111,7 +160,7 @@ class RugbyScoringService {
                 if (model.awayScore < 0) { model.awayScore = 0; }
                 if (model.awayTries > 0) { model.awayTries -= 1; }
             }
-        } else if (eventEntry.eventType == "conversion") {
+        } else if (eventType == "conversion") {
             if (isHome) {
                 model.homeScore = model.homeScore - 2;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -119,7 +168,7 @@ class RugbyScoringService {
                 model.awayScore = model.awayScore - 2;
                 if (model.awayScore < 0) { model.awayScore = 0; }
             }
-        } else if (eventEntry.eventType == "penalty_try") {
+        } else if (eventType == "penalty_try") {
             if (isHome) {
                 model.homeScore = model.homeScore - 7;
                 if (model.homeScore < 0) { model.homeScore = 0; }
@@ -127,7 +176,7 @@ class RugbyScoringService {
                 model.awayScore = model.awayScore - 7;
                 if (model.awayScore < 0) { model.awayScore = 0; }
             }
-        } else if (eventEntry.eventType == "penalty" || eventEntry.eventType == "drop") {
+        } else if (eventType == "penalty" || eventType == "drop") {
             if (isHome) {
                 model.homeScore = model.homeScore - 3;
                 if (model.homeScore < 0) { model.homeScore = 0; }

@@ -280,8 +280,8 @@ class EventLogMenu extends WatchUi.Menu2 {
         if (entries != null && entries.size() > 0) {
             var start = entries.size() > 20 ? entries.size() - 20 : 0;
             for (var idx = start; idx < entries.size(); idx = idx + 1) {
-                var entry = EventLogEntry.fromDict(entries[idx]);
-                var label = entry != null ? entry.toDisplayString() : "--:--";
+                var label = RugbyTimerEventLog.formatStoredEntry(entries[idx]);
+                if (label == null) { label = "--:--"; }
                 addItem(new WatchUi.MenuItem(label, null, :log_entry, null));
                 itemsAdded += 1;
             }

@@ -51,8 +51,8 @@ function test_recordTry_persists_without_save_failure(logger as Test.Logger) as 
     if (snapshot.lastEvents == null || snapshot.lastEvents.size() != 1) { logger.error("recordTry did not persist history"); return false; }
 
     var storedEvents = snapshot.lastEvents as Lang.Array;
-    var storedEvent = ScoreEvent.fromDict(storedEvents[0]);
-    return storedEvent != null && storedEvent.eventType == "try" && storedEvent.isHome == true;
+    return RugbyScoringService.getStoredEventType(storedEvents[0]) == "try"
+        && RugbyScoringService.isStoredEventHome(storedEvents[0]) == true;
 }
 
 (:test)
