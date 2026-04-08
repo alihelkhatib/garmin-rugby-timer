@@ -5,6 +5,12 @@
 - Added `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom` to lock the compact-round overflow regression down.
 - Validated with `./scripts/validate-local.sh` on April 8, 2026. App build and unit-test build both passed.
 
+## [2026-04-08] Add explicit main-screen UI specification
+
+- Added `docs/UI_SPEC.md` as the canonical visual contract for the live match screen. It defines device families, visual hierarchy, measured band ownership, scoreboard rules, countdown/card invariants, and manual acceptance states.
+- Linked the technical documentation back to that spec so future layout changes have a clear reference point instead of relying on screenshots or memory.
+- No runtime code changed in this step.
+
 ## [2026-04-08] Separate the score band from center metadata
 
 - Fixed a round-layout regression from the hybrid layout refactor where `Half 1` and `OT / OT` had been packed back into the score band, letting the big score digits and idle countdown visually collide on-device.
