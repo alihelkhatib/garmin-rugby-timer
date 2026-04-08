@@ -1,361 +1,549 @@
 using Toybox.Test;
 using Toybox.Lang;
 using Toybox.Graphics;
+using Rez.Drawables;
 
 /*
-Headless renderer layout regression tests.
+Presentation-layer regression tests for the XML-first live screen.
 
-Purpose: keep the main countdown anchor stable across state changes and verify
-that visible card rows still push the countdown lower when space allows.
+Purpose: validate family-driven visibility and helper output now that XML owns
+screen geometry and the renderer only maps model state into drawable content.
 */
 
-class TestLayoutDeviceContext {
-    var countdownHeight;
-    var stateHeight;
-    var hintHeight;
-
-    function initialize(countdownHeightValue, stateHeightValue, hintHeightValue) {
-        countdownHeight = countdownHeightValue;
-        stateHeight = stateHeightValue;
-        hintHeight = hintHeightValue;
-    }
-
-    function getFontHeight(font) {
-        if (font == "countdown") { return countdownHeight; }
-        if (font == "state") { return stateHeight; }
-        if (font == "hint") { return hintHeight; }
-        return 10;
-    }
-}
-
-class TestLayoutParts {
-    var fonts;
-    var layout;
-}
-
-function buildTestLayout(dc, width, height, model) {
-    var fonts = RugbyTimerRenderer.chooseFonts(width);
-    var family = width == height ? "compact_round" : "rect";
-    if (width == height && width > 240) {
-        family = "large_round";
-    }
-    var guide = RugbyLayoutSupport.resolveGuide(null, family);
-    var parts = new TestLayoutParts();
-    parts.fonts = fonts;
-    parts.layout = RugbyTimerRenderer.calculateLayout(dc, width, height, fonts, guide, model);
-    return parts;
-}
-
-class TestLayoutModel {
+class TestRendererModel {
     var gameState;
+    var countdownRemaining;
+    var countdownSeconds;
+    var elapsedTime;
+    var halfNumber;
+    var homeTries;
+    var awayTries;
+    var suspensionTime;
     var yellowHomeTimes;
     var yellowAwayTimes;
     var redHomeTimes;
     var redAwayTimes;
     var redHomePermanent;
     var redAwayPermanent;
-    var suspensionTime;
-    var halfNumber;
-    var homeTries;
-    var awayTries;
-    var elapsedTime;
-    var countdownRemaining;
+    var redHomeLabelCounter;
+    var redAwayLabelCounter;
 
     function initialize(stateValue) {
         gameState = stateValue;
+        countdownRemaining = 2400;
+        countdownSeconds = 45;
+        elapsedTime = 125;
+        halfNumber = 1;
+        homeTries = 2;
+        awayTries = 1;
+        suspensionTime = 0;
         yellowHomeTimes = [];
         yellowAwayTimes = [];
         redHomeTimes = [];
         redAwayTimes = [];
         redHomePermanent = false;
         redAwayPermanent = false;
-        suspensionTime = 0;
-        halfNumber = 1;
-        homeTries = 0;
-        awayTries = 0;
-        elapsedTime = 0;
-        countdownRemaining = 2400;
+        redHomeLabelCounter = 0;
+        redAwayLabelCounter = 0;
+    }
+
+    function formatShortTime(seconds) {
+        if (seconds <= 0) {
+            return "--";
+        }
+        var mins = (seconds.toLong() / 60);
+        var secs = (seconds.toLong() % 60);
+        return mins.toString() + ":" + secs.format("%02d");
     }
 }
 
-(:test)
-function test_mainContentLayout_keeps_countdown_stable_between_idle_and_playing(logger as Test.Logger) as Lang.Boolean {
-    var height = 240;
-    var width = 240;
-    var dc = new TestLayoutDeviceContext(120, 16, 12);
-    var model = new TestLayoutModel(STATE_IDLE);
-    var parts = buildTestLayout(dc, width, height, model);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var cardInfo = RugbyRenderedCardInfo.create(0, 18, layout.cardsY);
+class TestLayoutFamilySpec {
+    var family;
+    var width;
+    var height;
+    var safeTopPct;
+    var safeBottomPct;
+    var safeSidePct;
 
-    var idleLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, false);
-    var playingLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, new TestLayoutModel(STATE_PLAYING), fonts, layout, cardInfo, height, false);
+    static function create(familyValue, widthValue, heightValue, safeTopPctValue, safeBottomPctValue, safeSidePctValue) {
+        var spec = new TestLayoutFamilySpec();
+        spec.family = familyValue;
+        spec.width = widthValue;
+        spec.height = heightValue;
+        spec.safeTopPct = safeTopPctValue;
+        spec.safeBottomPct = safeBottomPctValue;
+        spec.safeSidePct = safeSidePctValue;
+        return spec;
+    }
+}
 
-    if (idleLayout.countdownY != playingLayout.countdownY) {
-        logger.error("countdownY drifted from " + idleLayout.countdownY.format("%.2f") + " to " + playingLayout.countdownY.format("%.2f"));
+class TestLayoutNode {
+    var id;
+    var xPct;
+    var yPct;
+    var widthPx;
+    var heightPx;
+    var justify;
+
+    static function create(idValue, xPctValue, yPctValue, widthPxValue, heightPxValue, justifyValue) {
+        var node = new TestLayoutNode();
+        node.id = idValue;
+        node.xPct = xPctValue;
+        node.yPct = yPctValue;
+        node.widthPx = widthPxValue;
+        node.heightPx = heightPxValue;
+        node.justify = justifyValue;
+        return node;
+    }
+}
+
+class TestLayoutBounds {
+    var left;
+    var right;
+    var top;
+    var bottom;
+
+    static function create(leftValue, rightValue, topValue, bottomValue) {
+        var bounds = new TestLayoutBounds();
+        bounds.left = leftValue;
+        bounds.right = rightValue;
+        bounds.top = topValue;
+        bounds.bottom = bottomValue;
+        return bounds;
+    }
+}
+
+function getMainLayoutSafetySpec(family) {
+    if (family == "compact_round") {
+        return TestLayoutFamilySpec.create(family, 240, 240, 6, 5, 10);
+    }
+    if (family == "large_round") {
+        return TestLayoutFamilySpec.create(family, 260, 260, 6, 5, 10);
+    }
+    return TestLayoutFamilySpec.create(family, 205, 148, 4, 4, 5);
+}
+
+function getOverlayLayoutSafetySpec(family) {
+    return getMainLayoutSafetySpec(family);
+}
+
+function getMainCoreNodesForFamily(family) {
+    if (family == "compact_round") {
+        return [
+            TestLayoutNode.create("ElapsedTimer", 50, 7, 46, 12, "center"),
+            TestLayoutNode.create("HomeLabel", 26, 18, 34, 12, "center"),
+            TestLayoutNode.create("AwayLabel", 74, 18, 34, 12, "center"),
+            TestLayoutNode.create("HomeScore", 26, 28, 52, 34, "center"),
+            TestLayoutNode.create("AwayScore", 74, 28, 52, 34, "center"),
+            TestLayoutNode.create("HomeTries", 14, 34, 24, 12, "left"),
+            TestLayoutNode.create("AwayTries", 86, 34, 24, 12, "right"),
+            TestLayoutNode.create("HalfText", 50, 43, 44, 12, "center"),
+            TestLayoutNode.create("HomeCardLabel", 29, 50, 16, 12, "right"),
+            TestLayoutNode.create("HomeCardValue", 31, 50, 26, 12, "left"),
+            TestLayoutNode.create("AwayCardLabel", 69, 50, 16, 12, "right"),
+            TestLayoutNode.create("AwayCardValue", 71, 50, 26, 12, "left"),
+            TestLayoutNode.create("Countdown", 50, 57, 126, 42, "center"),
+            TestLayoutNode.create("StateLine1", 50, 77, 68, 12, "center"),
+            TestLayoutNode.create("StateLine2", 50, 83, 22, 12, "center"),
+            TestLayoutNode.create("HintLine1", 50, 88, 110, 12, "center"),
+            TestLayoutNode.create("HintLine2", 50, 93, 108, 12, "center")
+        ];
+    }
+    if (family == "large_round") {
+        return [
+            TestLayoutNode.create("ElapsedTimer", 50, 6, 54, 14, "center"),
+            TestLayoutNode.create("HomeLabel", 27, 16, 36, 12, "center"),
+            TestLayoutNode.create("AwayLabel", 73, 16, 36, 12, "center"),
+            TestLayoutNode.create("HomeScore", 27, 25, 56, 34, "center"),
+            TestLayoutNode.create("AwayScore", 73, 25, 56, 34, "center"),
+            TestLayoutNode.create("HomeTries", 16, 32, 34, 16, "left"),
+            TestLayoutNode.create("AwayTries", 84, 32, 34, 16, "right"),
+            TestLayoutNode.create("HalfText", 50, 40, 48, 12, "center"),
+            TestLayoutNode.create("HomeCardLabel", 31, 49, 20, 16, "right"),
+            TestLayoutNode.create("HomeCardValue", 33, 49, 34, 16, "left"),
+            TestLayoutNode.create("AwayCardLabel", 67, 49, 20, 16, "right"),
+            TestLayoutNode.create("AwayCardValue", 69, 49, 34, 16, "left"),
+            TestLayoutNode.create("Countdown", 50, 56, 136, 42, "center"),
+            TestLayoutNode.create("StateLine1", 50, 77, 84, 16, "center"),
+            TestLayoutNode.create("StateLine2", 50, 83, 28, 16, "center"),
+            TestLayoutNode.create("HintLine1", 50, 89, 114, 12, "center"),
+            TestLayoutNode.create("HintLine2", 50, 94, 112, 12, "center")
+        ];
+    }
+    return [
+        TestLayoutNode.create("ElapsedTimer", 50, 5, 54, 14, "center"),
+        TestLayoutNode.create("HomeLabel", 24, 14, 42, 16, "center"),
+        TestLayoutNode.create("AwayLabel", 76, 14, 42, 16, "center"),
+        TestLayoutNode.create("HomeScore", 24, 23, 56, 34, "center"),
+        TestLayoutNode.create("AwayScore", 76, 23, 56, 34, "center"),
+        TestLayoutNode.create("HomeTries", 10, 30, 34, 16, "left"),
+        TestLayoutNode.create("AwayTries", 90, 30, 34, 16, "right"),
+        TestLayoutNode.create("HalfText", 50, 38, 48, 12, "center"),
+        TestLayoutNode.create("HomeCardLabel", 27, 47, 20, 16, "right"),
+        TestLayoutNode.create("HomeCardValue", 29, 47, 34, 16, "left"),
+        TestLayoutNode.create("AwayCardLabel", 71, 47, 20, 16, "right"),
+        TestLayoutNode.create("AwayCardValue", 73, 47, 34, 16, "left"),
+        TestLayoutNode.create("Countdown", 50, 54, 136, 42, "center"),
+        TestLayoutNode.create("StateLine1", 50, 77, 84, 16, "center"),
+        TestLayoutNode.create("StateLine2", 50, 84, 28, 16, "center"),
+        TestLayoutNode.create("HintLine1", 50, 90, 114, 12, "center"),
+        TestLayoutNode.create("HintLine2", 50, 95, 112, 12, "center")
+    ];
+}
+
+function getOverlayCoreNodesForFamily(family) {
+    if (family == "compact_round") {
+        return [
+            TestLayoutNode.create("OverlayMainCountdown", 50, 9, 120, 34, "center"),
+            TestLayoutNode.create("OverlayStateLabel", 50, 32, 84, 16, "center"),
+            TestLayoutNode.create("OverlayCountdown", 50, 48, 128, 42, "center"),
+            TestLayoutNode.create("OverlayHint", 50, 84, 116, 12, "center")
+        ];
+    }
+    if (family == "large_round") {
+        return [
+            TestLayoutNode.create("OverlayMainCountdown", 50, 8, 120, 34, "center"),
+            TestLayoutNode.create("OverlayStateLabel", 50, 30, 84, 16, "center"),
+            TestLayoutNode.create("OverlayCountdown", 50, 46, 136, 42, "center"),
+            TestLayoutNode.create("OverlayHint", 50, 84, 116, 12, "center")
+        ];
+    }
+    return [
+        TestLayoutNode.create("OverlayMainCountdown", 50, 7, 120, 34, "center"),
+        TestLayoutNode.create("OverlayStateLabel", 50, 27, 84, 16, "center"),
+        TestLayoutNode.create("OverlayCountdown", 50, 44, 136, 42, "center"),
+        TestLayoutNode.create("OverlayHint", 50, 84, 116, 12, "center")
+    ];
+}
+
+function getNodeBounds(spec, node) {
+    var centerX = (spec.width * node.xPct) / 100.0f;
+    var centerY = (spec.height * node.yPct) / 100.0f;
+    var left = centerX;
+    var right = centerX;
+    if (node.justify == "center") {
+        left = centerX - (node.widthPx / 2.0f);
+        right = centerX + (node.widthPx / 2.0f);
+    } else if (node.justify == "left") {
+        right = centerX + node.widthPx;
+    } else {
+        left = centerX - node.widthPx;
+    }
+    var top = centerY - (node.heightPx / 2.0f);
+    var bottom = centerY + (node.heightPx / 2.0f);
+    return TestLayoutBounds.create(left, right, top, bottom);
+}
+
+function findNodeById(nodes, id) {
+    for (var i = 0; i < nodes.size(); i = i + 1) {
+        if (nodes[i].id == id) {
+            return nodes[i];
+        }
+    }
+    return null;
+}
+
+function assertNodeBoundsStayVisible(logger, spec, node) {
+    var bounds = getNodeBounds(spec, node);
+    if (bounds.left < 0 || bounds.right > spec.width || bounds.top < 0 || bounds.bottom > spec.height) {
+        logger.error(spec.family + " " + node.id + " escaped screen bounds");
         return false;
     }
+    var safeLeft = (spec.width * spec.safeSidePct) / 100.0f;
+    var safeRight = spec.width - safeLeft;
+    var safeTop = (spec.height * spec.safeTopPct) / 100.0f;
+    var safeBottom = spec.height - ((spec.height * spec.safeBottomPct) / 100.0f);
+    var anchorX = (spec.width * node.xPct) / 100.0f;
+    var anchorY = (spec.height * node.yPct) / 100.0f;
+    if (anchorX < safeLeft || anchorX > safeRight) {
+        logger.error(spec.family + " " + node.id + " anchor drifted into bezel-risk side area");
+        return false;
+    }
+    if (anchorY < safeTop || anchorY > safeBottom) {
+        logger.error(spec.family + " " + node.id + " anchor drifted into bezel-risk top/bottom area");
+        return false;
+    }
+    return true;
+}
 
+function assertVerticalOrder(logger, spec, nodes, firstId, secondId, gapPx) {
+    var first = findNodeById(nodes, firstId);
+    var second = findNodeById(nodes, secondId);
+    if (first == null || second == null) {
+        logger.error("missing node for vertical-order test");
+        return false;
+    }
+    var firstBounds = getNodeBounds(spec, first);
+    var secondBounds = getNodeBounds(spec, second);
+    if (firstBounds.bottom + gapPx > secondBounds.top) {
+        logger.error(spec.family + " " + firstId + " overlaps or crowds " + secondId);
+        return false;
+    }
+    return true;
+}
+
+function assertHorizontalGap(logger, spec, nodes, leftId, rightId, gapPx) {
+    var leftNode = findNodeById(nodes, leftId);
+    var rightNode = findNodeById(nodes, rightId);
+    if (leftNode == null || rightNode == null) {
+        logger.error("missing node for horizontal-gap test");
+        return false;
+    }
+    var leftBounds = getNodeBounds(spec, leftNode);
+    var rightBounds = getNodeBounds(spec, rightNode);
+    if (leftBounds.right + gapPx > rightBounds.left) {
+        logger.error(spec.family + " " + leftId + " overlaps or crowds " + rightId);
+        return false;
+    }
+    return true;
+}
+
+function assertCenterLaneSeparation(logger, spec, nodes, leftId, rightId, gapPx) {
+    var centerX = spec.width / 2.0f;
+    var leftNode = findNodeById(nodes, leftId);
+    var rightNode = findNodeById(nodes, rightId);
+    if (leftNode == null || rightNode == null) {
+        logger.error("missing node for center-lane test");
+        return false;
+    }
+    var leftBounds = getNodeBounds(spec, leftNode);
+    var rightBounds = getNodeBounds(spec, rightNode);
+    if (leftBounds.right + gapPx > centerX) {
+        logger.error(spec.family + " " + leftId + " crossed the center lane");
+        return false;
+    }
+    if (rightBounds.left - gapPx < centerX) {
+        logger.error(spec.family + " " + rightId + " crossed the center lane");
+        return false;
+    }
     return true;
 }
 
 (:test)
-function test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused(logger as Test.Logger) as Lang.Boolean {
-    var height = 240;
-    var width = 240;
-    var dc = new TestLayoutDeviceContext(120, 16, 12);
-    var model = new TestLayoutModel(STATE_PLAYING);
-    var parts = buildTestLayout(dc, width, height, model);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var cardInfo = RugbyRenderedCardInfo.create(0, 18, layout.cardsY);
-
-    var playingLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, false);
-    var pausedLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, new TestLayoutModel(STATE_PAUSED), fonts, layout, cardInfo, height, false);
-
-    if (playingLayout.countdownY != pausedLayout.countdownY) {
-        logger.error("countdownY drifted from " + playingLayout.countdownY.format("%.2f") + " to " + pausedLayout.countdownY.format("%.2f"));
+function test_renderer_compact_family_hides_icons_and_tries(logger as Test.Logger) as Lang.Boolean {
+    if (RugbyTimerRenderer.shouldShowIcons("compact_round")) {
+        logger.error("compact round should hide icons");
         return false;
     }
-
+    if (RugbyTimerRenderer.shouldShowTries("compact_round")) {
+        logger.error("compact round should hide tries");
+        return false;
+    }
     return true;
 }
 
 (:test)
-function test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused_with_cards(logger as Test.Logger) as Lang.Boolean {
-    var height = 260;
-    var width = 260;
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_PLAYING);
+function test_renderer_large_family_shows_icons_and_tries(logger as Test.Logger) as Lang.Boolean {
+    if (!RugbyTimerRenderer.shouldShowIcons("large_round")) {
+        logger.error("large round should show icons");
+        return false;
+    }
+    if (!RugbyTimerRenderer.shouldShowTries("rect")) {
+        logger.error("rectangular layout should show tries");
+        return false;
+    }
+    return true;
+}
+
+(:test)
+function test_renderer_text_helpers_format_scoreboard_strings(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_PLAYING);
+    if (RugbyTimerRenderer.getElapsedTimerText(model) != "02:05") {
+        logger.error("elapsed timer text mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getCountdownText(model) != "40:00") {
+        logger.error("countdown text mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getHalfText(model) != "Half 1") {
+        logger.error("half text mismatch");
+        return false;
+    }
+    return RugbyTimerRenderer.getHomeTriesText(model) == "2T"
+        && RugbyTimerRenderer.getAwayTriesText(model) == "1T";
+}
+
+(:test)
+function test_renderer_state_mapping_for_paused(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_PAUSED);
+    if (RugbyTimerRenderer.getMainStateLine1(model) != "PAUSED") {
+        logger.error("paused line 1 mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getMainStateLine2(model) != "") {
+        logger.error("paused line 2 should be hidden");
+        return false;
+    }
+    return RugbyTimerRenderer.getMainStateColor(model) == Graphics.COLOR_RED;
+}
+
+(:test)
+function test_renderer_state_mapping_for_conversion(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_CONVERSION);
+    if (RugbyTimerRenderer.getMainStateLine1(model) != "CONVERSION") {
+        logger.error("conversion line 1 mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getMainStateLine2(model) != "45s") {
+        logger.error("conversion line 2 mismatch");
+        return false;
+    }
+    return RugbyTimerRenderer.getMainStateColor(model) == Graphics.COLOR_RED;
+}
+
+(:test)
+function test_renderer_hint_mode_covers_locked_idle_and_hidden(logger as Test.Logger) as Lang.Boolean {
+    if (RugbyTimerRenderer.getHintMode(STATE_PLAYING, true, true) != "locked") {
+        logger.error("locked hint mode mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getHintMode(STATE_IDLE, false, true) != "idle") {
+        logger.error("idle hint mode mismatch");
+        return false;
+    }
+    if (RugbyTimerRenderer.getHintMode(STATE_PLAYING, false, true) != "hidden") {
+        logger.error("playing hint mode should be hidden");
+        return false;
+    }
+    return true;
+}
+
+(:test)
+function test_renderer_teamCardPresentation_prefers_urgent_timed_card(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_PLAYING);
     model.yellowHomeTimes = [{ "remaining" => 300, "label" => "Y1", "cardId" => 1 }];
-    var parts = buildTestLayout(dc, width, height, model);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var cardInfo = RugbyRenderedCardInfo.create(2, 18, layout.cardsY);
+    model.redHomePermanent = true;
 
-    var playingLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, cardInfo, height, false);
-    var pausedModel = new TestLayoutModel(STATE_PAUSED);
-    pausedModel.yellowHomeTimes = model.yellowHomeTimes;
-    var pausedLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, pausedModel, fonts, layout, cardInfo, height, false);
-
-    if (playingLayout.countdownY != pausedLayout.countdownY) {
-        logger.error("countdownY with cards drifted from " + playingLayout.countdownY.format("%.2f") + " to " + pausedLayout.countdownY.format("%.2f"));
+    var card = RugbyTimerRenderer.getTeamCardPresentation(
+        model,
+        model.yellowHomeTimes,
+        model.redHomeTimes,
+        model.redHomePermanent,
+        1
+    );
+    if (!card.visible) {
+        logger.error("urgent timed card should be visible");
         return false;
     }
-
-    return true;
+    if (card.label != "Y1" || card.value != "5:00") {
+        logger.error("urgent timed card content mismatch");
+        return false;
+    }
+    return card.color == Graphics.COLOR_YELLOW;
 }
 
 (:test)
-function test_mainContentLayout_moves_down_for_visible_card_rows(logger as Test.Logger) as Lang.Boolean {
-    var height = 260;
-    var width = 260;
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_PLAYING);
-    var parts = buildTestLayout(dc, width, height, model);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var playingModel = model;
+function test_renderer_teamCardPresentation_falls_back_to_perm_red(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_PLAYING);
+    model.redAwayPermanent = true;
+    model.redAwayLabelCounter = 2;
 
-    var baseLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, playingModel, fonts, layout, RugbyRenderedCardInfo.create(0, 18, layout.cardsY), height, false);
-    var stackedLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, playingModel, fonts, layout, RugbyRenderedCardInfo.create(2, 18, layout.cardsY), height, false);
-
-    if (!(stackedLayout.countdownY > baseLayout.countdownY)) {
-        logger.error("card rows did not lower countdownY");
+    var card = RugbyTimerRenderer.getTeamCardPresentation(
+        model,
+        model.yellowAwayTimes,
+        model.redAwayTimes,
+        model.redAwayPermanent,
+        model.redAwayLabelCounter
+    );
+    if (!card.visible) {
+        logger.error("permanent red card should be visible");
         return false;
     }
+    if (card.label != "R2" || card.value != "PERM") {
+        logger.error("permanent red card content mismatch");
+        return false;
+    }
+    return card.color == Graphics.COLOR_RED;
+}
 
-    return true;
+
+(:test)
+function test_overlay_helpers_return_expected_text_and_hint(logger as Test.Logger) as Lang.Boolean {
+    var model = new TestRendererModel(STATE_CONVERSION);
+    if (RugbyTimerOverlay.getOverlayMainCountdownText(model) != "40:00") {
+        logger.error("overlay main countdown mismatch");
+        return false;
+    }
+    if (RugbyTimerOverlay.getOverlayCountdownText(model) != "00:45") {
+        logger.error("overlay special countdown mismatch");
+        return false;
+    }
+    if (RugbyTimerOverlay.getSpecialStateLabel(model) != "CONVERSION") {
+        logger.error("overlay state label mismatch");
+        return false;
+    }
+    return RugbyTimerOverlay.getSpecialOverlayHint(model) == "UP: +2   DOWN: MISS";
 }
 
 (:test)
-function test_calculateLayout_keeps_header_inside_safe_band(logger as Test.Logger) as Lang.Boolean {
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_IDLE);
-    var parts = buildTestLayout(dc, 240, 240, model);
-    var layout = parts.layout;
-
-    if (!(layout.gameTimerY >= layout.safeTop)) {
-        logger.error("game timer moved above safe top");
-        return false;
-    }
-    if (!(layout.scoreY > layout.teamLabelY)) {
-        logger.error("header rows are out of order");
-        return false;
-    }
-    if (!(layout.headerBottomY < layout.cardsY && layout.homeScoreX > layout.safeLeft && layout.awayScoreX < layout.safeRight)) {
-        logger.error("header or score anchors escaped safe content");
-        return false;
-    }
-    if (layout.showHalf && !(layout.halfY > layout.scoreY + 10)) {
-        logger.error("half row drifted into the score band");
-        return false;
-    }
-    if (!(layout.homeTriesX < layout.homeScoreX && layout.awayTriesX > layout.awayScoreX)) {
-        logger.error("tries were not anchored beside their score columns");
-        return false;
-    }
-    if (layout.showTries && !(layout.triesY > layout.scoreY && layout.triesY < layout.headerBottomY)) {
-        logger.error("tries did not stay in the score-adjacent band");
-        return false;
-    }
-
-    return true;
-}
-
-(:test)
-function test_compact_round_fonts_reduce_hint_and_label_emphasis(logger as Test.Logger) as Lang.Boolean {
-    var fonts = RugbyTimerRenderer.chooseFonts(240);
-    if (fonts.hintFont != Graphics.FONT_XTINY) {
-        logger.error("compact-round idle hints did not shrink");
-        return false;
-    }
-    if (RugbyTimerRenderer.chooseTeamLabelFont(240) != Graphics.FONT_SYSTEM_TINY) {
-        logger.error("compact-round team labels did not shrink");
-        return false;
+function test_mainLayout_core_nodes_stay_on_screen_and_out_of_bezel_risk(logger as Test.Logger) as Lang.Boolean {
+    var families = ["compact_round", "large_round", "rect"];
+    for (var i = 0; i < families.size(); i = i + 1) {
+        var family = families[i];
+        var spec = getMainLayoutSafetySpec(family);
+        var nodes = getMainCoreNodesForFamily(family);
+        for (var j = 0; j < nodes.size(); j = j + 1) {
+            if (!assertNodeBoundsStayVisible(logger, spec, nodes[j])) {
+                return false;
+            }
+        }
     }
     return true;
 }
 
 (:test)
-function test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom(logger as Test.Logger) as Lang.Boolean {
-    var height = 240;
-    var width = 240;
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_IDLE);
-    var parts = buildTestLayout(dc, width, height, model);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var main = RugbyTimerRenderer.calculateMainContentLayout(dc, model, fonts, layout, RugbyRenderedCardInfo.create(0, 18, layout.cardsY), height, false);
-    var countdownBottom = main.countdownY + dc.getFontHeight("countdown");
-    var safeBottomLimit = layout.safeBottom - (height * 0.02);
-
-    if (countdownBottom > safeBottomLimit) {
-        logger.error("idle countdown overflowed safe bottom");
-        return false;
-    }
-
-    return true;
-}
-
-(:test)
-function test_compactDetailMode_recovers_metadata_in_priority_order(logger as Test.Logger) as Lang.Boolean {
-    var modeCritical = RugbyTimerRenderer.chooseCompactDetailMode(new TestLayoutModel(STATE_PLAYING), 192, 170);
-    var modeElapsed = RugbyTimerRenderer.chooseCompactDetailMode(new TestLayoutModel(STATE_PLAYING), 192, 190);
-    var modeHalf = RugbyTimerRenderer.chooseCompactDetailMode(new TestLayoutModel(STATE_PLAYING), 192, 210);
-    var modeFull = RugbyTimerRenderer.chooseCompactDetailMode(new TestLayoutModel(STATE_PLAYING), 210, 222);
-
-    if (modeCritical != "critical-only") {
-        logger.error("expected critical-only fallback");
-        return false;
-    }
-    if (modeElapsed != "critical-plus-elapsed") {
-        logger.error("elapsed did not return first");
-        return false;
-    }
-    if (modeHalf != "critical-plus-elapsed-half") {
-        logger.error("half did not return before tries");
-        return false;
-    }
-    if (modeFull != "full-compact") {
-        logger.error("tries did not return last");
-        return false;
+function test_mainLayout_core_rows_keep_vertical_separation(logger as Test.Logger) as Lang.Boolean {
+    var families = ["compact_round", "large_round", "rect"];
+    for (var i = 0; i < families.size(); i = i + 1) {
+        var family = families[i];
+        var spec = getMainLayoutSafetySpec(family);
+        var nodes = getMainCoreNodesForFamily(family);
+        if (!assertVerticalOrder(logger, spec, nodes, "ElapsedTimer", "HomeLabel", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "HomeLabel", "HomeScore", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "HomeScore", "HalfText", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "HalfText", "HomeCardValue", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "HomeCardValue", "Countdown", 6)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "Countdown", "StateLine1", 6)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "StateLine1", "StateLine2", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "StateLine2", "HintLine1", 2)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "HintLine1", "HintLine2", 1)) { return false; }
     }
     return true;
 }
 
 (:test)
-function test_calculateLayout_compact_round_uses_critical_only_for_timed_cards(logger as Test.Logger) as Lang.Boolean {
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_PLAYING);
-    model.yellowHomeTimes = [{ "remaining" => 300, "label" => "Y1", "cardId" => 1 }];
-    var parts = buildTestLayout(dc, 240, 240, model);
-    var layout = parts.layout;
-
-    if (layout.compactDetailMode != "critical-only") {
-        logger.error("timed cards did not force critical-only mode");
-        return false;
-    }
-    if (layout.showElapsedTimer || layout.showHalf || layout.showTries) {
-        logger.error("optional metadata stayed visible in critical-only mode");
-        return false;
+function test_mainLayout_same_row_objects_keep_horizontal_separation(logger as Test.Logger) as Lang.Boolean {
+    var families = ["compact_round", "large_round", "rect"];
+    for (var i = 0; i < families.size(); i = i + 1) {
+        var family = families[i];
+        var spec = getMainLayoutSafetySpec(family);
+        var nodes = getMainCoreNodesForFamily(family);
+        if (!assertHorizontalGap(logger, spec, nodes, "HomeTries", "HomeScore", 2)) { return false; }
+        if (!assertHorizontalGap(logger, spec, nodes, "HomeCardLabel", "HomeCardValue", 2)) { return false; }
+        if (!assertHorizontalGap(logger, spec, nodes, "AwayScore", "AwayTries", 2)) { return false; }
+        if (!assertHorizontalGap(logger, spec, nodes, "AwayCardLabel", "AwayCardValue", 2)) { return false; }
+        if (!assertCenterLaneSeparation(logger, spec, nodes, "HomeScore", "AwayScore", 6)) { return false; }
+        if (!assertCenterLaneSeparation(logger, spec, nodes, "HomeCardValue", "AwayCardLabel", 6)) { return false; }
     }
     return true;
 }
 
 (:test)
-function test_calculateLayout_compact_round_no_cards_returns_elapsed_before_half(logger as Test.Logger) as Lang.Boolean {
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var model = new TestLayoutModel(STATE_IDLE);
-    var parts = buildTestLayout(dc, 240, 240, model);
-    var layout = parts.layout;
-
-    if (layout.compactDetailMode != "critical-plus-elapsed") {
-        logger.error("compact round no-card layout did not settle on elapsed-first mode");
-        return false;
+function test_overlayLayout_core_nodes_stay_on_screen_and_separated(logger as Test.Logger) as Lang.Boolean {
+    var families = ["compact_round", "large_round", "rect"];
+    for (var i = 0; i < families.size(); i = i + 1) {
+        var family = families[i];
+        var spec = getOverlayLayoutSafetySpec(family);
+        var nodes = getOverlayCoreNodesForFamily(family);
+        for (var j = 0; j < nodes.size(); j = j + 1) {
+            if (!assertNodeBoundsStayVisible(logger, spec, nodes[j])) {
+                return false;
+            }
+        }
+        if (!assertVerticalOrder(logger, spec, nodes, "OverlayMainCountdown", "OverlayStateLabel", 4)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "OverlayStateLabel", "OverlayCountdown", 4)) { return false; }
+        if (!assertVerticalOrder(logger, spec, nodes, "OverlayCountdown", "OverlayHint", 8)) { return false; }
     }
-    if (!layout.showElapsedTimer || layout.showHalf || layout.showTries) {
-        logger.error("compact round no-card layout restored metadata out of order");
-        return false;
-    }
-    return true;
-}
-
-(:test)
-function test_compactRound_countdown_stays_stable_between_playing_and_paused_with_timed_cards(logger as Test.Logger) as Lang.Boolean {
-    var height = 240;
-    var width = 240;
-    var dc = new TestLayoutDeviceContext(72, 16, 12);
-    var playingModel = new TestLayoutModel(STATE_PLAYING);
-    playingModel.yellowHomeTimes = [{ "remaining" => 300, "label" => "Y1", "cardId" => 1 }];
-    var pausedModel = new TestLayoutModel(STATE_PAUSED);
-    pausedModel.yellowHomeTimes = playingModel.yellowHomeTimes;
-
-    var parts = buildTestLayout(dc, width, height, playingModel);
-    var fonts = parts.fonts;
-    var layout = parts.layout;
-    var cardInfo = RugbyRenderedCardInfo.create(1, 18, layout.cardsY);
-    var playingLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, playingModel, fonts, layout, cardInfo, height, false);
-    var pausedLayout = RugbyTimerRenderer.calculateMainContentLayout(dc, pausedModel, fonts, layout, cardInfo, height, false);
-
-    if (playingLayout.countdownY != pausedLayout.countdownY) {
-        logger.error("compact-round timed-card countdown drifted between playing and paused");
-        return false;
-    }
-    return true;
-}
-
-(:test)
-function test_getUrgentCardEntry_picks_lowest_remaining_time(logger as Test.Logger) as Lang.Boolean {
-    var urgent = RugbyTimerRenderer.getUrgentCardEntry([
-        { "startTime" => 0, "duration" => 600, "remaining" => 540, "label" => "Y2", "cardId" => 2, "vibeTriggered" => false },
-        { "startTime" => 0, "duration" => 600, "remaining" => 120, "label" => "Y1", "cardId" => 1, "vibeTriggered" => false }
-    ], 0);
-
-    if (urgent == null) {
-        logger.error("urgent card entry was null");
-        return false;
-    }
-    if (urgent.label != "Y1") {
-        logger.error("urgent card selection ignored the lowest remaining time");
-        return false;
-    }
-
-    return true;
-}
-
-(:test)
-function test_getUrgentCardEntry_skips_expired_entries(logger as Test.Logger) as Lang.Boolean {
-    var urgent = RugbyTimerRenderer.getUrgentCardEntry([
-        { "startTime" => 0, "duration" => 600, "remaining" => 0, "label" => "Y2", "cardId" => 2, "vibeTriggered" => false },
-        { "startTime" => 0, "duration" => 600, "remaining" => 90, "label" => "Y1", "cardId" => 1, "vibeTriggered" => false }
-    ], 0);
-
-    if (urgent == null || urgent.label != "Y1") {
-        logger.error("expired entries still outranked live timed cards");
-        return false;
-    }
-
     return true;
 }

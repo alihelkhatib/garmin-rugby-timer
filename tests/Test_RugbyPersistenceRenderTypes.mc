@@ -1,11 +1,12 @@
 using Toybox.Test;
 using Toybox.Lang;
+using Toybox.Graphics;
 
 /*
-Unit tests for the persistence/render typed adapter layer.
+Unit tests for the persistence layer and small typed helpers.
 
-Purpose: ensure the new wrappers round-trip the older dictionary schemas
-without changing storage or render-boundary behavior.
+Purpose: ensure storage adapters still round-trip and the surviving typed
+presentation wrappers behave as expected after removing the old geometry types.
 */
 (:test)
 function test_persistedCardTimerEntry_roundtrip(logger as Test.Logger) as Lang.Boolean {
@@ -29,26 +30,12 @@ function test_persistedGameSnapshot_roundtrip(logger as Test.Logger) as Lang.Boo
 }
 
 (:test)
-function test_renderTypes_and_timerUpdateResult(logger as Test.Logger) as Lang.Boolean {
-    var fonts = RugbyRenderFonts.create(1, 2, 3, 4, 5, 6, 7);
-    var layout = RugbyRenderLayout.create();
-    layout.family = "compact_round";
-    layout.compactDetailMode = "critical-plus-elapsed";
-    layout.safeTop = 10;
-    layout.teamLabelY = 20;
-    layout.scoreY = 30;
-    layout.homeTriesX = 15;
-    layout.awayTriesX = 85;
-    layout.cardsY = 50;
-    layout.stateBaseY = 60;
-    layout.hintBaseY = 70;
-    layout.iconY = 80;
-    layout.showIcons = false;
-    layout.showElapsedTimer = true;
-    layout.showHalf = false;
-    layout.showTries = false;
-    var cardInfo = RugbyRenderedCardInfo.create(2, 12, 100);
-    var content = RugbyMainContentLayout.create(120, 140, 160, 18);
+function test_smallRenderTypes_and_timerUpdateResult(logger as Test.Logger) as Lang.Boolean {
+    var card = RugbyCardSlotPresentation.create("Y1", "9:59", Graphics.COLOR_YELLOW, true);
     var update = RugbyTimerUpdateResult.create([], true);
-    return fonts.countdownFont == 5 && layout.family == "compact_round" && layout.compactDetailMode == "critical-plus-elapsed" && layout.homeTriesX == 15 && layout.showHalf == false && layout.showTries == false && layout.cardsY == 50 && cardInfo.rows == 2 && content.hintLineGap == 18 && update.expired == true;
+    return card.label == "Y1"
+        && card.value == "9:59"
+        && card.color == Graphics.COLOR_YELLOW
+        && card.visible == true
+        && update.expired == true;
 }

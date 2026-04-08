@@ -1,87 +1,52 @@
 using Rez.Layouts;
 
 class RugbyLayoutSupport {
-    static function applyMainLayout(view, dc, width, height) {
+    static function applyLayout(view, dc, width, height, useOverlayLayout) {
         var family = RugbyLayoutSupport.getFamily(width, height);
-        if (family == "rect") {
+        var layoutId = RugbyLayoutSupport.getLayoutId(family, useOverlayLayout);
+        if (layoutId == "OverlayLayoutRect") {
+            view.setLayout(Rez.Layouts.OverlayLayoutRect(dc));
+        } else if (layoutId == "OverlayLayoutCompactRound") {
+            view.setLayout(Rez.Layouts.OverlayLayoutCompactRound(dc));
+        } else if (layoutId == "OverlayLayoutLargeRound") {
+            view.setLayout(Rez.Layouts.OverlayLayoutLargeRound(dc));
+        } else if (layoutId == "MainLayoutRect") {
             view.setLayout(Rez.Layouts.MainLayoutRect(dc));
-            return family;
-        }
-        if (family == "compact_round") {
+        } else if (layoutId == "MainLayoutCompactRound") {
             view.setLayout(Rez.Layouts.MainLayoutCompactRound(dc));
-            return family;
+        } else {
+            view.setLayout(Rez.Layouts.MainLayoutLargeRound(dc));
         }
-        view.setLayout(Rez.Layouts.MainLayoutLargeRound(dc));
-        return family;
+        return layoutId;
     }
 
-    static function resolveGuide(view, family) {
-        var drawable = null;
-        if (view != null) {
-            try {
-                drawable = view.findDrawableById("LayoutGuide") as RugbyLayoutGuideDrawable;
-            } catch (ex) {
-                drawable = null;
+    static function getLayoutId(family, useOverlayLayout) {
+        if (useOverlayLayout) {
+            if (family == "rect") {
+                return "OverlayLayoutRect";
             }
+            if (family == "compact_round") {
+                return "OverlayLayoutCompactRound";
+            }
+            return "OverlayLayoutLargeRound";
         }
-        if (drawable != null && drawable.guide != null) {
-            return drawable.guide;
-        }
-        return RugbyLayoutSupport.createFallbackGuideByFamily(family);
-    }
-
-    static function createFallbackGuide(width, height) {
-        if (RugbyLayoutSupport.isRectangular(width, height)) {
-            return RugbyLayoutSupport.createFallbackGuideByFamily("rect");
-        }
-        if (width <= 240) {
-            return RugbyLayoutSupport.createFallbackGuideByFamily("compact_round");
-        }
-        return RugbyLayoutSupport.createFallbackGuideByFamily("large_round");
-    }
-
-    static function createFallbackGuideByFamily(family) {
-        var guide = RugbyLayoutGuide.create();
         if (family == "rect") {
-            guide.family = "rect";
-            guide.safeTopPct = 0.06;
-            guide.safeBottomPct = 0.06;
-            guide.safeSidePct = 0.05;
-            guide.headerGapPct = 0.010;
-            guide.cardsGapPct = 0.025;
-            guide.stateGapPct = 0.018;
-            guide.hintGapPct = 0.014;
-            guide.iconInsetPct = 0.040;
-            guide.lowerBandGapPct = 0.16;
-            guide.cardInsetPct = 0.24;
-            return guide;
+            return "MainLayoutRect";
         }
         if (family == "compact_round") {
-            guide.family = "compact_round";
-            guide.safeTopPct = 0.09;
-            guide.safeBottomPct = 0.08;
-            guide.safeSidePct = 0.10;
-            guide.headerGapPct = 0.012;
-            guide.cardsGapPct = 0.028;
-            guide.stateGapPct = 0.020;
-            guide.hintGapPct = 0.015;
-            guide.iconInsetPct = 0.050;
-            guide.lowerBandGapPct = 0.18;
-            guide.cardInsetPct = 0.23;
-            return guide;
+            return "MainLayoutCompactRound";
         }
-        guide.family = "large_round";
-        guide.safeTopPct = 0.10;
-        guide.safeBottomPct = 0.09;
-        guide.safeSidePct = 0.10;
-        guide.headerGapPct = 0.010;
-        guide.cardsGapPct = 0.025;
-        guide.stateGapPct = 0.018;
-        guide.hintGapPct = 0.014;
-        guide.iconInsetPct = 0.045;
-        guide.lowerBandGapPct = 0.17;
-        guide.cardInsetPct = 0.24;
-        return guide;
+        return "MainLayoutLargeRound";
+    }
+
+    static function isOverlayLayout(layoutId) {
+        return layoutId == "OverlayLayoutRect"
+            || layoutId == "OverlayLayoutCompactRound"
+            || layoutId == "OverlayLayoutLargeRound";
+    }
+
+    static function isCompactRound(family) {
+        return family == "compact_round";
     }
 
     static function isRectangular(width, height) {

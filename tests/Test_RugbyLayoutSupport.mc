@@ -2,64 +2,54 @@ using Toybox.Test;
 using Toybox.Lang;
 
 /*
-Unit tests for layout-guide fallback behavior.
+Unit tests for family and XML layout selection.
 
-Purpose: keep the hybrid XML + renderer layout model conservative when XML
-metadata is unavailable.
+Purpose: keep the XML-first screen flow choosing the correct family and layout
+without relying on the old fallback guide model.
 */
 
 (:test)
-function test_layoutSupport_resolveGuide_returns_compact_round_fallback(logger as Test.Logger) as Lang.Boolean {
-    var guide = RugbyLayoutSupport.resolveGuide(null, "compact_round");
-    if (guide == null) {
-        logger.error("compact round guide was null");
-        return false;
-    }
-    if (guide.family != "compact_round") {
-        logger.error("unexpected compact round family: " + guide.family);
+function test_layoutSupport_getFamily_returns_compact_round_for_240_square(logger as Test.Logger) as Lang.Boolean {
+    var family = RugbyLayoutSupport.getFamily(240, 240);
+    if (family != "compact_round") {
+        logger.error("expected compact_round, got " + family);
         return false;
     }
     return true;
 }
 
 (:test)
-function test_layoutSupport_resolveGuide_returns_large_round_fallback(logger as Test.Logger) as Lang.Boolean {
-    var guide = RugbyLayoutSupport.resolveGuide(null, "large_round");
-    if (guide == null) {
-        logger.error("large round guide was null");
-        return false;
-    }
-    if (guide.family != "large_round") {
-        logger.error("unexpected large round family: " + guide.family);
+function test_layoutSupport_getFamily_returns_large_round_for_larger_square(logger as Test.Logger) as Lang.Boolean {
+    var family = RugbyLayoutSupport.getFamily(260, 260);
+    if (family != "large_round") {
+        logger.error("expected large_round, got " + family);
         return false;
     }
     return true;
 }
 
 (:test)
-function test_layoutSupport_resolveGuide_returns_rectangular_fallback(logger as Test.Logger) as Lang.Boolean {
-    var guide = RugbyLayoutSupport.resolveGuide(null, "rect");
-    if (guide == null) {
-        logger.error("rect guide was null");
-        return false;
-    }
-    if (guide.family != "rect") {
-        logger.error("unexpected rect family: " + guide.family);
+function test_layoutSupport_getFamily_returns_rect_for_rectangular(logger as Test.Logger) as Lang.Boolean {
+    var family = RugbyLayoutSupport.getFamily(205, 148);
+    if (family != "rect") {
+        logger.error("expected rect, got " + family);
         return false;
     }
     return true;
 }
 
 (:test)
-function test_layoutSupport_fallback_safe_insets_stay_conservative(logger as Test.Logger) as Lang.Boolean {
-    var roundGuide = RugbyLayoutSupport.resolveGuide(null, "compact_round");
-    var rectGuide = RugbyLayoutSupport.resolveGuide(null, "rect");
-    if (!(roundGuide.safeTopPct > rectGuide.safeTopPct)) {
-        logger.error("round fallback should reserve more top safe area than rectangular");
+function test_layoutSupport_getLayoutId_switches_between_main_and_overlay(logger as Test.Logger) as Lang.Boolean {
+    if (RugbyLayoutSupport.getLayoutId("compact_round", false) != "MainLayoutCompactRound") {
+        logger.error("compact main layout id mismatch");
         return false;
     }
-    if (!(roundGuide.safeSidePct > rectGuide.safeSidePct)) {
-        logger.error("round fallback should reserve more side inset than rectangular");
+    if (RugbyLayoutSupport.getLayoutId("large_round", true) != "OverlayLayoutLargeRound") {
+        logger.error("large round overlay layout id mismatch");
+        return false;
+    }
+    if (RugbyLayoutSupport.getLayoutId("rect", true) != "OverlayLayoutRect") {
+        logger.error("rect overlay layout id mismatch");
         return false;
     }
     return true;

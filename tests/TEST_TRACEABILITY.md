@@ -36,17 +36,16 @@ Card timers (requirements discovered from history and conversation):
 
 Layout regressions:
 
-- **LAYOUT-001** — Main countdown stays anchored when the match transitions from idle to playing without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_idle_and_playing` — Covered
-- **LAYOUT-002** — Main countdown stays anchored when the match transitions from playing to paused without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused` — Covered
-- **LAYOUT-003** — Main countdown stays anchored when the match transitions from playing to paused while visible sanction rows are present. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused_with_cards` — Covered
-- **LAYOUT-004** — Visible sanction rows push the main countdown downward when additional vertical space is needed. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_moves_down_for_visible_card_rows` — Covered
-- **LAYOUT-005** — The measured score header stays inside the safe top band on compact round layouts. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_keeps_header_inside_safe_band` — Covered
-- **LAYOUT-006** — Device-family fallback guides resolve stable safe-area values for compact round, large round, and rectangular layouts. — `tests/Test_RugbyLayoutSupport.mc::*` — Covered
-- **LAYOUT-007** — The idle countdown remains fully inside the safe bottom bound on compact round layouts. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_idle_countdown_inside_safe_bottom` — Covered
-- **LAYOUT-008** — Compact-round metadata returns in priority order: elapsed, then half, then tries. — `tests/Test_RugbyTimerRendererLayout.mc::test_compactDetailMode_recovers_metadata_in_priority_order` — Covered
-- **LAYOUT-009** — Timed sanctions force compact round into `critical-only` mode so optional metadata drops before the primary lanes shrink. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_compact_round_uses_critical_only_for_timed_cards` — Covered
-- **LAYOUT-010** — Urgent sanction selection ignores expired entries and keeps the nearest live timed sanction visible. — `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_picks_lowest_remaining_time`, `tests/Test_RugbyTimerRendererLayout.mc::test_getUrgentCardEntry_skips_expired_entries` — Covered
-- **LAYOUT-011** — Compact-round idle hints and `HOME` / `AWAY` labels use reduced emphasis tiers. — `tests/Test_RugbyTimerRendererLayout.mc::test_compact_round_fonts_reduce_hint_and_label_emphasis` — Covered
+- **LAYOUT-001** — Device families resolve to compact round, large round, and rectangular XML layouts. — `tests/Test_RugbyLayoutSupport.mc::*` — Covered
+- **LAYOUT-002** — Main live-screen helpers provide stable scoreboard text for elapsed timer, countdown, half, and tries. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_text_helpers_format_scoreboard_strings` — Covered
+- **LAYOUT-003** — Paused and special-state text/color mapping stays consistent for XML-bound state lines. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_state_mapping_for_paused`, `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_state_mapping_for_conversion` — Covered
+- **LAYOUT-004** — Hint visibility stays predictable for locked, idle, and non-hint states. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_hint_mode_covers_locked_idle_and_hidden` — Covered
+- **LAYOUT-005** — Compact-round layouts hide lower-priority icons and tries while larger families retain them. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_compact_family_hides_icons_and_tries`, `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_large_family_shows_icons_and_tries` — Covered
+- **LAYOUT-006** — Urgent sanction selection still surfaces the most important visible card row before permanent-red fallback. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_teamCardPresentation_prefers_urgent_timed_card`, `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_teamCardPresentation_falls_back_to_perm_red` — Covered
+- **LAYOUT-007** — The play/pause icon resource still matches the current game state. — `tests/Test_RugbyTimerRendererLayout.mc::test_renderer_play_pause_icon_resource_changes_by_state` — Covered
+- **LAYOUT-008** — Overlay helper output remains correct for overlay countdown, label, and hint text. — `tests/Test_RugbyTimerRendererLayout.mc::test_overlay_helpers_return_expected_text_and_hint` — Covered
+- **LAYOUT-009** — Main-screen core nodes stay on screen, outside bezel-risk anchor zones, and preserve row/column separation across all layout families. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainLayout_core_nodes_stay_on_screen_and_out_of_bezel_risk`, `tests/Test_RugbyTimerRendererLayout.mc::test_mainLayout_core_rows_keep_vertical_separation`, `tests/Test_RugbyTimerRendererLayout.mc::test_mainLayout_same_row_objects_keep_horizontal_separation` — Covered
+- **LAYOUT-010** — Overlay core nodes stay on screen and keep vertical separation across all layout families. — `tests/Test_RugbyTimerRendererLayout.mc::test_overlayLayout_core_nodes_stay_on_screen_and_separated` — Covered
 
 Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 
@@ -77,7 +76,7 @@ Additional unit tests added (cards/timing):
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — verifies idle UP/DOWN changes bypass the in-match action throttle path
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — verifies serialized sanction-timer wrapper roundtrip
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — verifies persisted snapshot wrapper roundtrip
-- `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — verifies renderer/timing typed adapter construction
+- `tests/Test_RugbyPersistenceRenderTypes.mc::test_smallRenderTypes_and_timerUpdateResult` — verifies surviving presentation/timer typed adapter construction
 - `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — verifies runtime status messages are consumed once
 - `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — verifies malformed saved matches are cleared and surfaced to the UI
 
@@ -119,7 +118,7 @@ Detailed test purposes (file::function -> purpose):
 - `tests/Test_RugbyTimerDelegateSupport.mc::test_delegate_idle_keys_adjust_without_action_gate` — Verifies idle UP/DOWN key events still mutate the model immediately even when the normal action gate would block in-match actions.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedCardTimerEntry_roundtrip` — Verifies serialized sanction-timer adapters preserve timing/label/id fields.
 - `tests/Test_RugbyPersistenceRenderTypes.mc::test_persistedGameSnapshot_roundtrip` — Verifies the persisted game snapshot adapter preserves key scoreboard/state fields.
-- `tests/Test_RugbyPersistenceRenderTypes.mc::test_renderTypes_and_timerUpdateResult` — Verifies the typed render-layout/font/card-info and timer-update adapters are constructed as expected.
+- `tests/Test_RugbyPersistenceRenderTypes.mc::test_smallRenderTypes_and_timerUpdateResult` — Verifies the surviving small presentation wrapper and timer-update adapter are constructed as expected.
 - `tests/Test_RugbyRuntimeStatus.mc::test_statusMessage_is_one_shot` — Verifies the model-level runtime status channel returns one message once and then clears.
 - `tests/Test_RugbyRuntimeStatus.mc::test_invalidSavedSnapshot_is_cleared_and_reported` — Verifies malformed persisted snapshots are discarded and replaced with a safe idle reset plus a user-visible reset notice.
 
