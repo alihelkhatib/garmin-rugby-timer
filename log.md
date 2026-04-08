@@ -1,3 +1,12 @@
+## [2026-04-08] Introduce hybrid XML layout scaffolding and safe-area renderer bands
+
+- Replaced the placeholder `resources/layouts/layout.xml` shell with three device-family layouts: compact round, large round, and rectangular. Each layout now carries a `RugbyLayoutGuideDrawable` instance so the watch app can pull family-specific safe-area and band-spacing metadata from XML during `onLayout()`.
+- Added `source/RugbyLayoutSupport.mc` and `source/RugbyLayoutGuideDrawable.mc` so `RugbyTimerView` can choose the correct XML layout, resolve a fallback-safe guide when needed, and hand one stable layout contract into `RugbyTimerRenderer`.
+- Refactored `RugbyTimerRenderer.mc` and `RugbyTimerRenderTypes.mc` to use a measured safe content rect plus explicit header/card/lower-band anchors instead of the older full-screen percentage guesses. `HOME` / `AWAY`, scores, elapsed timer, and sanction rows now all anchor inside the same safe layout model.
+- Kept dynamic content in Monkey C rather than XML: live scores, card timers, the main countdown, and state text are still rendered procedurally, but now inside XML-defined family bands.
+- Added layout regressions in `tests/Test_RugbyTimerRendererLayout.mc` and new family/fallback coverage in `tests/Test_RugbyLayoutSupport.mc`.
+- Validated with `./scripts/validate-local.sh` on April 8, 2026. App build and unit-test build both passed. `monkeydo` was launched with `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" "1" -t`, but this environment still did not stream test-case results back to the terminal.
+
 ## [2026-04-08] Add explicit home and away score labels
 
 - Added `HOME` and `AWAY` labels above the respective score digits in `source/RugbyTimerRenderer.mc` so the score columns are easier to parse at a glance on-watch.

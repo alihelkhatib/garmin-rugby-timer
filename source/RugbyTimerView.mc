@@ -77,10 +77,12 @@ class RugbyTimerView extends WatchUi.View {
      * @param dc The device context
      */
     function onLayout(dc) {
-        setLayout(Rez.Layouts.MainLayout(dc));
-        // Calculate and cache fonts and layout once
-        cachedFonts = RugbyTimerRenderer.chooseFonts(dc.getWidth());
-        cachedLayout = RugbyTimerRenderer.calculateLayout(dc.getHeight());
+        var width = dc.getWidth();
+        var height = dc.getHeight();
+        cachedFonts = RugbyTimerRenderer.chooseFonts(width);
+        var family = RugbyLayoutSupport.applyMainLayout(self, dc, width, height);
+        var guide = RugbyLayoutSupport.resolveGuide(self, family);
+        cachedLayout = RugbyTimerRenderer.calculateLayout(dc, width, height, cachedFonts, guide);
         RugbyTimerRenderer.invalidateMainLayoutCache();
     }
 
@@ -113,8 +115,7 @@ class RugbyTimerView extends WatchUi.View {
      * @param dc The device context
      */
     function onUpdate(dc) {
-        dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
-        dc.clear();
+        View.onUpdate(dc);
 
         var width = dc.getWidth();
         var height = dc.getHeight();
@@ -131,18 +132,18 @@ class RugbyTimerView extends WatchUi.View {
         var fonts = cachedFonts;
         var layout = cachedLayout;
 
-        RugbyTimerRenderer.renderScores(dc, model, width, fonts.scoreFont, layout.scoreY, height);
-        RugbyTimerRenderer.renderGameTimer(dc, model, width, fonts.timerFont, layout.gameTimerY);
-        RugbyTimerRenderer.renderHalfAndTries(dc, model, width, fonts.halfFont, fonts.triesFont, layout.halfY, layout.triesY);
-        RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, width, height, layout.iconY, cachedPlayIcon, cachedPauseIcon);
+        RugbyTimerRenderer.renderScores(dc, model, layout, fonts.scoreFont, width);
+        RugbyTimerRenderer.renderGameTimer(dc, model, layout, fonts.timerFont);
+        RugbyTimerRenderer.renderHalfAndTries(dc, model, layout, fonts.halfFont, fonts.triesFont);
+        RugbyTimerRenderer.renderPlayPauseIndicator(dc, model, layout, cachedPlayIcon, cachedPauseIcon);
         if (isLocked) {
-            RugbyTimerRenderer.renderLockIndicator(dc, width, height, layout.scoreY, cachedLockIcon);
+            RugbyTimerRenderer.renderLockIndicator(dc, layout, cachedLockIcon);
         }
 
-        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, width, layout.cardsY, height);
+        var cardInfo = RugbyTimerRenderer.renderCardTimers(dc, model, layout, height);
         var mainContentLayout = RugbyTimerRenderer.getMainContentLayoutCached(dc, model, fonts, layout, cardInfo, height, isLocked);
-        RugbyTimerRenderer.renderCountdown(dc, model, width, fonts.countdownFont, mainContentLayout.countdownY);
-        RugbyTimerRenderer.renderStateText(dc, model, width, fonts.stateFont, mainContentLayout.stateY, height);
+        RugbyTimerRenderer.renderCountdown(dc, model, layout, fonts.countdownFont, mainContentLayout.countdownY);
+        RugbyTimerRenderer.renderStateText(dc, model, layout.centerX, fonts.stateFont, mainContentLayout.stateY, height);
         renderHint(dc, width, fonts.hintFont, mainContentLayout.hintY, height, mainContentLayout.hintLineGap);
 
         RugbyTimerOverlay.renderSpecialOverlay(self, model, dc, width, height);

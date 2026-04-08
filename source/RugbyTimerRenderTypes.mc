@@ -52,26 +52,49 @@ class RugbyMainContentLayoutCacheEntry {
 }
 
 class RugbyRenderLayout {
+    var safeLeft;
+    var safeRight;
+    var safeTop;
+    var safeBottom;
+    var contentWidth;
+    var contentHeight;
+    var centerX;
+    var homeScoreX;
+    var awayScoreX;
+    var homeCardAnchorX;
+    var awayCardAnchorX;
     var scoreY;
+    var teamLabelY;
     var halfY;
     var gameTimerY;
     var triesY;
+    var headerBottomY;
     var cardsY;
     var stateBaseY;
     var hintBaseY;
+    var lowerBandTopY;
     var iconY;
 
-    static function create(scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY) {
-        var layout = new RugbyRenderLayout();
-        layout.scoreY = scoreY;
-        layout.halfY = halfY;
-        layout.gameTimerY = gameTimerY;
-        layout.triesY = triesY;
-        layout.cardsY = cardsY;
-        layout.stateBaseY = stateBaseY;
-        layout.hintBaseY = hintBaseY;
-        layout.iconY = iconY;
-        return layout;
+    static function create() {
+        return new RugbyRenderLayout();
+    }
+}
+
+class RugbyLayoutGuide {
+    var family;
+    var safeTopPct;
+    var safeBottomPct;
+    var safeSidePct;
+    var headerGapPct;
+    var cardsGapPct;
+    var stateGapPct;
+    var hintGapPct;
+    var iconInsetPct;
+    var lowerBandGapPct;
+    var cardInsetPct;
+
+    static function create() {
+        return new RugbyLayoutGuide();
     }
 }
 

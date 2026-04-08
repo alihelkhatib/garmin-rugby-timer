@@ -63,24 +63,70 @@ class RugbyTimerRenderer {
         return RugbyRenderFonts.create(scoreFont, triesFont, halfFont, timerFont, countdownFont, stateFont, hintFont);
     }
 
+    static function chooseTeamLabelFont(width) {
+        if (width <= 240) {
+            return Graphics.FONT_XTINY;
+        }
+        return Graphics.FONT_SMALL;
+    }
+
     /**
-     * Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
-     * and the state/hint section so each renders consistently across devices.
-     * @param height The height of the screen
-     * @return A dictionary of layout values
+     * Compute the safe content bounds and measured bands for the live match screen.
+     * @param dc The device context
+     * @param width The screen width
+     * @param height The screen height
+     * @param fonts The chosen render fonts
+     * @param guide The XML-backed layout guide
+     * @return The measured layout values
      */
-    static function calculateLayout(height) {
-        // Compute the anchor positions for the scoreboard, half indicator, main game timer, card stack,
-        // and the state/hint section so each renders consistently across devices.
-        var scoreY = height * 0.10;
-        var halfY = height * 0.18;
-        var gameTimerY = halfY * 0.5;
-        var triesY = halfY + height * 0.06;
-        var cardsY = height * 0.31;
-        var stateBaseY = height * 0.86;
-        var hintBaseY = height * 0.93;
-        var iconY = height * 0.04;
-        return RugbyRenderLayout.create(scoreY, halfY, gameTimerY, triesY, cardsY, stateBaseY, hintBaseY, iconY);
+    static function calculateLayout(dc, width, height, fonts, guide) {
+        var layout = RugbyRenderLayout.create();
+        var safeLeft = width * guide.safeSidePct;
+        var safeRight = width - safeLeft;
+        var safeTop = height * guide.safeTopPct;
+        var safeBottom = height - (height * guide.safeBottomPct);
+        var contentWidth = safeRight - safeLeft;
+        var contentHeight = safeBottom - safeTop;
+        var headerGap = height * guide.headerGapPct;
+        var cardsGap = height * guide.cardsGapPct;
+        var lowerBandGap = height * guide.lowerBandGapPct;
+        var labelFont = RugbyTimerRenderer.chooseTeamLabelFont(width);
+        var timerHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.timerFont, height * 0.04);
+        var labelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.03);
+        var scoreHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.scoreFont, height * 0.10);
+        var halfHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.halfFont, height * 0.03);
+        var triesHeight = RugbyTimerRenderer.getFontHeightSafe(dc, fonts.triesFont, height * 0.03);
+        var smallGap = headerGap * 0.6;
+        var gameTimerY = safeTop;
+        var teamLabelY = gameTimerY + timerHeight + headerGap;
+        var scoreY = teamLabelY + labelHeight + headerGap;
+        var halfY = scoreY + scoreHeight + smallGap;
+        var triesY = halfY + halfHeight + smallGap;
+        var headerBottomY = triesY + triesHeight;
+
+        layout.safeLeft = safeLeft;
+        layout.safeRight = safeRight;
+        layout.safeTop = safeTop;
+        layout.safeBottom = safeBottom;
+        layout.contentWidth = contentWidth;
+        layout.contentHeight = contentHeight;
+        layout.centerX = safeLeft + (contentWidth / 2);
+        layout.homeScoreX = safeLeft + (contentWidth * 0.24);
+        layout.awayScoreX = safeRight - (contentWidth * 0.24);
+        layout.homeCardAnchorX = safeLeft + (contentWidth * guide.cardInsetPct);
+        layout.awayCardAnchorX = safeRight - (contentWidth * guide.cardInsetPct);
+        layout.gameTimerY = gameTimerY;
+        layout.teamLabelY = teamLabelY;
+        layout.scoreY = scoreY;
+        layout.halfY = halfY;
+        layout.triesY = triesY;
+        layout.headerBottomY = headerBottomY;
+        layout.cardsY = headerBottomY + cardsGap;
+        layout.lowerBandTopY = safeBottom - lowerBandGap;
+        layout.stateBaseY = layout.lowerBandTopY;
+        layout.hintBaseY = safeBottom - RugbyTimerRenderer.getFontHeightSafe(dc, fonts.hintFont, height * 0.04);
+        layout.iconY = safeTop;
+        return layout;
     }
 
     static function getFontHeightSafe(dc, font, fallback) {
@@ -133,12 +179,12 @@ class RugbyTimerRenderer {
 
         var cardStackBottom = cardInfo.cardsY + (cardInfo.rows * cardInfo.lineStep);
         var topPadding = height * 0.05;
-        var bottomPadding = height * 0.08;
+        var bottomPadding = height * 0.02;
         var afterCountdownGap = stateHeight > 0 ? height * 0.02 : height * 0.015;
         var afterStateGap = (stateHeight > 0 && hintHeight > 0) ? height * 0.015 : 0;
-        var minCountdownY = layout.triesY + height * 0.08;
+        var minCountdownY = layout.headerBottomY + (height * 0.05);
         var preferredCountdownY = cardStackBottom + topPadding;
-        var maxCountdownY = height - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
+        var maxCountdownY = layout.safeBottom - bottomPadding - hintHeight - afterStateGap - stateHeight - afterCountdownGap - countdownHeight;
 
         if (preferredCountdownY < minCountdownY) {
             preferredCountdownY = minCountdownY;
@@ -168,22 +214,16 @@ class RugbyTimerRenderer {
      * @param scoreY The Y position of the scores
      * @param height The height of the screen
      */
-    static function renderScores(dc, model, width, scoreFont, scoreY, height) {
-        var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
-        var labelOffset = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.035) + (height * 0.01);
-        var labelY = scoreY - labelOffset;
-        if (labelY < 0) {
-            labelY = 0;
-        }
-
+    static function renderScores(dc, model, layout, scoreFont, width) {
+        var labelFont = RugbyTimerRenderer.chooseTeamLabelFont(width);
         dc.setColor(Graphics.COLOR_BLUE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 4, labelY, labelFont, "HOME", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.homeScoreX, layout.teamLabelY, labelFont, "HOME", Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_TRANSPARENT);
-        dc.drawText((3 * width) / 4, labelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.awayScoreX, layout.teamLabelY, labelFont, "AWAY", Graphics.TEXT_JUSTIFY_CENTER);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 4, scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(3 * width / 4, scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.homeScoreX, layout.scoreY, scoreFont, model.homeScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.awayScoreX, layout.scoreY, scoreFont, model.awayScore.toString(), Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     /**
@@ -194,10 +234,10 @@ class RugbyTimerRenderer {
      * @param timerFont The font to use for the timer
      * @param gameTimerY The Y position of the timer
      */
-    static function renderGameTimer(dc, model, width, timerFont, gameTimerY) {
+    static function renderGameTimer(dc, model, layout, timerFont) {
         var gameStr = RugbyTimerTiming.formatTime(model.elapsedTime);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(width / 2, gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.centerX, layout.gameTimerY, timerFont, gameStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }
 
@@ -211,11 +251,11 @@ class RugbyTimerRenderer {
      * @param halfY The Y position of the half number
      * @param triesY The Y position of the tries
      */
-    static function renderHalfAndTries(dc, model, width, halfFont, triesFont, halfY, triesY) {
+    static function renderHalfAndTries(dc, model, layout, halfFont, triesFont) {
         var halfStr = "Half " + model.halfNumber.toString();
-        dc.drawText(width / 2, halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.centerX, layout.halfY, halfFont, halfStr, Graphics.TEXT_JUSTIFY_CENTER);
         var triesText = model.homeTries.toString() + "T / " + model.awayTries.toString() + "T";
-        dc.drawText(width / 2, triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.centerX, layout.triesY, triesFont, triesText, Graphics.TEXT_JUSTIFY_CENTER);
     }
 
     /**
@@ -226,12 +266,15 @@ class RugbyTimerRenderer {
      * @param halfFont The font to use for the lock indicator
      * @param scoreY The Y position of the lock indicator
      */
-    static function renderLockIndicator(dc, width, height, scoreY, lockIcon) {
-        var iconMarginX = width * 0.08;
-        var iconY = scoreY - height * 0.05;
-        if (iconY < 0) { iconY = 0; }
+    static function renderLockIndicator(dc, layout, lockIcon) {
         if (lockIcon != null) {
-            dc.drawBitmap(width - iconMarginX, iconY, lockIcon);
+            var iconX = layout.safeRight;
+            try {
+                iconX = iconX - lockIcon.getWidth();
+            } catch (ex) {
+                iconX = iconX - 12;
+            }
+            dc.drawBitmap(iconX, layout.iconY, lockIcon);
         }
     }
 
@@ -243,16 +286,13 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @param iconY The Y position of the icon
      */
-    static function renderPlayPauseIndicator(dc, model, width, height, iconY, playIcon, pauseIcon) {
-        var iconMarginX = width * 0.08;
-        var y = iconY;
-        if (y < 0) { y = 0; }
+    static function renderPlayPauseIndicator(dc, model, layout, playIcon, pauseIcon) {
         var icon = playIcon;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_IDLE) {
             icon = pauseIcon;
         }
         if (icon != null) {
-            dc.drawBitmap(iconMarginX, y, icon);
+            dc.drawBitmap(layout.safeLeft, layout.iconY, icon);
         }
     }
 
@@ -288,7 +328,7 @@ class RugbyTimerRenderer {
      * @param height The height of the screen
      * @return A dictionary containing information about the rendered cards
      */
-    static function renderCardTimers(dc, model, width, cardsY, height) {
+    static function renderCardTimers(dc, model, layout, height) {
         Profiler.start("renderCardTimers");
         // Only render the first two active sanctions per team so the primary layout stays tidy while
         // extra yellow/red timers continue counting in the background.
@@ -311,12 +351,13 @@ class RugbyTimerRenderer {
         if (maxCardRows > 0) {
             var homeLine = 0;
             var awayLine = 0;
-            var homeX = width / 4;
-            var awayX = (3 * width) / 4;
-            var labelFont = width <= 260 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
-            var valueFont = width <= 260 ? Graphics.FONT_TINY : Graphics.FONT_SMALL;
+            var width = layout.safeRight - layout.safeLeft;
+            var homeX = layout.homeCardAnchorX;
+            var awayX = layout.awayCardAnchorX;
+            var labelFont = width <= 220 ? Graphics.FONT_XTINY : Graphics.FONT_SMALL;
+            var valueFont = labelFont;
             var maxLabelHeight = RugbyTimerRenderer.getFontHeightSafe(dc, labelFont, height * 0.04);
-            var maxValueHeight = RugbyTimerRenderer.getFontHeightSafe(dc, valueFont, height * 0.045);
+            var maxValueHeight = RugbyTimerRenderer.getFontHeightSafe(dc, valueFont, height * 0.04);
             var maxFontHeight = (maxValueHeight > maxLabelHeight) ? maxValueHeight : maxLabelHeight;
             lineStep = maxFontHeight + (height * 0.016);
             var labelGap = width * 0.016;
@@ -345,7 +386,7 @@ class RugbyTimerRenderer {
                     dc,
                     homeLabelX,
                     homeTimerX,
-                    cardsY + homeLine * lineStep,
+                    layout.cardsY + homeLine * lineStep,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_YELLOW,
@@ -373,7 +414,7 @@ class RugbyTimerRenderer {
                     dc,
                     awayLabelX,
                     awayTimerX,
-                    cardsY + awayLine * lineStep,
+                    layout.cardsY + awayLine * lineStep,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_YELLOW,
@@ -389,7 +430,7 @@ class RugbyTimerRenderer {
                     dc,
                     homeLabelX,
                     homeTimerX,
-                    cardsY + homeLine * lineStep,
+                    layout.cardsY + homeLine * lineStep,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
@@ -417,7 +458,7 @@ class RugbyTimerRenderer {
                         dc,
                         homeLabelX,
                         homeTimerX,
-                        cardsY + homeLine * lineStep,
+                        layout.cardsY + homeLine * lineStep,
                         labelFont,
                         valueFont,
                         Graphics.COLOR_RED,
@@ -434,7 +475,7 @@ class RugbyTimerRenderer {
                     dc,
                     awayLabelX,
                     awayTimerX,
-                    cardsY + awayLine * lineStep,
+                    layout.cardsY + awayLine * lineStep,
                     labelFont,
                     valueFont,
                     Graphics.COLOR_RED,
@@ -462,7 +503,7 @@ class RugbyTimerRenderer {
                         dc,
                         awayLabelX,
                         awayTimerX,
-                        cardsY + awayLine * lineStep,
+                        layout.cardsY + awayLine * lineStep,
                         labelFont,
                         valueFont,
                         Graphics.COLOR_RED,
@@ -476,7 +517,7 @@ class RugbyTimerRenderer {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         }
         Profiler.stop("renderCardTimers");
-        return RugbyRenderedCardInfo.create(maxCardRows, lineStep, cardsY);
+        return RugbyRenderedCardInfo.create(maxCardRows, lineStep, layout.cardsY);
     }
 
     /**
@@ -532,13 +573,13 @@ class RugbyTimerRenderer {
      * @param countdownFont The font to use for the countdown timer
      * @param countdownY The Y position of the countdown timer
      */
-    static function renderCountdown(dc, model, width, countdownFont, countdownY) {
+    static function renderCountdown(dc, model, layout, countdownFont, countdownY) {
         Profiler.start("renderCountdown");
         // Draw the large, white countdown digits centered so refs can still read the main clock even when the overlay
         // kicks in.
         var displaySeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownRemaining);
         var countdownStr = RugbyTimerTiming.formatTime(displaySeconds);
-        dc.drawText(width / 2, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(layout.centerX, countdownY, countdownFont, countdownStr, Graphics.TEXT_JUSTIFY_CENTER);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         Profiler.stop("renderCountdown");
     }
@@ -552,7 +593,7 @@ class RugbyTimerRenderer {
      * @param stateY The Y position of the state text
      * @param height The height of the screen
      */
-    static function renderStateText(dc, model, width, stateFont, stateY, height) {
+    static function renderStateText(dc, model, centerX, stateFont, stateY, height) {
         // Paused and special states adopt a red accent so they stand out from normal match play.
         var stateColor = Graphics.COLOR_WHITE;
         if (model.gameState == STATE_PAUSED || model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
@@ -560,21 +601,21 @@ class RugbyTimerRenderer {
         }
         dc.setColor(stateColor, Graphics.COLOR_TRANSPARENT);
         if (model.gameState == STATE_PAUSED) {
-            dc.drawText(width / 2, stateY, Graphics.FONT_SMALL, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY, Graphics.FONT_SMALL, "PAUSED", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_CONVERSION) {
-            dc.drawText(width / 2, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY, stateFont, "CONVERSION", Graphics.TEXT_JUSTIFY_CENTER);
             var convSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
             var countdownStr = (convSeconds as Lang.Number).toLong().toString();
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_PENALTY) {
-            dc.drawText(width / 2, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY, stateFont, "PENALTY KICK", Graphics.TEXT_JUSTIFY_CENTER);
             var penSeconds = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
             var countdownStr = (penSeconds as Lang.Number).toLong().toString();
-            dc.drawText(width / 2, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY + (height * 0.07), stateFont, countdownStr + "s", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_HALFTIME) {
-            dc.drawText(width / 2, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY, stateFont, "HALF TIME", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (model.gameState == STATE_ENDED) {
-            dc.drawText(width / 2, stateY, stateFont, "GAME ENDED", Graphics.TEXT_JUSTIFY_CENTER);
+            dc.drawText(centerX, stateY, stateFont, "GAME ENDED", Graphics.TEXT_JUSTIFY_CENTER);
         }
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
     }

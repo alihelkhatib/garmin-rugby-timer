@@ -1,4 +1,49 @@
-<layout id="MainLayout" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <label x="center" y="10" text="@Strings.AppName" color="Graphics.COLOR_WHITE" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" />
-    <bitmap id="id_monkey" x="center" y="30" filename="../drawables/monkey.png" />
-</layout>
+<layouts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <layout id="MainLayoutCompactRound" background="Graphics.COLOR_BLACK">
+        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
+            <param name="family">"compact_round"</param>
+            <param name="safeTopPct">0.12</param>
+            <param name="safeBottomPct">0.10</param>
+            <param name="safeSidePct">0.12</param>
+            <param name="headerGapPct">0.012</param>
+            <param name="cardsGapPct">0.028</param>
+            <param name="stateGapPct">0.020</param>
+            <param name="hintGapPct">0.015</param>
+            <param name="iconInsetPct">0.050</param>
+            <param name="lowerBandGapPct">0.18</param>
+            <param name="cardInsetPct">0.23</param>
+        </drawable>
+    </layout>
+
+    <layout id="MainLayoutLargeRound" background="Graphics.COLOR_BLACK">
+        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
+            <param name="family">"large_round"</param>
+            <param name="safeTopPct">0.10</param>
+            <param name="safeBottomPct">0.09</param>
+            <param name="safeSidePct">0.10</param>
+            <param name="headerGapPct">0.010</param>
+            <param name="cardsGapPct">0.025</param>
+            <param name="stateGapPct">0.018</param>
+            <param name="hintGapPct">0.014</param>
+            <param name="iconInsetPct">0.045</param>
+            <param name="lowerBandGapPct">0.17</param>
+            <param name="cardInsetPct">0.24</param>
+        </drawable>
+    </layout>
+
+    <layout id="MainLayoutRect" background="Graphics.COLOR_BLACK">
+        <drawable id="LayoutGuide" class="RugbyLayoutGuideDrawable">
+            <param name="family">"rect"</param>
+            <param name="safeTopPct">0.06</param>
+            <param name="safeBottomPct">0.06</param>
+            <param name="safeSidePct">0.05</param>
+            <param name="headerGapPct">0.010</param>
+            <param name="cardsGapPct">0.025</param>
+            <param name="stateGapPct">0.018</param>
+            <param name="hintGapPct">0.014</param>
+            <param name="iconInsetPct">0.040</param>
+            <param name="lowerBandGapPct">0.16</param>
+            <param name="cardInsetPct">0.24</param>
+        </drawable>
+    </layout>
+</layouts>

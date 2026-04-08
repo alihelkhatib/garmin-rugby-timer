@@ -39,6 +39,8 @@ Layout regressions:
 - **LAYOUT-002** — Main countdown stays anchored when the match transitions from playing to paused without other layout changes. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused` — Covered
 - **LAYOUT-003** — Main countdown stays anchored when the match transitions from playing to paused while visible sanction rows are present. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_keeps_countdown_stable_between_playing_and_paused_with_cards` — Covered
 - **LAYOUT-004** — Visible sanction rows push the main countdown downward when additional vertical space is needed. — `tests/Test_RugbyTimerRendererLayout.mc::test_mainContentLayout_moves_down_for_visible_card_rows` — Covered
+- **LAYOUT-005** — The measured score header stays inside the safe top band on compact round layouts. — `tests/Test_RugbyTimerRendererLayout.mc::test_calculateLayout_keeps_header_inside_safe_band` — Covered
+- **LAYOUT-006** — Device-family fallback guides resolve stable safe-area values for compact round, large round, and rectangular layouts. — `tests/Test_RugbyLayoutSupport.mc::*` — Covered
 
 Next steps: add simulator/UI integration tests that assert full rendered overlap behavior and end-to-end menu flow behavior via the simulator Test Explorer or a simulator-driven script.
 
