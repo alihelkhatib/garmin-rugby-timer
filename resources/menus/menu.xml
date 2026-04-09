@@ -1,11 +1,11 @@
 <menu id="MainMenu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
-    <menu-item id="record_score" label="Record Score" />
-    <menu-item id="pause_clock" label="Pause/Resume Clock" />
-    <menu-item id="record_card" label="Record Card" />
-    <menu-item id="start_half2" label="Start 2nd Half" />
-    <menu-item id="end_game" label="End Game" />
-    <menu-item id="undo_last" label="Undo Last Score" />
-    <menu-item id="settings" label="Match Preset" />
-    <menu-item id="toggle_lock" label="Toggle Lock" />
+    <menu-item id="record_score" label="@Strings.MainMenu_RecordScore" />
+    <menu-item id="pause_clock" label="@Strings.MainMenu_PauseClock" />
+    <menu-item id="record_card" label="@Strings.MainMenu_RecordCard" />
+    <menu-item id="start_half2" label="@Strings.MainMenu_StartHalf2" />
+    <menu-item id="end_game" label="@Strings.MainMenu_EndGame" />
+    <menu-item id="undo_last" label="@Strings.MainMenu_UndoLastScore" />
+    <menu-item id="settings" label="@Strings.MainMenu_Settings" />
+    <menu-item id="toggle_lock" label="@Strings.MainMenu_ToggleLock" />
 </menu>

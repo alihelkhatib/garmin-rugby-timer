@@ -1,5 +1,6 @@
 <strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <string id="AppName">Rugby Timer</string>
+    <string id="Activity_Name">Rugby</string>
     <string id="Hint_Select_Start">SELECT: Start</string>
     <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
     <string id="Hint_Select_Resume">SELECT: Resume</string>
@@ -7,7 +8,17 @@
 
     <string id="LockIndicator">L</string>
     <string id="HalfPrefix">Half </string>
-    <string id="TrySeparator">T / </string>
+    <string id="TrySuffix">T</string>
+    <string id="SecondsSuffix">s</string>
+    <string id="Team_Home_Short">HOME</string>
+    <string id="Team_Away_Short">AWAY</string>
+    <string id="Team_Home">Home</string>
+    <string id="Team_Away">Away</string>
+    <string id="EventTeam_Home">Home</string>
+    <string id="EventTeam_Away">Away</string>
+    <string id="CardPrefix_Yellow">Y</string>
+    <string id="CardPrefix_Red">R</string>
+    <string id="Card_Permanent">PERM</string>
     <string id="State_Paused">PAUSED</string>
     <string id="State_Conversion">CONVERSION</string>
     <string id="State_PenaltyKick">PENALTY KICK</string>
@@ -22,4 +33,90 @@
     <string id="Overlay_ConversionMiss_Action">DOWN</string>
     <string id="Overlay_ConversionMiss_Result">MISS</string>
     <string id="Overlay_Hint_SelectBack">SELECT: Back</string>
+
+    <string id="Profile_Rugby7s">Rugby 7s</string>
+    <string id="Profile_Rugby10s">Rugby 10s</string>
+    <string id="Profile_Rugby15s">Rugby 15s</string>
+    <string id="Profile_U19">U19</string>
+    <string id="Profile_Custom">Custom</string>
+    <string id="Format_7s">7s-style</string>
+    <string id="Format_15s">15s-style</string>
+
+    <string id="Generic_On">On</string>
+    <string id="Generic_Off">Off</string>
+    <string id="Status_ActionFailed">Action failed</string>
+    <string id="Status_SaveFailed">Save failed</string>
+    <string id="Status_SavedMatchReset">Saved match reset</string>
+    <string id="Status_IdleOnly">Idle only</string>
+    <string id="Status_RecordingUnsupported">Recording unsupported</string>
+    <string id="Status_RugbySportUnsupported">Rugby sport unsupported</string>
+    <string id="Status_RecordingStartFailed">Recording start failed</string>
+    <string id="Status_RecordingSaveFailed">Recording save failed</string>
+
+    <string id="Settings_Title">Rugby Settings</string>
+    <string id="Settings_Profile">Profile</string>
+    <string id="Settings_FormatFamily">Format Family</string>
+    <string id="Settings_HalfTimer">Half Timer</string>
+    <string id="Settings_ConversionTimer">Conversion Timer</string>
+    <string id="Settings_PenaltyKick">Penalty Kick</string>
+    <string id="Settings_ConversionOverlay">Conversion Overlay</string>
+    <string id="Settings_PenaltyOverlay">Penalty Overlay</string>
+    <string id="Settings_LockOnStart">Lock on Start</string>
+    <string id="Settings_DimTheme">Dim Theme</string>
+    <string id="Settings_IdleHints">Idle Hints</string>
+    <string id="Settings_ResetScores">Reset Scores</string>
+    <string id="ProfileMenu_Title">Match Preset</string>
+
+    <string id="Picker_HalfLengthTitle">Half Length (min)</string>
+    <string id="ConversionMenu_Title">Conversion Timer</string>
+    <string id="PenaltyMenu_Title">Penalty Kick</string>
+    <string id="Timer_30Sec">30 sec</string>
+    <string id="Timer_60Sec">60 sec</string>
+    <string id="Timer_90Sec">90 sec</string>
+    <string id="Timer_120Sec">120 sec</string>
+
+    <string id="MainMenu_RecordScore">Record Score</string>
+    <string id="MainMenu_PauseClock">Pause/Resume Clock</string>
+    <string id="MainMenu_RecordCard">Record Card</string>
+    <string id="MainMenu_StartHalf2">Start 2nd Half</string>
+    <string id="MainMenu_EndGame">End Game</string>
+    <string id="MainMenu_UndoLastScore">Undo Last Score</string>
+    <string id="MainMenu_Settings">Match Preset</string>
+    <string id="MainMenu_ToggleLock">Toggle Lock</string>
+
+    <string id="ScoreTeam_Title">Which Team?</string>
+    <string id="ScoreTeam_HomeTitle">Home Score</string>
+    <string id="ScoreTeam_AwayTitle">Away Score</string>
+    <string id="ScoreType_Try">Try (5)</string>
+    <string id="ScoreType_PenaltyTry">Penalty Try (7)</string>
+    <string id="ScoreType_DropGoal">Drop Goal (3)</string>
+
+    <string id="CardTeam_Title">Card Team</string>
+    <string id="CardTeam_HomeTitle">Home Card</string>
+    <string id="CardTeam_AwayTitle">Away Card</string>
+    <string id="CardType_Yellow">Yellow</string>
+    <string id="CardType_Red">Red</string>
+
+    <string id="ExitMenu_Title">Exit?</string>
+    <string id="ExitMenu_Resume">Resume</string>
+    <string id="ExitMenu_EndGame">End Game</string>
+    <string id="ExitMenu_ResetGame">Reset Game</string>
+    <string id="ExitMenu_SaveGame">Save Game</string>
+    <string id="ExitMenu_EventLog">Event Log</string>
+    <string id="ExitMenu_ExitApp">Exit App</string>
+
+    <string id="EventLog_Title">Event Log</string>
+    <string id="EventLog_Empty">No events recorded</string>
+    <string id="EventLog_Save">Save Log</string>
+    <string id="EventLog_NoTime">--:--</string>
+
+    <string id="Event_Try">Try</string>
+    <string id="Event_ConversionMade">Conversion (+2)</string>
+    <string id="Event_ConversionMiss">Conversion Miss</string>
+    <string id="Event_PenaltyGoal">Penalty Goal</string>
+    <string id="Event_DropGoal">Drop Goal</string>
+    <string id="Event_PenaltyTry">Penalty Try</string>
+    <string id="Event_YellowCard">Yellow Card</string>
+    <string id="Event_RedCard">Red Card</string>
+    <string id="Event_PermanentSuffix"> (permanent)</string>
 </strings>

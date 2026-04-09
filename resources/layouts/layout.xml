@@ -1,8 +1,8 @@
 <layouts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
     <layout id="MainLayoutCompactRound" background="Graphics.COLOR_BLACK">
         <label id="ElapsedTimer" text="" x="center" y="7%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
-        <label id="HomeLabel" text="HOME" x="26%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
-        <label id="AwayLabel" text="AWAY" x="74%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="HomeLabel" text="" x="26%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="" x="74%" y="18%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
         <label id="HomeScore" text="" x="26%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="AwayScore" text="" x="74%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="HomeTries" text="" x="40%" y="34%" font="Graphics.FONT_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" visible="false" />
@@ -21,9 +21,9 @@
     </layout>
 
     <layout id="MainLayoutLargeRound" background="Graphics.COLOR_BLACK">
-        <label id="ElapsedTimer" text="" x="center" y="start" font="Graphics.FONT_SYSTEM_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
-        <label id="HomeLabel" text="HOME" x="27%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
-        <label id="AwayLabel" text="AWAY" x="73%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="ElapsedTimer" text="" x="start" y="start" font="Graphics.FONT_SYSTEM_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
+        <label id="HomeLabel" text="" x="27%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="" x="73%" y="16%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
         <label id="HomeScore" text="" x="27%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="AwayScore" text="" x="73%" y="22%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="HomeTries" text="" x="40%" y="32%" font="Graphics.FONT_SYSTEM_XTINY" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
@@ -43,8 +43,8 @@
 
     <layout id="MainLayoutRect" background="Graphics.COLOR_BLACK">
         <label id="ElapsedTimer" text="" x="center" y="5%" font="Graphics.FONT_SYSTEM_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_LT_GRAY" />
-        <label id="HomeLabel" text="HOME" x="24%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
-        <label id="AwayLabel" text="AWAY" x="76%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
+        <label id="HomeLabel" text="" x="24%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_BLUE" />
+        <label id="AwayLabel" text="" x="76%" y="14%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_ORANGE" />
         <label id="HomeScore" text="" x="24%" y="23%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="AwayScore" text="" x="76%" y="23%" font="Graphics.FONT_NUMBER_MEDIUM" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
         <label id="HomeTries" text="" x="10%" y="30%" font="Graphics.FONT_SMALL" justification="Graphics.TEXT_JUSTIFY_LEFT" color="Graphics.COLOR_WHITE" />
