@@ -2,6 +2,7 @@ using Toybox.Activity;
 using Toybox.ActivityRecording;
 using Toybox.Lang;
 using Toybox.System;
+using Rez.Strings;
 
 /**
  * Activity-recording and GPS-track integration service.
@@ -13,19 +14,19 @@ using Toybox.System;
 class RugbyRecordingService {
     static function startRecording(model) {
         if (!(Toybox has :ActivityRecording)) {
-            model.setStatusMessage("Recording unsupported");
+            model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_RecordingUnsupported));
             return;
         }
         if (!(Activity has :SPORT_RUGBY)) {
             System.println("Activity recording unavailable: SPORT_RUGBY not supported");
             model.session = null;
-            model.setStatusMessage("Rugby sport unsupported");
+            model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_RugbySportUnsupported));
             return;
         }
         try {
             if (model.session == null) {
                 model.session = ActivityRecording.createSession({
-                    :name => "Rugby",
+                    :name => RugbyStrings.load(Rez.Strings.Activity_Name),
                     :sport => Activity.SPORT_RUGBY
                 });
             }
@@ -36,7 +37,7 @@ class RugbyRecordingService {
         } catch (ex) {
             System.println("Error starting activity recording: " + ex.getErrorMessage());
             model.session = null;
-            model.setStatusMessage("Recording start failed");
+            model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_RecordingStartFailed));
         }
     }
 
@@ -51,7 +52,7 @@ class RugbyRecordingService {
             model.session.save();
         } catch (ex) {
             System.println("Error stopping activity recording: " + ex.getErrorMessage());
-            model.setStatusMessage("Recording save failed");
+            model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_RecordingSaveFailed));
         }
         model.session = null;
     }

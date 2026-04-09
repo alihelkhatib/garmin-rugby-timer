@@ -1,6 +1,7 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.System;
+using Rez.Strings;
 
 /**
  * Storage adapter for live match snapshots and final summaries.
@@ -32,7 +33,7 @@ class RugbyTimerPersistence {
         System.println("Clearing invalid saved state: " + reason);
         Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
         model.resetMatchRuntimeState();
-        model.setStatusMessage("Saved match reset");
+        model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_SavedMatchReset));
     }
 
     /**

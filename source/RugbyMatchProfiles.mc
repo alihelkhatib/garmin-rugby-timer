@@ -23,13 +23,13 @@ class RugbyMatchProfiles {
 
     static function getBuiltInProfile(profileId) {
         if (profileId == "7s") {
-            return RugbyMatchProfiles.createProfile("7s", "Rugby 7s", true, 420, 30, 30, 60, true, false);
+            return RugbyMatchProfiles.createProfile("7s", RugbyStrings.getProfileLabel("7s"), true, 420, 30, 30, 60, true, false);
         } else if (profileId == "10s") {
-            return RugbyMatchProfiles.createProfile("10s", "Rugby 10s", false, 2400, 90, 60, 60, true, false);
+            return RugbyMatchProfiles.createProfile("10s", RugbyStrings.getProfileLabel("10s"), false, 2400, 90, 60, 60, true, false);
         } else if (profileId == "u19") {
-            return RugbyMatchProfiles.createProfile("u19", "U19", false, 2100, 90, 60, 60, true, false);
+            return RugbyMatchProfiles.createProfile("u19", RugbyStrings.getProfileLabel("u19"), false, 2100, 90, 60, 60, true, false);
         }
-        return RugbyMatchProfiles.createProfile("15s", "Rugby 15s", false, 2400, 90, 60, 60, true, false);
+        return RugbyMatchProfiles.createProfile("15s", RugbyStrings.getProfileLabel("15s"), false, 2400, 90, 60, 60, true, false);
     }
 
     static function getProfile(profileId) {
@@ -54,10 +54,10 @@ class RugbyMatchProfiles {
     static function getStoredCustomProfile() {
         var fallback = MatchProfileEntry.fromDict(RugbyMatchProfiles.getBuiltInProfile("15s"));
         if (fallback == null) {
-            fallback = MatchProfileEntry.create("15s", "Rugby 15s", false, 2400, 90, 60, 60, true, false);
+            fallback = MatchProfileEntry.create("15s", RugbyStrings.getProfileLabel("15s"), false, 2400, 90, 60, 60, true, false);
         }
         var label = Storage.getValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL);
-        if (label == null) { label = "Custom"; }
+        if (label == null) { label = RugbyStrings.getDefaultCustomProfileLabel(); }
         var is7s = Storage.getValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S);
         if (is7s == null) { is7s = fallback.is7s; }
         var halfDuration = Storage.getValue(STORAGE_KEY_CUSTOM_HALF_DURATION);
@@ -92,7 +92,7 @@ class RugbyMatchProfiles {
             return;
         }
         var label = entry.label;
-        if (label == null) { label = "Custom"; }
+        if (label == null) { label = RugbyStrings.getDefaultCustomProfileLabel(); }
         Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL, label);
         Storage.setValue(STORAGE_KEY_CUSTOM_PROFILE_IS_7S, entry.is7s);
         Storage.setValue(STORAGE_KEY_CUSTOM_HALF_DURATION, entry.halfDuration);
@@ -109,7 +109,7 @@ class RugbyMatchProfiles {
     }
 
     static function getFormatLabel(is7s) {
-        return is7s ? "7s-style" : "15s-style";
+        return RugbyStrings.getFormatLabel(is7s);
     }
 
     static function inferProfileIdFromSettings(is7s, halfDuration, conversionTime, kickoffTime, penaltyKickTime, useConversionTimer, usePenaltyTimer) {
@@ -179,7 +179,7 @@ class RugbyMatchProfiles {
         if (inferredProfileId == "custom") {
             RugbyMatchProfiles.storeCustomProfile(RugbyMatchProfiles.createProfile(
                 "custom",
-                "Custom",
+                RugbyStrings.getDefaultCustomProfileLabel(),
                 is7s,
                 halfDuration,
                 conversionTime,

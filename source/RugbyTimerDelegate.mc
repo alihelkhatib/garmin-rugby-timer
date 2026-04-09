@@ -3,6 +3,7 @@ using Toybox.System;
 using Toybox.Lang;
 using Toybox.Graphics;
 using Toybox.Timer;
+using Rez.Strings;
 
 /**
  * The main delegate for the application.
@@ -41,7 +42,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function showPresetMenu() as Void {
-        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null, false), WatchUi.SLIDE_UP);
         WatchUi.requestUpdate();
     }
 
@@ -64,7 +65,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
     function handleInputFailure(context, ex) {
         var view = Application.getApp().rugbyView;
         System.println("Input failure (" + context + "): " + ex.getErrorMessage());
-        model.setStatusMessage("Action failed");
+        model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_ActionFailed));
         if (view != null && view.isSpecialOverlayActive()) {
             view.closeSpecialTimerScreen();
         }
@@ -267,13 +268,13 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
             }
             // Show confirmation menu before exiting
             if (model.gameState != STATE_IDLE) {
-                var menu = new WatchUi.Menu2({:title=>"Exit?"});
-                menu.addItem(new WatchUi.MenuItem("Resume", null, :resume, null));
-                menu.addItem(new WatchUi.MenuItem("End Game", null, :end, null));
-                menu.addItem(new WatchUi.MenuItem("Reset Game", null, :reset, null));
-                menu.addItem(new WatchUi.MenuItem("Save Game", null, :save_game, null));
-                menu.addItem(new WatchUi.MenuItem("Event Log", null, :view_log, null));
-                menu.addItem(new WatchUi.MenuItem("Exit App", null, :exit, null));
+                var menu = new WatchUi.Menu2({:title=>RugbyStrings.load(Rez.Strings.ExitMenu_Title)});
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_Resume), null, :resume, null));
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_EndGame), null, :end, null));
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_ResetGame), null, :reset, null));
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_SaveGame), null, :save_game, null));
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_EventLog), null, :view_log, null));
+                menu.addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ExitMenu_ExitApp), null, :exit, null));
                 WatchUi.pushView(menu, new ExitMenuDelegate(model), WatchUi.SLIDE_UP);
                 return true;
             }

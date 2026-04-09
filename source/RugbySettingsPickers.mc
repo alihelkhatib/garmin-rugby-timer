@@ -1,6 +1,7 @@
 using Toybox.WatchUi;
 using Toybox.Application;
 using Toybox.Graphics;
+using Rez.Strings;
 
 /**
  * Picker widgets used by the settings flow.
@@ -55,7 +56,7 @@ class MinutesPicker extends WatchUi.Picker {
         var units = currentMinutes % 10;
         Picker.initialize({
             :title => new WatchUi.Text({
-                :text  => "Half Length (min)",
+                :text  => RugbyStrings.load(Rez.Strings.Picker_HalfLengthTitle),
                 :font  => Graphics.FONT_TINY,
                 :locX  => WatchUi.LAYOUT_HALIGN_CENTER,
                 :locY  => WatchUi.LAYOUT_VALIGN_CENTER,
@@ -74,10 +75,12 @@ class MinutesPicker extends WatchUi.Picker {
  */
 class TimerPickerDelegate extends WatchUi.PickerDelegate {
     var menu;
+    var embeddedInApp;
 
-    function initialize(settingsMenu) {
+    function initialize(settingsMenu, embedded) {
         PickerDelegate.initialize();
         menu = settingsMenu;
+        embeddedInApp = embedded == true;
     }
 
     function onAccept(values) {
@@ -85,10 +88,13 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
         if (app != null && app.model != null) {
             var minutes = RugbySettingsSupport.getMinutesFromDigits(values);
             app.model.setHalfDuration(minutes * 60);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (menu != null) {
+            rebuildSettingsRootMenu(embeddedInApp);
+        } else {
+            WatchUi.requestUpdate();
+        }
         return true;
     }
 
@@ -103,11 +109,11 @@ class TimerPickerDelegate extends WatchUi.PickerDelegate {
  */
 class ConversionAdjustMenu extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({:title=>"Conversion Timer"});
-        addItem(new WatchUi.MenuItem("30 sec", "00:30", :t30, null));
-        addItem(new WatchUi.MenuItem("60 sec", "01:00", :t60, null));
-        addItem(new WatchUi.MenuItem("90 sec", "01:30", :t90, null));
-        addItem(new WatchUi.MenuItem("120 sec", "02:00", :t120, null));
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.ConversionMenu_Title)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_30Sec), "00:30", :t30, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_60Sec), "01:00", :t60, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_90Sec), "01:30", :t90, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_120Sec), "02:00", :t120, null));
     }
 }
 
@@ -116,10 +122,12 @@ class ConversionAdjustMenu extends WatchUi.Menu2 {
  */
 class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
     var menu;
+    var embeddedInApp;
 
-    function initialize(settingsMenu) {
+    function initialize(settingsMenu, embedded) {
         Menu2InputDelegate.initialize();
         menu = settingsMenu;
+        embeddedInApp = embedded == true;
     }
 
     function onSelect(item) {
@@ -127,10 +135,13 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getConversionSelectionSeconds(item.getId());
             app.model.setConversionTime(val);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (menu != null) {
+            rebuildSettingsRootMenu(embeddedInApp);
+        } else {
+            WatchUi.requestUpdate();
+        }
     }
 
     function onBack() {
@@ -143,10 +154,10 @@ class ConversionAdjustDelegate extends WatchUi.Menu2InputDelegate {
  */
 class PenaltyAdjustMenu extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({:title=>"Penalty Kick"});
-        addItem(new WatchUi.MenuItem("30 sec", "00:30", :p30, null));
-        addItem(new WatchUi.MenuItem("60 sec", "01:00", :p60, null));
-        addItem(new WatchUi.MenuItem("90 sec", "01:30", :p90, null));
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.PenaltyMenu_Title)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_30Sec), "00:30", :p30, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_60Sec), "01:00", :p60, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Timer_90Sec), "01:30", :p90, null));
     }
 }
 
@@ -155,10 +166,12 @@ class PenaltyAdjustMenu extends WatchUi.Menu2 {
  */
 class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
     var menu;
+    var embeddedInApp;
 
-    function initialize(settingsMenu) {
+    function initialize(settingsMenu, embedded) {
         Menu2InputDelegate.initialize();
         menu = settingsMenu;
+        embeddedInApp = embedded == true;
     }
 
     function onSelect(item) {
@@ -166,10 +179,13 @@ class PenaltyAdjustDelegate extends WatchUi.Menu2InputDelegate {
         if (app != null && app.model != null) {
             var val = RugbySettingsSupport.getPenaltySelectionSeconds(item.getId());
             app.model.setPenaltyKickTime(val);
-            menu.refresh();
-            WatchUi.requestUpdate();
         }
         WatchUi.popView(WatchUi.SLIDE_DOWN);
+        if (menu != null) {
+            rebuildSettingsRootMenu(embeddedInApp);
+        } else {
+            WatchUi.requestUpdate();
+        }
     }
 
     function onBack() {

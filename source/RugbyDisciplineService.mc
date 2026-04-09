@@ -4,6 +4,8 @@
  * Purpose: centralize sanction timing, numbering, totals, and event-log
  * side effects so discipline behavior does not stay embedded in the model.
  */
+using Rez.Strings;
+
 class RugbyDisciplineService {
     static function formatCardLabel(prefix, cardId) {
         return prefix + cardId.toString();
@@ -15,7 +17,7 @@ class RugbyDisciplineService {
         }
         var duration = model.getYellowCardDuration();
         var cardId = RugbyTimerCards.allocateYellowCardId(model, isHome);
-        var label = formatCardLabel("Y", cardId);
+        var label = formatCardLabel(RugbyStrings.getCardPrefix(false), cardId);
         var entry = RugbyTimerCards.createYellowCardEntryFromStartTime(model.suspensionTime, duration, label, cardId);
         if (isHome) {
             model.yellowHomeTimes.add(entry);
@@ -24,7 +26,7 @@ class RugbyDisciplineService {
             model.yellowAwayTimes.add(entry);
             model.yellowAwayTotal = model.yellowAwayTotal + 1;
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Yellow Card (" + label + ")");
+        RugbyTimerEventLog.appendEntry(model, RugbyStrings.getEventTeamLabel(isHome) + " " + RugbyStrings.load(Rez.Strings.Event_YellowCard) + " (" + label + ")");
         model.schedulePersistState();
     }
 
@@ -34,7 +36,7 @@ class RugbyDisciplineService {
         }
         var redDuration = model.getRedCardDuration();
         var cardId = RugbyTimerCards.allocateRedCardId(model, isHome);
-        var label = formatCardLabel("R", cardId);
+        var label = formatCardLabel(RugbyStrings.getCardPrefix(true), cardId);
         if (model.usesSevensCardRules()) {
             if (isHome) {
                 model.redHomePermanent = true;
@@ -56,7 +58,16 @@ class RugbyDisciplineService {
         } else {
             model.redAwayTotal = model.redAwayTotal + 1;
         }
-        RugbyTimerEventLog.appendEntry(model, (isHome ? "Home" : "Away") + " Red Card (" + label + ")" + (model.usesSevensCardRules() ? " (permanent)" : ""));
+        RugbyTimerEventLog.appendEntry(
+            model,
+            RugbyStrings.getEventTeamLabel(isHome)
+                + " "
+                + RugbyStrings.load(Rez.Strings.Event_RedCard)
+                + " ("
+                + label
+                + ")"
+                + (model.usesSevensCardRules() ? RugbyStrings.load(Rez.Strings.Event_PermanentSuffix) : "")
+        );
         model.schedulePersistState();
     }
 }

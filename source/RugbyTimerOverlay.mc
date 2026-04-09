@@ -41,29 +41,18 @@ class RugbyTimerOverlay {
 
     static function getSpecialOverlayHint(model) {
         if (model.gameState == STATE_CONVERSION) {
-            return RugbyTimerOverlay.loadString(Rez.Strings.Overlay_Hint_Conversion);
+            return RugbyStrings.load(Rez.Strings.Overlay_Hint_Conversion);
         } else if (model.gameState == STATE_PENALTY) {
-            return RugbyTimerOverlay.loadString(Rez.Strings.Overlay_Hint_Penalty);
+            return RugbyStrings.load(Rez.Strings.Overlay_Hint_Penalty);
         }
-        return RugbyTimerOverlay.loadString(Rez.Strings.Overlay_Hint_SelectBack);
+        return RugbyStrings.load(Rez.Strings.Overlay_Hint_SelectBack);
     }
 
     static function getSpecialStateLabel(model) {
         if (model.gameState == STATE_CONVERSION) {
-            return RugbyTimerOverlay.loadString(Rez.Strings.State_Conversion);
+            return RugbyStrings.load(Rez.Strings.State_Conversion);
         } else if (model.gameState == STATE_PENALTY) {
-            return RugbyTimerOverlay.loadString(Rez.Strings.State_PenaltyKick);
-        }
-        return "";
-    }
-
-    static function loadString(resourceId) {
-        if (resourceId instanceof Lang.String) {
-            return resourceId;
-        }
-        var value = WatchUi.loadResource(resourceId);
-        if (value instanceof Lang.String) {
-            return value;
+            return RugbyStrings.load(Rez.Strings.State_PenaltyKick);
         }
         return "";
     }

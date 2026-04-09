@@ -1,6 +1,7 @@
 using Toybox.Application.Storage;
 using Toybox.Lang;
 using Toybox.WatchUi;
+using Rez.Strings;
 
 const EVENT_LOG_LIMIT = 64;
 const EVENT_LOG_STORAGE_KEY = STORAGE_KEY_EVENT_LOG_EXPORT;
@@ -50,7 +51,7 @@ class RugbyTimerEventLog {
     static function formatStoredEntry(raw) {
         var time = RugbyTimerEventLog.getStoredEntryTime(raw);
         var description = RugbyTimerEventLog.getStoredEntryDescription(raw);
-        if (time == null) { time = "--:--"; }
+        if (time == null) { time = RugbyStrings.load(Rez.Strings.EventLog_NoTime); }
         if (description == null) { description = ""; }
         return time + " – " + description;
     }

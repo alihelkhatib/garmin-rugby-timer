@@ -1,6 +1,7 @@
 using Toybox.WatchUi;
 using Toybox.Application;
 using Toybox.Application.Storage;
+using Rez.Strings;
 
 /**
  * Settings menu construction only.
@@ -22,7 +23,7 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
     var idleHintsItem;
 
     function initialize() {
-        Menu2.initialize({:title=>"Rugby Settings"});
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.Settings_Title)});
         var profile = getActiveProfile();
         var entry = RugbySettingsSupport.getProfileEntry(profile);
         var profileLabel = RugbySettingsSupport.getProfileLabel(profile);
@@ -33,42 +34,42 @@ class RugbySettingsMenu extends WatchUi.Menu2 {
         var useConvLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.useConversionTimer);
         var usePenLabel = RugbySettingsSupport.getOnOffLabel(entry != null && entry.usePenaltyTimer);
 
-        profileItem = new WatchUi.MenuItem("Profile", profileLabel, :profile, null);
+        profileItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_Profile), profileLabel, :profile, null);
         addItem(profileItem);
 
-        formatItem = new WatchUi.MenuItem("Format Family", formatLabel, :format_family, null);
+        formatItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_FormatFamily), formatLabel, :format_family, null);
         addItem(formatItem);
 
-        halfTimerItem = new WatchUi.MenuItem("Half Timer", halfLabel, :countdown_timer, null);
+        halfTimerItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_HalfTimer), halfLabel, :countdown_timer, null);
         addItem(halfTimerItem);
 
-        conversionItem = new WatchUi.MenuItem("Conversion Timer", conversionLabel, :conv_time, null);
+        conversionItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_ConversionTimer), conversionLabel, :conv_time, null);
         addItem(conversionItem);
 
-        penaltyItem = new WatchUi.MenuItem("Penalty Kick", penaltyLabel, :pen_time, null);
+        penaltyItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_PenaltyKick), penaltyLabel, :pen_time, null);
         addItem(penaltyItem);
 
-        useConvItem = new WatchUi.MenuItem("Conversion Overlay", useConvLabel, :use_conv, null);
+        useConvItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_ConversionOverlay), useConvLabel, :use_conv, null);
         addItem(useConvItem);
 
-        usePenItem = new WatchUi.MenuItem("Penalty Overlay", usePenLabel, :use_pen, null);
+        usePenItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_PenaltyOverlay), usePenLabel, :use_pen, null);
         addItem(usePenItem);
 
         var lockStart = Storage.getValue(STORAGE_KEY_LOCK_ON_START);
         if (lockStart == null) { lockStart = false; }
-        lockStartItem = new WatchUi.MenuItem("Lock on Start", lockStart ? "On" : "Off", :lock_start, null);
+        lockStartItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_LockOnStart), RugbyStrings.getOnOffLabel(lockStart), :lock_start, null);
         addItem(lockStartItem);
 
         var dimMode = Storage.getValue(STORAGE_KEY_DIM_MODE);
         if (dimMode == null) { dimMode = false; }
-        dimModeItem = new WatchUi.MenuItem("Dim Theme", dimMode ? "On" : "Off", :dim_mode, null);
+        dimModeItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_DimTheme), RugbyStrings.getOnOffLabel(dimMode), :dim_mode, null);
         addItem(dimModeItem);
 
         var showIdleHints = RugbySettingsSupport.getStoredFlag(Storage.getValue(STORAGE_KEY_SHOW_IDLE_HINTS), true);
-        idleHintsItem = new WatchUi.MenuItem("Idle Hints", showIdleHints ? "On" : "Off", :idle_hints, null);
+        idleHintsItem = new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_IdleHints), RugbyStrings.getOnOffLabel(showIdleHints), :idle_hints, null);
         addItem(idleHintsItem);
 
-        addItem(new WatchUi.MenuItem("Reset Scores", null, :reset, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.Settings_ResetScores), null, :reset, null));
     }
 
     function isInGame() {

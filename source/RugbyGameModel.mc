@@ -4,6 +4,7 @@ using Toybox.ActivityRecording;
 using Toybox.Activity;
 using Toybox.Lang;
 using Toybox.Timer;
+using Rez.Strings;
 
 // Represents the game state
 enum {
@@ -292,7 +293,7 @@ class RugbyGameModel {
 
     function buildPendingCustomProfile() {
         var label = Storage.getValue(STORAGE_KEY_CUSTOM_PROFILE_LABEL);
-        if (label == null) { label = "Custom"; }
+        if (label == null) { label = RugbyStrings.getDefaultCustomProfileLabel(); }
         return RugbyMatchProfiles.createProfile(
             "custom",
             label,
@@ -358,7 +359,7 @@ class RugbyGameModel {
             lastPersistTime = System.getTimer();
         } catch (ex) {
             System.println("Error persisting state: " + ex.getErrorMessage());
-            setStatusMessage("Save failed");
+            setStatusMessage(RugbyStrings.load(Rez.Strings.Status_SaveFailed));
         }
     }
 
@@ -613,7 +614,7 @@ class RugbyGameModel {
             return;
         }
         if (conversionTeam != null) {
-            RugbyTimerEventLog.appendEntry(self, (conversionTeam ? "Home" : "Away") + " Conversion Miss");
+            RugbyTimerEventLog.appendEntry(self, RugbyStrings.getEventTeamLabel(conversionTeam) + " " + RugbyStrings.load(Rez.Strings.Event_ConversionMiss));
         }
         endConversionWithoutScore();
     }
@@ -629,7 +630,7 @@ class RugbyGameModel {
             persistState();
         } catch (ex) {
             System.println("Error saving finished match: " + ex.getErrorMessage());
-            setStatusMessage("Save failed");
+            setStatusMessage(RugbyStrings.load(Rez.Strings.Status_SaveFailed));
         }
     }
 
@@ -639,7 +640,7 @@ class RugbyGameModel {
             Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, null);
         } catch (ex) {
             System.println("Error finalizing game: " + ex.getErrorMessage());
-            setStatusMessage("Save failed");
+            setStatusMessage(RugbyStrings.load(Rez.Strings.Status_SaveFailed));
         }
     }
 

@@ -4,7 +4,6 @@ using Toybox.Timer;
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Application.Storage;
-using Rez.Strings;
 using Rez.Drawables;
 
 /**
@@ -167,8 +166,8 @@ class RugbyTimerView extends WatchUi.View {
 
     function bindMainLayout() {
         setTextDrawable("ElapsedTimer", RugbyTimerRenderer.getElapsedTimerText(model), true, Graphics.COLOR_LT_GRAY);
-        setTextDrawable("HomeLabel", "HOME", true, Graphics.COLOR_BLUE);
-        setTextDrawable("AwayLabel", "AWAY", true, Graphics.COLOR_YELLOW);
+        setTextDrawable("HomeLabel", RugbyStrings.getTeamShortLabel(true), true, Graphics.COLOR_BLUE);
+        setTextDrawable("AwayLabel", RugbyStrings.getTeamShortLabel(false), true, Graphics.COLOR_YELLOW);
         setTextDrawable("HomeScore", model.homeScore.toString(), true, Graphics.COLOR_WHITE);
         setTextDrawable("AwayScore", model.awayScore.toString(), true, Graphics.COLOR_WHITE);
         setTextDrawable("HalfText", RugbyTimerRenderer.getHalfText(model), true, Graphics.COLOR_WHITE);
@@ -204,10 +203,12 @@ class RugbyTimerView extends WatchUi.View {
         setTextDrawable("StateLine1", stateLine1, stateLine1.length() > 0, stateColor);
         setTextDrawable("StateLine2", stateLine2, stateLine2.length() > 0, stateColor);
 
-        var hintLines = getMainHintLines();
+        var hintLines = getMainHintLines() as Lang.Array;
+        var hintLine1 = getHintLine(hintLines, 0);
+        var hintLine2 = getHintLine(hintLines, 1);
         var hintColor = dimMode ? Graphics.COLOR_LT_GRAY : Graphics.COLOR_WHITE;
-        setTextDrawable("HintLine1", hintLines[0], hintLines[0].length() > 0, hintColor);
-        setTextDrawable("HintLine2", hintLines[1], hintLines[1].length() > 0, hintColor);
+        setTextDrawable("HintLine1", hintLine1, hintLine1.length() > 0, hintColor);
+        setTextDrawable("HintLine2", hintLine2, hintLine2.length() > 0, hintColor);
 
         var showStatusMessage = specialOverlayMessage != null && System.getTimer() < specialOverlayMessageExpiry;
         setTextDrawable("StatusMessage", showStatusMessage ? specialOverlayMessage : "", showStatusMessage, Graphics.COLOR_YELLOW);
@@ -236,6 +237,21 @@ class RugbyTimerView extends WatchUi.View {
             ];
         }
         return ["", ""];
+    }
+
+    function getHintLine(hintLines, index) {
+        if (!(hintLines instanceof Lang.Array)) {
+            return "";
+        }
+        var lines = hintLines as Lang.Array;
+        if (index < 0 || index >= lines.size()) {
+            return "";
+        }
+        var line = lines[index];
+        if (line instanceof Lang.String) {
+            return line;
+        }
+        return "";
     }
 
     function setTextDrawable(id, text, visible, color) {
@@ -286,10 +302,11 @@ class RugbyTimerView extends WatchUi.View {
     }
 
     function getCachedDrawable(id) {
-        if (drawableCache == null) {
+        if (!(drawableCache instanceof Lang.Dictionary)) {
             return null;
         }
-        return drawableCache[id];
+        var cache = drawableCache as Lang.Dictionary;
+        return cache[id];
     }
 
     function loadString(resourceId) {

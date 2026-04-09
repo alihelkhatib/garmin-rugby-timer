@@ -2,6 +2,7 @@ using Toybox.WatchUi;
 using Toybox.System;
 using Toybox.Lang;
 using Toybox.Timer;
+using Rez.Strings;
 
 /**
  * Menu and dialog classes for the in-match interaction stack.
@@ -37,7 +38,7 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
 
     function showPresetAfterMenuClose() as Void {
         presetOpenTimer = null;
-        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null), WatchUi.SLIDE_UP);
+        WatchUi.pushView(new MatchProfileMenu(), new MatchProfileDelegate(null, false), WatchUi.SLIDE_UP);
         WatchUi.requestUpdate();
     }
 
@@ -88,9 +89,9 @@ class MainMenuDelegate extends WatchUi.Menu2InputDelegate {
 
 class ScoreTeamMenu extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({:title=>"Which Team?"});
-        addItem(new WatchUi.MenuItem("Home", null, :team_home, null));
-        addItem(new WatchUi.MenuItem("Away", null, :team_away, null));
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.ScoreTeam_Title)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.getTeamMenuLabel(true), null, :team_home, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.getTeamMenuLabel(false), null, :team_away, null));
     }
 }
 
@@ -124,10 +125,10 @@ class ScoreTeamDelegate extends WatchUi.Menu2InputDelegate {
  */
 class ScoreTypeMenu extends WatchUi.Menu2 {
     function initialize(isHome) {
-        Menu2.initialize({:title=> isHome ? "Home Score" : "Away Score"});
-        addItem(new WatchUi.MenuItem("Try (5)", null, :score_try, null));
-        addItem(new WatchUi.MenuItem("Penalty Try (7)", null, :score_pen_try, null));
-        addItem(new WatchUi.MenuItem("Drop Goal (3)", null, :score_drop, null));
+        Menu2.initialize({:title=> isHome ? RugbyStrings.load(Rez.Strings.ScoreTeam_HomeTitle) : RugbyStrings.load(Rez.Strings.ScoreTeam_AwayTitle)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ScoreType_Try), null, :score_try, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ScoreType_PenaltyTry), null, :score_pen_try, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.ScoreType_DropGoal), null, :score_drop, null));
     }
 }
 
@@ -171,9 +172,9 @@ class ScoreTypeDelegate extends WatchUi.Menu2InputDelegate {
  */
 class CardTeamMenu extends WatchUi.Menu2 {
     function initialize() {
-        Menu2.initialize({:title=>"Card Team"});
-        addItem(new WatchUi.MenuItem("Home", null, :team_home, null));
-        addItem(new WatchUi.MenuItem("Away", null, :team_away, null));
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.CardTeam_Title)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.getTeamMenuLabel(true), null, :team_home, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.getTeamMenuLabel(false), null, :team_away, null));
     }
 }
 
@@ -200,9 +201,9 @@ class CardTeamDelegate extends WatchUi.Menu2InputDelegate {
  */
 class CardTypeMenu extends WatchUi.Menu2 {
     function initialize(isHome) {
-        Menu2.initialize({:title=> isHome ? "Home Card" : "Away Card"});
-        addItem(new WatchUi.MenuItem("Yellow", null, :card_yellow, null));
-        addItem(new WatchUi.MenuItem("Red", null, :card_red, null));
+        Menu2.initialize({:title=> isHome ? RugbyStrings.load(Rez.Strings.CardTeam_HomeTitle) : RugbyStrings.load(Rez.Strings.CardTeam_AwayTitle)});
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.CardType_Yellow), null, :card_yellow, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.CardType_Red), null, :card_red, null));
     }
 }
 
@@ -273,21 +274,21 @@ class ExitMenuDelegate extends WatchUi.Menu2InputDelegate {
  */
 class EventLogMenu extends WatchUi.Menu2 {
     function initialize(entries as Lang.Array) {
-        Menu2.initialize({:title=>"Event Log"});
+        Menu2.initialize({:title=>RugbyStrings.load(Rez.Strings.EventLog_Title)});
         var itemsAdded = 0;
         if (entries != null && entries.size() > 0) {
             var start = entries.size() > 20 ? entries.size() - 20 : 0;
             for (var idx = start; idx < entries.size(); idx = idx + 1) {
                 var label = RugbyTimerEventLog.formatStoredEntry(entries[idx]);
-                if (label == null) { label = "--:--"; }
+                if (label == null) { label = RugbyStrings.load(Rez.Strings.EventLog_NoTime); }
                 addItem(new WatchUi.MenuItem(label, null, :log_entry, null));
                 itemsAdded += 1;
             }
         }
         if (itemsAdded == 0) {
-            addItem(new WatchUi.MenuItem("No events recorded", null, :log_entry, null));
+            addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.EventLog_Empty), null, :log_entry, null));
         }
-        addItem(new WatchUi.MenuItem("Save Log", null, :save_log, null));
+        addItem(new WatchUi.MenuItem(RugbyStrings.load(Rez.Strings.EventLog_Save), null, :save_log, null));
     }
 }
 

@@ -1,6 +1,7 @@
 using Toybox.Graphics;
 using Toybox.Lang;
 using Rez.Drawables;
+using Rez.Strings;
 
 /**
  * Live-screen presentation helper.
@@ -27,15 +28,15 @@ class RugbyTimerRenderer {
     }
 
     static function getHalfText(model) {
-        return "Half " + model.halfNumber.toString();
+        return RugbyStrings.getHalfText(model.halfNumber);
     }
 
     static function getHomeTriesText(model) {
-        return model.homeTries.toString() + "T";
+        return RugbyStrings.getTryText(model.homeTries);
     }
 
     static function getAwayTriesText(model) {
-        return model.awayTries.toString() + "T";
+        return RugbyStrings.getTryText(model.awayTries);
     }
 
 
@@ -58,15 +59,15 @@ class RugbyTimerRenderer {
 
     static function getMainStateLine1(model) {
         if (model.gameState == STATE_PAUSED) {
-            return "PAUSED";
+            return RugbyStrings.load(Rez.Strings.State_Paused);
         } else if (model.gameState == STATE_CONVERSION) {
-            return "CONVERSION";
+            return RugbyStrings.load(Rez.Strings.State_Conversion);
         } else if (model.gameState == STATE_PENALTY) {
-            return "PENALTY KICK";
+            return RugbyStrings.load(Rez.Strings.State_PenaltyKick);
         } else if (model.gameState == STATE_HALFTIME) {
-            return "HALF TIME";
+            return RugbyStrings.load(Rez.Strings.State_HalfTime);
         } else if (model.gameState == STATE_ENDED) {
-            return "GAME ENDED";
+            return RugbyStrings.load(Rez.Strings.State_GameEnded);
         }
         return "";
     }
@@ -74,7 +75,7 @@ class RugbyTimerRenderer {
     static function getMainStateLine2(model) {
         if (model.gameState == STATE_CONVERSION || model.gameState == STATE_PENALTY) {
             var remaining = RugbyTimerTiming.getDisplayCountdownSeconds(model.countdownSeconds);
-            return remaining.toLong().toString() + "s";
+            return RugbyStrings.getSecondsText(remaining);
         }
         return "";
     }
@@ -96,13 +97,14 @@ class RugbyTimerRenderer {
     }
 
     static function getUrgentCardEntry(entries, timerNow) {
-        if (entries == null) {
+        if (!(entries instanceof Lang.Array)) {
             return null;
         }
+        var cardEntries = entries as Lang.Array;
         var bestEntry = null;
         var bestRemaining = null;
-        for (var i = 0; i < entries.size(); i = i + 1) {
-            var entry = CardEntry.fromDict(entries[i]);
+        for (var i = 0; i < cardEntries.size(); i = i + 1) {
+            var entry = CardEntry.fromDict(cardEntries[i]);
             if (entry == null) {
                 continue;
             }
@@ -143,7 +145,7 @@ class RugbyTimerRenderer {
             bestColor = Graphics.COLOR_RED;
         }
         if (bestEntry != null) {
-            var prefix = bestColor == Graphics.COLOR_RED ? "R" : "Y";
+            var prefix = RugbyStrings.getCardPrefix(bestColor == Graphics.COLOR_RED);
             var fallbackId = 1;
             if (bestEntry.cardId instanceof Lang.Number || bestEntry.cardId instanceof Lang.Float) {
                 fallbackId = bestEntry.cardId;
@@ -156,8 +158,9 @@ class RugbyTimerRenderer {
             );
         }
         if (permanentRed) {
-            var label = redCounter > 0 ? "R" + redCounter.toString() : "R";
-            return RugbyCardSlotPresentation.create(label, "PERM", Graphics.COLOR_RED, true);
+            var prefix = RugbyStrings.getCardPrefix(true);
+            var label = redCounter > 0 ? prefix + redCounter.toString() : prefix;
+            return RugbyCardSlotPresentation.create(label, RugbyStrings.load(Rez.Strings.Card_Permanent), Graphics.COLOR_RED, true);
         }
         return RugbyCardSlotPresentation.create("", "", Graphics.COLOR_WHITE, false);
     }

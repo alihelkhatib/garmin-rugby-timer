@@ -37,7 +37,7 @@ class RugbySettingsSupport {
     }
 
     static function getOnOffLabel(enabled) {
-        return enabled == true ? "On" : "Off";
+        return RugbyStrings.getOnOffLabel(enabled);
     }
 
     static function getStoredFlag(value, defaultValue) {
