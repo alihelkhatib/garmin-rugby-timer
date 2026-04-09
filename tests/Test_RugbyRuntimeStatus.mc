@@ -1,6 +1,7 @@
 using Toybox.Test;
 using Toybox.Lang;
 using Toybox.Application.Storage;
+using Rez.Strings;
 
 /*
 Unit tests for one-shot runtime status messaging and invalid restore recovery.
@@ -15,9 +16,10 @@ function test_statusMessage_is_one_shot(logger as Test.Logger) as Lang.Boolean {
 
     var model = new RugbyGameModel();
     model.initialize();
-    model.setStatusMessage("Save failed");
+    var expected = RugbyStrings.load(Rez.Strings.Status_SaveFailed);
+    model.setStatusMessage(expected);
 
-    if (model.consumeStatusMessage() != "Save failed") {
+    if (model.consumeStatusMessage() != expected) {
         logger.error("status message did not round-trip");
         return false;
     }
@@ -47,7 +49,7 @@ function test_invalidSavedSnapshot_is_cleared_and_reported(logger as Test.Logger
         logger.error("invalid snapshot should reset to STATE_IDLE");
         return false;
     }
-    if (model.consumeStatusMessage() != "Saved match reset") {
+    if (model.consumeStatusMessage() != RugbyStrings.load(Rez.Strings.Status_SavedMatchReset)) {
         logger.error("invalid snapshot should surface reset message");
         return false;
     }

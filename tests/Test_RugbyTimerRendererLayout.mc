@@ -2,6 +2,7 @@ using Toybox.Test;
 using Toybox.Lang;
 using Toybox.Graphics;
 using Rez.Drawables;
+using Rez.Strings;
 
 /*
 Presentation-layer regression tests for the XML-first live screen.
@@ -235,9 +236,14 @@ function getNodeBounds(spec, node) {
 }
 
 function findNodeById(nodes, id) {
-    for (var i = 0; i < nodes.size(); i = i + 1) {
-        if (nodes[i].id == id) {
-            return nodes[i];
+    if (!(nodes instanceof Lang.Array)) {
+        return null;
+    }
+    var layoutNodes = nodes as Lang.Array;
+    for (var i = 0; i < layoutNodes.size(); i = i + 1) {
+        var node = layoutNodes[i] as TestLayoutNode;
+        if (node != null && node.id == id) {
+            return node;
         }
     }
     return null;
@@ -356,18 +362,18 @@ function test_renderer_text_helpers_format_scoreboard_strings(logger as Test.Log
         logger.error("countdown text mismatch");
         return false;
     }
-    if (RugbyTimerRenderer.getHalfText(model) != "Half 1") {
+    if (RugbyTimerRenderer.getHalfText(model) != RugbyStrings.getHalfText(1)) {
         logger.error("half text mismatch");
         return false;
     }
-    return RugbyTimerRenderer.getHomeTriesText(model) == "2T"
-        && RugbyTimerRenderer.getAwayTriesText(model) == "1T";
+    return RugbyTimerRenderer.getHomeTriesText(model) == RugbyStrings.getTryText(2)
+        && RugbyTimerRenderer.getAwayTriesText(model) == RugbyStrings.getTryText(1);
 }
 
 (:test)
 function test_renderer_state_mapping_for_paused(logger as Test.Logger) as Lang.Boolean {
     var model = new TestRendererModel(STATE_PAUSED);
-    if (RugbyTimerRenderer.getMainStateLine1(model) != "PAUSED") {
+    if (RugbyTimerRenderer.getMainStateLine1(model) != RugbyStrings.load(Rez.Strings.State_Paused)) {
         logger.error("paused line 1 mismatch");
         return false;
     }
@@ -381,11 +387,11 @@ function test_renderer_state_mapping_for_paused(logger as Test.Logger) as Lang.B
 (:test)
 function test_renderer_state_mapping_for_conversion(logger as Test.Logger) as Lang.Boolean {
     var model = new TestRendererModel(STATE_CONVERSION);
-    if (RugbyTimerRenderer.getMainStateLine1(model) != "CONVERSION") {
+    if (RugbyTimerRenderer.getMainStateLine1(model) != RugbyStrings.load(Rez.Strings.State_Conversion)) {
         logger.error("conversion line 1 mismatch");
         return false;
     }
-    if (RugbyTimerRenderer.getMainStateLine2(model) != "45s") {
+    if (RugbyTimerRenderer.getMainStateLine2(model) != RugbyStrings.getSecondsText(45)) {
         logger.error("conversion line 2 mismatch");
         return false;
     }
@@ -469,11 +475,11 @@ function test_overlay_helpers_return_expected_text_and_hint(logger as Test.Logge
         logger.error("overlay special countdown mismatch");
         return false;
     }
-    if (RugbyTimerOverlay.getSpecialStateLabel(model) != "CONVERSION") {
+    if (RugbyTimerOverlay.getSpecialStateLabel(model) != RugbyStrings.load(Rez.Strings.State_Conversion)) {
         logger.error("overlay state label mismatch");
         return false;
     }
-    return RugbyTimerOverlay.getSpecialOverlayHint(model) == "UP: +2   DOWN: MISS";
+    return RugbyTimerOverlay.getSpecialOverlayHint(model) == RugbyStrings.load(Rez.Strings.Overlay_Hint_Conversion);
 }
 
 (:test)
@@ -482,9 +488,10 @@ function test_mainLayout_core_nodes_stay_on_screen_and_out_of_bezel_risk(logger 
     for (var i = 0; i < families.size(); i = i + 1) {
         var family = families[i];
         var spec = getMainLayoutSafetySpec(family);
-        var nodes = getMainCoreNodesForFamily(family);
+        var nodes = getMainCoreNodesForFamily(family) as Lang.Array;
         for (var j = 0; j < nodes.size(); j = j + 1) {
-            if (!assertNodeBoundsStayVisible(logger, spec, nodes[j])) {
+            var node = nodes[j] as TestLayoutNode;
+            if (!assertNodeBoundsStayVisible(logger, spec, node)) {
                 return false;
             }
         }
@@ -535,9 +542,10 @@ function test_overlayLayout_core_nodes_stay_on_screen_and_separated(logger as Te
     for (var i = 0; i < families.size(); i = i + 1) {
         var family = families[i];
         var spec = getOverlayLayoutSafetySpec(family);
-        var nodes = getOverlayCoreNodesForFamily(family);
+        var nodes = getOverlayCoreNodesForFamily(family) as Lang.Array;
         for (var j = 0; j < nodes.size(); j = j + 1) {
-            if (!assertNodeBoundsStayVisible(logger, spec, nodes[j])) {
+            var node = nodes[j] as TestLayoutNode;
+            if (!assertNodeBoundsStayVisible(logger, spec, node)) {
                 return false;
             }
         }

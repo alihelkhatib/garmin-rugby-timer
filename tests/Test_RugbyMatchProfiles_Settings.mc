@@ -167,3 +167,11 @@ function test_custom_profile_label_intent(logger as Test.Logger) as Lang.Boolean
     var s = MatchProfileEntry.fromDict(RugbyMatchProfiles.getStoredCustomProfile());
     return s != null && s.label == "MyCoolVariant";
 }
+
+(:test)
+function test_localized_profile_and_format_labels_default_to_resource_values(logger as Test.Logger) as Lang.Boolean {
+    if (RugbyStrings.getProfileLabel("7s") != "Rugby 7s") { logger.error("localized 7s label mismatch"); return false; }
+    if (RugbyStrings.getProfileLabel("custom") != "Custom") { logger.error("localized custom label mismatch"); return false; }
+    return RugbyStrings.getFormatLabel(true) == "7s-style"
+        && RugbyStrings.getFormatLabel(false) == "15s-style";
+}

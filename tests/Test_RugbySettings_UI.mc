@@ -57,6 +57,30 @@ class TestConversionAdjustDelegate {
     }
 }
 
+class TestSettingsMenuProjection {
+    var profileLabel;
+    var halfLabel;
+    var conversionLabel;
+    var penaltyLabel;
+
+    static function create(model) {
+        var projection = new TestSettingsMenuProjection();
+        var profile = model.buildCurrentProfile(model.matchProfileId);
+        projection.profileLabel = RugbySettingsSupport.getProfileLabel(profile);
+        projection.halfLabel = formatSeconds(RugbySettingsSupport.getProfileEntry(profile).halfDuration);
+        projection.conversionLabel = formatSeconds(RugbySettingsSupport.getProfileEntry(profile).conversionTime);
+        projection.penaltyLabel = formatSeconds(RugbySettingsSupport.getProfileEntry(profile).penaltyKickTime);
+        return projection;
+    }
+}
+
+function formatSeconds(seconds) {
+    if (seconds == null) { seconds = 0; }
+    var mins = (seconds.toLong() / 60).toLong();
+    var secs = (seconds.toLong() % 60).toLong();
+    return mins.format("%02d") + ":" + secs.format("%02d");
+}
+
 // shared helper `clearCustomStorage` moved to tests/TestHelpers.mc
 
 (:test)
@@ -71,6 +95,38 @@ function test_ui_select_profile_7s(logger as Test.Logger) as Lang.Boolean {
     d.onSelect(item);
 
     return (model.matchProfileId == "7s") && (model.halfDuration == 420) && (model.conversionTime == 30);
+}
+
+(:test)
+function test_ui_rebuilt_settings_projection_for_7s(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    var d = new TestMatchProfileDelegate(model);
+    d.onSelect(new TestMenuItem("profile_7s"));
+
+    var projection = TestSettingsMenuProjection.create(model);
+    if (projection.profileLabel != RugbyStrings.getProfileLabel("7s")) { logger.error("7s profile label mismatch"); return false; }
+    if (projection.halfLabel != "07:00") { logger.error("7s half label mismatch"); return false; }
+    if (projection.conversionLabel != "00:30") { logger.error("7s conversion label mismatch"); return false; }
+    return projection.penaltyLabel == "01:00";
+}
+
+(:test)
+function test_ui_rebuilt_settings_projection_for_u19(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    var d = new TestMatchProfileDelegate(model);
+    d.onSelect(new TestMenuItem("profile_u19"));
+
+    var projection = TestSettingsMenuProjection.create(model);
+    if (projection.profileLabel != RugbyStrings.getProfileLabel("u19")) { logger.error("u19 profile label mismatch"); return false; }
+    if (projection.halfLabel != "35:00") { logger.error("u19 half label mismatch"); return false; }
+    if (projection.conversionLabel != "01:30") { logger.error("u19 conversion label mismatch"); return false; }
+    return projection.penaltyLabel == "01:00";
 }
 
 (:test)
@@ -98,6 +154,20 @@ function test_ui_minutes_picker_sets_half_duration(logger as Test.Logger) as Lan
     var ok = p.onAccept([2,5]); // 25 minutes
     if (!ok) { return false; }
     return (model.halfDuration == 25 * 60) && (model.matchProfileId == "custom");
+}
+
+(:test)
+function test_ui_rebuilt_settings_projection_for_custom_minutes(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    var p = new TestTimerPickerDelegate(model);
+    if (!p.onAccept([2, 5])) { logger.error("minutes picker accept failed"); return false; }
+
+    var projection = TestSettingsMenuProjection.create(model);
+    if (projection.profileLabel != RugbyStrings.getProfileLabel("custom")) { logger.error("custom profile label mismatch"); return false; }
+    return projection.halfLabel == "25:00";
 }
 
 (:test)
