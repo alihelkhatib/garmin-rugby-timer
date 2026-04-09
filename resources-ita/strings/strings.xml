@@ -1,0 +1,122 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Timer Rugby</string>
+    <string id="Activity_Name">Rugby</string>
+    <string id="Hint_Select_Start">SELECT: Avvia</string>
+    <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
+    <string id="Hint_Select_Resume">SELECT: Riprendi</string>
+    <string id="Hint_Locked">BLOCCATO</string>
+
+    <string id="LockIndicator">B</string>
+    <string id="HalfPrefix">T. </string>
+    <string id="TrySuffix">M</string>
+    <string id="SecondsSuffix">s</string>
+    <string id="Team_Home_Short">CASA</string>
+    <string id="Team_Away_Short">OSP</string>
+    <string id="Team_Home">Casa</string>
+    <string id="Team_Away">Ospite</string>
+    <string id="EventTeam_Home">Casa</string>
+    <string id="EventTeam_Away">Osp.</string>
+    <string id="CardPrefix_Yellow">G</string>
+    <string id="CardPrefix_Red">R</string>
+    <string id="Card_Permanent">PERM</string>
+    <string id="State_Paused">PAUSA</string>
+    <string id="State_Conversion">TRASFORMAZIONE</string>
+    <string id="State_PenaltyKick">PIAZZATO</string>
+    <string id="State_HalfTime">INTERVALLO</string>
+    <string id="State_GameEnded">FINE GARA</string>
+    <string id="State_ReadyToStart">Pronto a iniziare</string>
+    <string id="Overlay_Countdown">COUNTDOWN</string>
+    <string id="Overlay_Hint_Conversion">UP: +2   DOWN: SBAGL.</string>
+    <string id="Overlay_Hint_Penalty">UP/DOWN: Nascondi</string>
+    <string id="Overlay_ConversionMade_Action">MENU</string>
+    <string id="Overlay_ConversionMade_Result">+2</string>
+    <string id="Overlay_ConversionMiss_Action">DOWN</string>
+    <string id="Overlay_ConversionMiss_Result">SBAGL.</string>
+    <string id="Overlay_Hint_SelectBack">SELECT: Indietro</string>
+
+    <string id="Profile_Rugby7s">Rugby a 7</string>
+    <string id="Profile_Rugby10s">Rugby a 10</string>
+    <string id="Profile_Rugby15s">Rugby a 15</string>
+    <string id="Profile_U19">U19</string>
+    <string id="Profile_Custom">Personalizzato</string>
+    <string id="Format_7s">Stile 7</string>
+    <string id="Format_15s">Stile 15</string>
+
+    <string id="Generic_On">On</string>
+    <string id="Generic_Off">Off</string>
+    <string id="Status_ActionFailed">Azione non riuscita</string>
+    <string id="Status_SaveFailed">Salvataggio fallito</string>
+    <string id="Status_SavedMatchReset">Partita salvata azzerata</string>
+    <string id="Status_IdleOnly">Solo da fermo</string>
+    <string id="Status_RecordingUnsupported">Registrazione non supportata</string>
+    <string id="Status_RugbySportUnsupported">Sport rugby non supportato</string>
+    <string id="Status_RecordingStartFailed">Avvio registrazione fallito</string>
+    <string id="Status_RecordingSaveFailed">Salvataggio registrazione fallito</string>
+
+    <string id="Settings_Title">Impostazioni Rugby</string>
+    <string id="Settings_Profile">Profilo</string>
+    <string id="Settings_FormatFamily">Formato</string>
+    <string id="Settings_HalfTimer">Tempo</string>
+    <string id="Settings_ConversionTimer">Trasformazione</string>
+    <string id="Settings_PenaltyKick">Calcio piazzato</string>
+    <string id="Settings_ConversionOverlay">Overlay trasform.</string>
+    <string id="Settings_PenaltyOverlay">Overlay piazzato</string>
+    <string id="Settings_LockOnStart">Blocca all'avvio</string>
+    <string id="Settings_DimTheme">Tema attenuato</string>
+    <string id="Settings_IdleHints">Suggerimenti inattivo</string>
+    <string id="Settings_ResetScores">Azzera punteggi</string>
+    <string id="ProfileMenu_Title">Profilo partita</string>
+
+    <string id="Picker_HalfLengthTitle">Tempo (min)</string>
+    <string id="ConversionMenu_Title">Tempo trasformazione</string>
+    <string id="PenaltyMenu_Title">Tempo piazzato</string>
+    <string id="Timer_30Sec">30 sec</string>
+    <string id="Timer_60Sec">60 sec</string>
+    <string id="Timer_90Sec">90 sec</string>
+    <string id="Timer_120Sec">120 sec</string>
+
+    <string id="MainMenu_RecordScore">Registra punteggio</string>
+    <string id="MainMenu_PauseClock">Pausa/Riprendi</string>
+    <string id="MainMenu_RecordCard">Registra cartellino</string>
+    <string id="MainMenu_StartHalf2">Avvia 2° tempo</string>
+    <string id="MainMenu_EndGame">Termina partita</string>
+    <string id="MainMenu_UndoLastScore">Annulla ultimo punteggio</string>
+    <string id="MainMenu_Settings">Profilo partita</string>
+    <string id="MainMenu_ToggleLock">Cambia blocco</string>
+
+    <string id="ScoreTeam_Title">Quale squadra?</string>
+    <string id="ScoreTeam_HomeTitle">Punti casa</string>
+    <string id="ScoreTeam_AwayTitle">Punti ospite</string>
+    <string id="ScoreType_Try">Meta (5)</string>
+    <string id="ScoreType_PenaltyTry">Meta tecnica (7)</string>
+    <string id="ScoreType_DropGoal">Drop (3)</string>
+
+    <string id="CardTeam_Title">Squadra sanzionata</string>
+    <string id="CardTeam_HomeTitle">Cartellino casa</string>
+    <string id="CardTeam_AwayTitle">Cartellino ospite</string>
+    <string id="CardType_Yellow">Giallo</string>
+    <string id="CardType_Red">Rosso</string>
+
+    <string id="ExitMenu_Title">Uscire?</string>
+    <string id="ExitMenu_Resume">Riprendi</string>
+    <string id="ExitMenu_EndGame">Termina partita</string>
+    <string id="ExitMenu_ResetGame">Azzera partita</string>
+    <string id="ExitMenu_SaveGame">Salva partita</string>
+    <string id="ExitMenu_EventLog">Registro eventi</string>
+    <string id="ExitMenu_ExitApp">Esci app</string>
+
+    <string id="EventLog_Title">Registro eventi</string>
+    <string id="EventLog_Empty">Nessun evento</string>
+    <string id="EventLog_Save">Salva registro</string>
+    <string id="EventLog_NoTime">--:--</string>
+
+    <string id="Event_Try">Meta</string>
+    <string id="Event_ConversionMade">Trasformazione (+2)</string>
+    <string id="Event_ConversionMiss">Trasformazione sbagliata</string>
+    <string id="Event_PenaltyGoal">Calcio piazzato</string>
+    <string id="Event_DropGoal">Drop</string>
+    <string id="Event_PenaltyTry">Meta tecnica</string>
+    <string id="Event_YellowCard">Cartellino giallo</string>
+    <string id="Event_RedCard">Cartellino rosso</string>
+    <string id="Event_PermanentSuffix"> (permanente)</string>
+</strings>

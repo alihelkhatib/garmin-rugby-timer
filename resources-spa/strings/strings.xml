@@ -1,0 +1,122 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">Crono Rugby</string>
+    <string id="Activity_Name">Rugby</string>
+    <string id="Hint_Select_Start">SELECT: Iniciar</string>
+    <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
+    <string id="Hint_Select_Resume">SELECT: Reanudar</string>
+    <string id="Hint_Locked">BLOQUEADO</string>
+
+    <string id="LockIndicator">B</string>
+    <string id="HalfPrefix">T </string>
+    <string id="TrySuffix">E</string>
+    <string id="SecondsSuffix">s</string>
+    <string id="Team_Home_Short">LOC</string>
+    <string id="Team_Away_Short">VIS</string>
+    <string id="Team_Home">Local</string>
+    <string id="Team_Away">Visitante</string>
+    <string id="EventTeam_Home">Local</string>
+    <string id="EventTeam_Away">Visit.</string>
+    <string id="CardPrefix_Yellow">A</string>
+    <string id="CardPrefix_Red">R</string>
+    <string id="Card_Permanent">PERM</string>
+    <string id="State_Paused">PAUSA</string>
+    <string id="State_Conversion">CONVERSIÓN</string>
+    <string id="State_PenaltyKick">PENAL</string>
+    <string id="State_HalfTime">DESCANSO</string>
+    <string id="State_GameEnded">FINAL</string>
+    <string id="State_ReadyToStart">Listo para iniciar</string>
+    <string id="Overlay_Countdown">CUENTA ATRÁS</string>
+    <string id="Overlay_Hint_Conversion">UP: +2   DOWN: FALLA</string>
+    <string id="Overlay_Hint_Penalty">UP/DOWN: Ocultar</string>
+    <string id="Overlay_ConversionMade_Action">MENU</string>
+    <string id="Overlay_ConversionMade_Result">+2</string>
+    <string id="Overlay_ConversionMiss_Action">DOWN</string>
+    <string id="Overlay_ConversionMiss_Result">FALLA</string>
+    <string id="Overlay_Hint_SelectBack">SELECT: Atrás</string>
+
+    <string id="Profile_Rugby7s">Rugby 7</string>
+    <string id="Profile_Rugby10s">Rugby 10</string>
+    <string id="Profile_Rugby15s">Rugby 15</string>
+    <string id="Profile_U19">U19</string>
+    <string id="Profile_Custom">Personalizado</string>
+    <string id="Format_7s">Estilo 7</string>
+    <string id="Format_15s">Estilo 15</string>
+
+    <string id="Generic_On">Sí</string>
+    <string id="Generic_Off">No</string>
+    <string id="Status_ActionFailed">Acción fallida</string>
+    <string id="Status_SaveFailed">Error al guardar</string>
+    <string id="Status_SavedMatchReset">Partido restablecido</string>
+    <string id="Status_IdleOnly">Solo en espera</string>
+    <string id="Status_RecordingUnsupported">Grabación no compatible</string>
+    <string id="Status_RugbySportUnsupported">Rugby no compatible</string>
+    <string id="Status_RecordingStartFailed">Error al iniciar grabación</string>
+    <string id="Status_RecordingSaveFailed">Error al guardar grabación</string>
+
+    <string id="Settings_Title">Ajustes Rugby</string>
+    <string id="Settings_Profile">Perfil</string>
+    <string id="Settings_FormatFamily">Formato</string>
+    <string id="Settings_HalfTimer">Tiempo</string>
+    <string id="Settings_ConversionTimer">Conversión</string>
+    <string id="Settings_PenaltyKick">Penal</string>
+    <string id="Settings_ConversionOverlay">Overlay conversión</string>
+    <string id="Settings_PenaltyOverlay">Overlay penal</string>
+    <string id="Settings_LockOnStart">Bloquear al iniciar</string>
+    <string id="Settings_DimTheme">Tema tenue</string>
+    <string id="Settings_IdleHints">Ayudas en espera</string>
+    <string id="Settings_ResetScores">Reiniciar marcador</string>
+    <string id="ProfileMenu_Title">Perfil de partido</string>
+
+    <string id="Picker_HalfLengthTitle">Tiempo (min)</string>
+    <string id="ConversionMenu_Title">Tiempo conversión</string>
+    <string id="PenaltyMenu_Title">Tiempo penal</string>
+    <string id="Timer_30Sec">30 s</string>
+    <string id="Timer_60Sec">60 s</string>
+    <string id="Timer_90Sec">90 s</string>
+    <string id="Timer_120Sec">120 s</string>
+
+    <string id="MainMenu_RecordScore">Anotar puntos</string>
+    <string id="MainMenu_PauseClock">Pausar/Reanudar</string>
+    <string id="MainMenu_RecordCard">Anotar tarjeta</string>
+    <string id="MainMenu_StartHalf2">Iniciar 2.ª parte</string>
+    <string id="MainMenu_EndGame">Terminar partido</string>
+    <string id="MainMenu_UndoLastScore">Deshacer último tanteo</string>
+    <string id="MainMenu_Settings">Perfil de partido</string>
+    <string id="MainMenu_ToggleLock">Cambiar bloqueo</string>
+
+    <string id="ScoreTeam_Title">¿Qué equipo?</string>
+    <string id="ScoreTeam_HomeTitle">Puntos local</string>
+    <string id="ScoreTeam_AwayTitle">Puntos visitante</string>
+    <string id="ScoreType_Try">Ensayo (5)</string>
+    <string id="ScoreType_PenaltyTry">Ensayo de castigo (7)</string>
+    <string id="ScoreType_DropGoal">Drop (3)</string>
+
+    <string id="CardTeam_Title">Equipo sancionado</string>
+    <string id="CardTeam_HomeTitle">Tarjeta local</string>
+    <string id="CardTeam_AwayTitle">Tarjeta visitante</string>
+    <string id="CardType_Yellow">Amarilla</string>
+    <string id="CardType_Red">Roja</string>
+
+    <string id="ExitMenu_Title">¿Salir?</string>
+    <string id="ExitMenu_Resume">Reanudar</string>
+    <string id="ExitMenu_EndGame">Terminar partido</string>
+    <string id="ExitMenu_ResetGame">Reiniciar partido</string>
+    <string id="ExitMenu_SaveGame">Guardar partido</string>
+    <string id="ExitMenu_EventLog">Registro</string>
+    <string id="ExitMenu_ExitApp">Salir app</string>
+
+    <string id="EventLog_Title">Registro</string>
+    <string id="EventLog_Empty">Sin eventos</string>
+    <string id="EventLog_Save">Guardar registro</string>
+    <string id="EventLog_NoTime">--:--</string>
+
+    <string id="Event_Try">Ensayo</string>
+    <string id="Event_ConversionMade">Conversión (+2)</string>
+    <string id="Event_ConversionMiss">Conversión fallada</string>
+    <string id="Event_PenaltyGoal">Gol de castigo</string>
+    <string id="Event_DropGoal">Drop</string>
+    <string id="Event_PenaltyTry">Ensayo de castigo</string>
+    <string id="Event_YellowCard">Tarjeta amarilla</string>
+    <string id="Event_RedCard">Tarjeta roja</string>
+    <string id="Event_PermanentSuffix"> (permanente)</string>
+</strings>
