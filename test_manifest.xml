@@ -11,7 +11,14 @@
             <iq:uses-permission id="SensorLogging"/>
         </iq:permissions>
         <iq:languages>
+            <iq:language>ara</iq:language>
+            <iq:language>deu</iq:language>
             <iq:language>eng</iq:language>
+            <iq:language>fre</iq:language>
+            <iq:language>jpn</iq:language>
+            <iq:language>por</iq:language>
+            <iq:language>spa</iq:language>
+            <iq:language>ita</iq:language>
         </iq:languages>
     </iq:application>
 </iq:manifest>
