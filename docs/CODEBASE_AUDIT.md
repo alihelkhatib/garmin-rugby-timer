@@ -77,5 +77,6 @@
 
 ## Remaining Warning Reduction Targets
 - Production warnings are now cleared on the app build.
-- Remaining warning noise is limited to a small number of older tests that still access arrays/dictionaries directly.
-- The highest-value next cleanup is converting the remaining warning-heavy tests to fully typed helpers, not more production refactoring.
+- Unit-test builds are also warning-free after the XML layout regression helpers were updated to cast array entries explicitly before field access.
+- The warning cleanup was intentionally narrow: it removed ambiguous container indexing without changing runtime behavior.
+- The next cleanup priority should stay behavior-driven rather than warning-driven unless new compiler noise appears.

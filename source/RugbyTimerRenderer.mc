@@ -164,4 +164,5 @@ class RugbyTimerRenderer {
         }
         return RugbyCardSlotPresentation.create("", "", Graphics.COLOR_WHITE, false);
     }
+
 }

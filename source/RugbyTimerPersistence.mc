@@ -36,6 +36,19 @@ class RugbyTimerPersistence {
         model.setStatusMessage(RugbyStrings.load(Rez.Strings.Status_SavedMatchReset));
     }
 
+    static function loadStoredSnapshot(model) {
+        try {
+            var rawSnapshot = Storage.getValue(STORAGE_KEY_GAME_STATE_DATA);
+            if (rawSnapshot == null) {
+                return null;
+            }
+            return PersistedGameSnapshot.fromDict(rawSnapshot);
+        } catch (ex) {
+            RugbyTimerPersistence.clearInvalidSavedState(model, "snapshot load failed");
+            return :invalid;
+        }
+    }
+
     /**
      * Saves the current game state to storage.
      * @param model The game model
@@ -131,7 +144,10 @@ class RugbyTimerPersistence {
      * @param model The game model
      */
     static function loadSavedState(model) {
-        var snapshot = PersistedGameSnapshot.fromDict(Storage.getValue(STORAGE_KEY_GAME_STATE_DATA));
+        var snapshot = RugbyTimerPersistence.loadStoredSnapshot(model);
+        if (snapshot == :invalid) {
+            return;
+        }
         if (snapshot != null) {
             if (!RugbyTimerPersistence.isSnapshotUsable(snapshot)) {
                 RugbyTimerPersistence.clearInvalidSavedState(model, "missing required fields");

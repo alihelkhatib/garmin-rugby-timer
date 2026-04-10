@@ -11,11 +11,12 @@
 - `RugbyTimerApp.mc`: App entry point and provider for the main view/delegate pair.
 - `RugbyGameModel.mc`: Public match-state facade. It owns canonical state, one-shot status messages, the 300 ms debounce timers for live snapshot saves and custom-profile writes, and delegates most rule changes to focused services.
 - `RugbyClockService.mc`, `RugbyScoringService.mc`, `RugbyDisciplineService.mc`, `RugbyRecordingService.mc`: Business-rule helpers for clock transitions, score history, discipline flows, and GPS recording. Snapshot orchestration now stays directly in `RugbyGameModel` because the removed `RugbySnapshotService` was only adding call depth.
-- `RugbyTimerPersistence.mc`: Saves/restores `gameStateData`, `eventLog`, and `lastGameSummary`; discards malformed snapshots on load; finalizes post-match summaries; and remains the only module that writes live match snapshots to Storage.
+- `RugbyTimerPersistence.mc`: Saves/restores `gameStateData`, `eventLog`, and `lastGameSummary`; discards malformed or unreadable snapshots on load; finalizes post-match summaries; and remains the only module that writes live match snapshots to Storage.
 - `RugbyScoringService.mc`: Owns score-history payload normalization for persisted `lastEvents`. Stored events now use plain serializable dictionaries with string keys and values, while legacy symbol-based payloads remain readable for backward compatibility.
 - `RugbyTimerEventLog.mc`: Owns event-log payload normalization and formatting. Stored entries now persist as `{ "time" => "MM:SS", "description" => String }`, and legacy `:time` / `:desc` payloads are still accepted on restore/display.
 - `RugbyTimerDelegate.mc`, `RugbyTimerMenus.mc`, `RugbyTimerInputSupport.mc`: Handle hardware input, menu navigation, and pure button-routing rules. Idle UP/DOWN edits now bypass the broader action throttle so timer changes feel immediate on the watch.
 - `RugbyTimerView.mc`, `RugbyTimerRenderer.mc`, and `RugbyLayoutSupport.mc`: the view now chooses a device-family XML layout for either the main screen or the special overlay, caches drawables by stable IDs, and binds runtime text/color/visibility into those XML-owned elements on each update. `RugbyTimerRenderer` now owns presentation mapping only, not screen geometry.
+- `RugbyStrings.mc`: shared localized-string loader/formatter for user-facing watch UI text. It centralizes profile/team labels, small formatted fragments, and resource loading so production code does not scatter raw English literals across view, menu, and runtime-status paths.
 - `RugbyTimerTiming.mc`, `RugbyTimerCards.mc`, `RugbyTimerOverlay.mc`: Own shared timing loops, sanction timer math, and overlay-specific label/hint mapping.
 - `RugbySettingsMenu.mc`, `RugbySettingsNavigation.mc`, `RugbySettingsPickers.mc`, `RugbySettingsSupport.mc`, `RugbyMatchProfiles.mc`: Own idle-only configuration, preset selection, picker helpers, and custom-profile persistence/migration.
 - Boundary types that still add value: `MatchProfileEntry.mc`, `CardEntry.mc`, `MatchSummaryEntry.mc`, `PersistedGameSnapshot.mc`, `PersistedCardTimerEntry.mc`, and `RugbyTimerRenderTypes.mc`.
@@ -24,6 +25,7 @@
 ## Layout Notes
 - The live match screen is now XML-first. Each device family (`compact_round`, `large_round`, `rect`) has a dedicated main layout plus a dedicated overlay layout in `resources/layouts/layout.xml`.
 - Layout XML now owns the positions of scoreboard labels, sanction slots, countdown text, state lines, hint lines, and overlay text. Runtime code updates those drawables through `findDrawableById()` instead of recomputing Y positions every frame.
+- The app now ships English plus Garmin French (`fre`), Spanish (`spa`), Arabic (`ara`), Japanese (`jpn`), Italian (`ita`), German (`deu`), and Portuguese (`por`) string resources. Most user-visible text is resource-backed, while internal ids/storage keys remain English and unchanged.
 - The main layouts reserve a permanent sanction row under the header. Home and away sanction slots are always part of the layout and are simply hidden when no urgent sanction or permanent red needs to be shown.
 - `RugbyTimerRenderer` now provides content decisions only: elapsed/countdown/half/tries strings, state-line text/color, hint mode, icon choice, and urgent sanction selection.
 - Compact round keeps the lower-priority chrome lighter by hiding tries and the two corner icons, while larger families keep those elements visible.
@@ -34,6 +36,7 @@
 - Idle setup: the app opens directly on the main timer screen. UP/DOWN change the half length immediately, MENU also increments the idle timer, and holding UP or MENU opens the preset picker.
 - Idle-hint visibility is now a simple persisted watch setting. Hints default to on, use a smaller compact-round font tier, and can be disabled for a cleaner idle screen without changing gameplay behavior.
 - Match profile persistence: built-in presets (`7s`, `10s`, `15s`, `u19`) apply immediately. Manual timing edits promote the model to `custom`, but repeated idle edits now debounce their Storage writes so the watch is not writing on every button press.
+- Settings menu refresh behavior: the root `Menu2` is treated as constructor-owned and rebuilt after subtitle-affecting changes such as profile selection, timer adjustments, and settings toggles. The app intentionally avoids mutating existing `Menu2` subtitles in place because that path has been device-fragile on this SDK.
 - Snapshot persistence: score/card actions schedule a short debounced save instead of synchronously calling Storage every time. Lifecycle-critical paths such as start/pause/resume, halftime/full-time, explicit save/end/reset, and app stop flush pending writes immediately.
 - Save-failure handling: the `Save failed` status is now reserved for true persistence exceptions. The previous constant-save failure caused by non-serializable score/event payloads was removed by normalizing stored payloads to plain serializable dictionaries.
 - Resume behavior: reopening during a live match restores a paused snapshot with `pausedState` preserved, so the referee must explicitly resume play.
@@ -41,11 +44,13 @@
 - Conversion and penalty overlays stay synchronized with the same pauseable `gameTime` clock as the main countdown. The count-up clock is driven separately from `elapsedTime`.
 - Discipline timing: yellow and timed-red sanctions run off `suspensionTime`, respect pause/resume correctly, and follow sevens-vs-non-sevens duration rules.
 - Runtime status surfacing: recording failures, invalid saved snapshots, guarded input failures, and genuine save failures all share a one-shot status channel that the view surfaces briefly on-watch.
+- Startup snapshot recovery: saved-state restore now fences the raw Storage read and typed snapshot decode so a corrupt or oversized `gameStateData` payload is cleared with the existing reset notice instead of crashing during app launch.
 - GPS tracking: the app attempts `Activity.SPORT_RUGBY` only. If the device/runtime does not support rugby activity recording, the timer continues without crashing and surfaces a short status message.
 
 ## Persistence and Release Notes
 - Keep persisted values storage-safe: only plain dictionaries, arrays, strings, booleans, and numbers should reach `Storage.setValue`.
 - `resources/drawables/` includes the required 40×40 launcher icon; replacement assets must keep that size.
+- Localized string overrides live under `resources-fre/`, `resources-spa/`, `resources-ara/`, `resources-jpn/`, `resources-ita/`, `resources-deu/`, and `resources-por/` to match Garmin's language-resource convention. `scripts/audit-localization.sh` provides a lightweight grep-based regression check against reintroducing obvious hardcoded English into the main production UI files.
 - Every gameplay change should be committed atomically and accompanied by `log.md` plus `project_technical_document.md` updates when behavior, persistence, layout, or release flow changes.
 - Rebuild after source changes and record the command in `log.md`.
 - Preferred local validation path: `./scripts/validate-local.sh`

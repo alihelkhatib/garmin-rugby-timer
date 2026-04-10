@@ -1,6 +1,5 @@
 using Toybox.Test;
 using Toybox.Lang;
-
 /*
 Unit tests for family and XML layout selection.
 

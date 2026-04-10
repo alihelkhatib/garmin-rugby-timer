@@ -55,3 +55,23 @@ function test_invalidSavedSnapshot_is_cleared_and_reported(logger as Test.Logger
     }
     return Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) == null;
 }
+
+(:test)
+function test_nonDictionarySavedSnapshot_is_cleared_and_reported(logger as Test.Logger) as Lang.Boolean {
+    clearCustomStorage();
+    clearSavedGameStorage();
+    Storage.setValue(STORAGE_KEY_GAME_STATE_DATA, "corrupt");
+
+    var model = new RugbyGameModel();
+    model.initialize();
+
+    if (model.gameState != STATE_IDLE) {
+        logger.error("non-dictionary snapshot should reset to STATE_IDLE");
+        return false;
+    }
+    if (model.consumeStatusMessage() != RugbyStrings.load(Rez.Strings.Status_SavedMatchReset)) {
+        logger.error("non-dictionary snapshot should surface reset message");
+        return false;
+    }
+    return Storage.getValue(STORAGE_KEY_GAME_STATE_DATA) == null;
+}

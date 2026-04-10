@@ -1,0 +1,122 @@
+<strings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <string id="AppName">مؤقت الرجبي</string>
+    <string id="Activity_Name">رجبي</string>
+    <string id="Hint_Select_Start">SELECT: ابدأ</string>
+    <string id="Hint_Idle_Adjust">UP/DOWN: +1/-1</string>
+    <string id="Hint_Select_Resume">SELECT: استئناف</string>
+    <string id="Hint_Locked">مقفول</string>
+
+    <string id="LockIndicator">ق</string>
+    <string id="HalfPrefix">شوط </string>
+    <string id="TrySuffix">م</string>
+    <string id="SecondsSuffix">ث</string>
+    <string id="Team_Home_Short">أرض</string>
+    <string id="Team_Away_Short">خارج</string>
+    <string id="Team_Home">صاحب الأرض</string>
+    <string id="Team_Away">الضيف</string>
+    <string id="EventTeam_Home">أرض</string>
+    <string id="EventTeam_Away">ضيف</string>
+    <string id="CardPrefix_Yellow">ص</string>
+    <string id="CardPrefix_Red">ح</string>
+    <string id="Card_Permanent">دائم</string>
+    <string id="State_Paused">إيقاف</string>
+    <string id="State_Conversion">تحويل</string>
+    <string id="State_PenaltyKick">ركلة جزاء</string>
+    <string id="State_HalfTime">بين الشوطين</string>
+    <string id="State_GameEnded">انتهت المباراة</string>
+    <string id="State_ReadyToStart">جاهز للبدء</string>
+    <string id="Overlay_Countdown">عد تنازلي</string>
+    <string id="Overlay_Hint_Conversion">UP: +2   DOWN: ضاعت</string>
+    <string id="Overlay_Hint_Penalty">UP/DOWN: إخفاء</string>
+    <string id="Overlay_ConversionMade_Action">MENU</string>
+    <string id="Overlay_ConversionMade_Result">+2</string>
+    <string id="Overlay_ConversionMiss_Action">DOWN</string>
+    <string id="Overlay_ConversionMiss_Result">ضاعت</string>
+    <string id="Overlay_Hint_SelectBack">SELECT: رجوع</string>
+
+    <string id="Profile_Rugby7s">رجبي 7</string>
+    <string id="Profile_Rugby10s">رجبي 10</string>
+    <string id="Profile_Rugby15s">رجبي 15</string>
+    <string id="Profile_U19">تحت 19</string>
+    <string id="Profile_Custom">مخصص</string>
+    <string id="Format_7s">نمط 7</string>
+    <string id="Format_15s">نمط 15</string>
+
+    <string id="Generic_On">نعم</string>
+    <string id="Generic_Off">لا</string>
+    <string id="Status_ActionFailed">فشل الإجراء</string>
+    <string id="Status_SaveFailed">فشل الحفظ</string>
+    <string id="Status_SavedMatchReset">تمت إعادة المباراة</string>
+    <string id="Status_IdleOnly">فقط عند التوقف</string>
+    <string id="Status_RecordingUnsupported">التسجيل غير مدعوم</string>
+    <string id="Status_RugbySportUnsupported">رياضة الرجبي غير مدعومة</string>
+    <string id="Status_RecordingStartFailed">فشل بدء التسجيل</string>
+    <string id="Status_RecordingSaveFailed">فشل حفظ التسجيل</string>
+
+    <string id="Settings_Title">إعدادات الرجبي</string>
+    <string id="Settings_Profile">الملف</string>
+    <string id="Settings_FormatFamily">النمط</string>
+    <string id="Settings_HalfTimer">زمن الشوط</string>
+    <string id="Settings_ConversionTimer">زمن التحويل</string>
+    <string id="Settings_PenaltyKick">زمن الجزاء</string>
+    <string id="Settings_ConversionOverlay">شاشة التحويل</string>
+    <string id="Settings_PenaltyOverlay">شاشة الجزاء</string>
+    <string id="Settings_LockOnStart">اقفل عند البدء</string>
+    <string id="Settings_DimTheme">سمة خافتة</string>
+    <string id="Settings_IdleHints">تلميحات التوقف</string>
+    <string id="Settings_ResetScores">تصفير النتيجة</string>
+    <string id="ProfileMenu_Title">ملف المباراة</string>
+
+    <string id="Picker_HalfLengthTitle">زمن الشوط (د)</string>
+    <string id="ConversionMenu_Title">زمن التحويل</string>
+    <string id="PenaltyMenu_Title">زمن الجزاء</string>
+    <string id="Timer_30Sec">30 ث</string>
+    <string id="Timer_60Sec">60 ث</string>
+    <string id="Timer_90Sec">90 ث</string>
+    <string id="Timer_120Sec">120 ث</string>
+
+    <string id="MainMenu_RecordScore">تسجيل نقاط</string>
+    <string id="MainMenu_PauseClock">إيقاف/استئناف</string>
+    <string id="MainMenu_RecordCard">تسجيل بطاقة</string>
+    <string id="MainMenu_StartHalf2">ابدأ الشوط الثاني</string>
+    <string id="MainMenu_EndGame">إنهاء المباراة</string>
+    <string id="MainMenu_UndoLastScore">تراجع عن آخر نقاط</string>
+    <string id="MainMenu_Settings">ملف المباراة</string>
+    <string id="MainMenu_ToggleLock">تبديل القفل</string>
+
+    <string id="ScoreTeam_Title">أي فريق؟</string>
+    <string id="ScoreTeam_HomeTitle">نقاط صاحب الأرض</string>
+    <string id="ScoreTeam_AwayTitle">نقاط الضيف</string>
+    <string id="ScoreType_Try">محاولة (5)</string>
+    <string id="ScoreType_PenaltyTry">محاولة جزاء (7)</string>
+    <string id="ScoreType_DropGoal">إسقاط (3)</string>
+
+    <string id="CardTeam_Title">الفريق المعاقب</string>
+    <string id="CardTeam_HomeTitle">بطاقة صاحب الأرض</string>
+    <string id="CardTeam_AwayTitle">بطاقة الضيف</string>
+    <string id="CardType_Yellow">صفراء</string>
+    <string id="CardType_Red">حمراء</string>
+
+    <string id="ExitMenu_Title">خروج؟</string>
+    <string id="ExitMenu_Resume">استئناف</string>
+    <string id="ExitMenu_EndGame">إنهاء المباراة</string>
+    <string id="ExitMenu_ResetGame">إعادة المباراة</string>
+    <string id="ExitMenu_SaveGame">حفظ المباراة</string>
+    <string id="ExitMenu_EventLog">السجل</string>
+    <string id="ExitMenu_ExitApp">الخروج من التطبيق</string>
+
+    <string id="EventLog_Title">السجل</string>
+    <string id="EventLog_Empty">لا توجد أحداث</string>
+    <string id="EventLog_Save">حفظ السجل</string>
+    <string id="EventLog_NoTime">--:--</string>
+
+    <string id="Event_Try">محاولة</string>
+    <string id="Event_ConversionMade">تحويل (+2)</string>
+    <string id="Event_ConversionMiss">ضاعت التحويلة</string>
+    <string id="Event_PenaltyGoal">هدف جزاء</string>
+    <string id="Event_DropGoal">إسقاط</string>
+    <string id="Event_PenaltyTry">محاولة جزاء</string>
+    <string id="Event_YellowCard">بطاقة صفراء</string>
+    <string id="Event_RedCard">بطاقة حمراء</string>
+    <string id="Event_PermanentSuffix"> (دائم)</string>
+</strings>

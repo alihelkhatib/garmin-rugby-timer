@@ -2060,3 +2060,45 @@
 - 2026-04-08 validation build: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs (warnings only: container-analysis warnings in `RugbyTimerRenderer.mc` and `RugbyTimerView.mc`).
 - 2026-04-08 simulator unit-test run: `"/Users/600171959/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.1.0-2026-03-09-6a872a80b/bin/monkeydo" "bin/tests.prg" "1" -t` -> FAILED with a broad existing suite baseline (`passed=23, failed=46, errors=1`), so the refactor is compile-validated but not yet backed by a clean green simulator suite from this workspace.
 - 2026-04-08 layout-safety test rebuild: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs after adding headless XML layout safety checks for off-screen, bezel-risk, and overlap regressions (warnings only: existing container-analysis warnings in production files plus the new test helper loops).
+
+## [2026-04-09] Warning cleanup for production and layout tests
+
+- Tightened the XML screen binding helpers so the compiler sees explicit `Lang.Array` and `Lang.Dictionary` access instead of ambiguous container indexing.
+- Cleared the remaining production warnings in `RugbyTimerRenderer.mc` and `RugbyTimerView.mc`, and cleared the matching layout-test warnings in `tests/Test_RugbyTimerRendererLayout.mc`.
+- 2026-04-09 validation build: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs with no warnings.
+
+## [2026-04-09] Rebuild settings root after subtitle-changing edits
+
+- Replaced the stale no-op settings refresh path with an explicit root-menu rebuild flow after profile selection, timer adjustments, and settings toggles that change visible subtitles.
+- Kept `RugbySettingsMenu` constructor-driven rather than mutating `Menu2` subtitles in place, which preserves the existing SDK/device safety constraint.
+- Added headless settings projection regressions for rebuilt 7s, U19, and custom-minute states in `tests/Test_RugbySettings_UI.mc`.
+- 2026-04-09 validation build: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+
+## [2026-04-09] Add French localization for the in-app UI
+
+- Added Garmin French (`fre`) language support in the app and test manifests plus a `resources-fre/strings/strings.xml` catalog for the full watch UI.
+- Introduced `RugbyStrings.mc` so menus, overlays, live-screen labels, runtime status messages, profile labels, and event-log text now load from localized resources instead of scattered English literals.
+- Cleared the remaining hardcoded English defaults from `resources/layouts/layout.xml` and localized the main menu resource XML through `@Strings.*` labels.
+- Added a lightweight `scripts/audit-localization.sh` regression helper and updated unit tests to assert the resource-backed text paths for renderer, overlay, profile, and runtime-status strings.
+- 2026-04-09 validation build: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+- 2026-04-09 localization audit: `bash ./scripts/audit-localization.sh` -> Localization audit passed.
+
+- Added Spanish (`spa`) and Arabic (`ara`) locale catalogs alongside English and French, and extended both manifests so Garmin locale resolution can pick those translations automatically.
+- 2026-04-09 validation rebuild after adding `spa`/`ara`: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+- 2026-04-09 localization audit after adding `spa`/`ara`: `bash ./scripts/audit-localization.sh` -> Localization audit passed.
+
+- Added Japanese (`jpn`), Italian (`ita`), German (`deu`), and Portuguese (`por`) locale catalogs to broaden rugby-market coverage using the same Garmin resource override pattern.
+- 2026-04-09 validation rebuild after adding `jpn`/`ita`/`deu`/`por`: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+- 2026-04-09 localization audit after adding `jpn`/`ita`/`deu`/`por`: `bash ./scripts/audit-localization.sh` -> Localization audit passed.
+
+## [2026-04-09] Harden startup restore against corrupt saved snapshots
+
+- Wrapped the raw `gameStateData` Storage read and `PersistedGameSnapshot` decode in a guarded helper so unreadable or oversized saved payloads now clear themselves instead of crashing app startup in `RugbyGameModel.initialize()`.
+- Added a runtime-status regression for non-dictionary saved state so the reset message and storage-clear path stay covered alongside the existing malformed-field snapshot test.
+- 2026-04-09 validation rebuild after restore hardening: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+
+## [2026-04-09] Revert duplicated main layouts after startup OOM
+
+- Backed out the experimental card-aware centered/countdown layout split and restored the original single main layout per device family.
+- Root cause: duplicating the main XML layouts increased the startup layout resource load enough to trigger an on-device out-of-memory crash during `RugbyTimerView.cacheCurrentDrawables()`.
+- 2026-04-09 validation rebuild after reverting duplicated layouts: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
