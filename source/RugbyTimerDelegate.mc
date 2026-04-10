@@ -90,7 +90,6 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         }
         overlayActionHandledUntil = now + 500;
         try {
-            view.closeSpecialTimerScreen();
             if (model.gameState == STATE_CONVERSION) {
                 if (action == :made) {
                     model.handleConversionSuccess();
@@ -101,6 +100,7 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
                 return true;
             }
             if (model.gameState == STATE_PENALTY) {
+                view.closeSpecialTimerScreen();
                 WatchUi.requestUpdate();
                 return true;
             }
@@ -375,3 +375,5 @@ class RugbyTimerDelegate extends WatchUi.BehaviorDelegate {
         }
     }
 }
+
+

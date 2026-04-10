@@ -3,7 +3,7 @@ using Toybox.Lang;
 using Toybox.WatchUi;
 using Rez.Strings;
 
-const EVENT_LOG_LIMIT = 64;
+const EVENT_LOG_LIMIT = 16;
 const EVENT_LOG_STORAGE_KEY = STORAGE_KEY_EVENT_LOG_EXPORT;
 
 /**
@@ -108,3 +108,4 @@ class RugbyTimerEventLog {
         WatchUi.pushView(new EventLogMenu(model.eventLogEntries), new EventLogDelegate(model), WatchUi.SLIDE_UP);
     }
 }
+

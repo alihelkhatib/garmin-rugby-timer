@@ -2102,3 +2102,8 @@
 - Backed out the experimental card-aware centered/countdown layout split and restored the original single main layout per device family.
 - Root cause: duplicating the main XML layouts increased the startup layout resource load enough to trigger an on-device out-of-memory crash during `RugbyTimerView.cacheCurrentDrawables()`.
 - 2026-04-09 validation rebuild after reverting duplicated layouts: `./scripts/validate-local.sh` -> BUILD SUCCESSFUL for app and unit-test PRGs.
+## [2026-04-10] Restore dedicated conversion overlay and reduce conversion-save pressure
+- Forced STATE_CONVERSION to use the dedicated overlay layout again, so the conversion timer no longer falls back to the busier scoreboard view.
+- Stopped closing the overlay before the conversion action finishes handling, which keeps the UI stable on UP/MENU and DOWN decisions.
+- Reduced the in-memory event-log retention cap from 64 to 16 entries to keep the live snapshot payload smaller during active matches.
+- Built via java --% -Xms1g -Dfile.encoding=UTF-8 -Dapple.awt.UIElement=true -jar C:\Users\aliel\AppData\Roaming\Garmin\ConnectIQ\Sdks\connectiq-sdk-win-8.3.0-2025-09-22-5813687a0\bin\monkeybrains.jar -o bin\rugbytimer.prg -f Y:\Projects\GarminApps\rugby-timer\monkey.jungle -y Y:\Projects\GarminApps\rugby-timer\developer_key -d fenix6_sim -w -> BUILD SUCCESSFUL.

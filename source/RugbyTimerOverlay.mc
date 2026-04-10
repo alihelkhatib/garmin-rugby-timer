@@ -28,6 +28,10 @@ class RugbyTimerOverlay {
     }
 
     static function isSpecialOverlayActive(view, model) {
+        // Conversion should always take over the screen; penalty can still be hidden.
+        if (model.gameState == STATE_CONVERSION) {
+            return true;
+        }
         return view.specialTimerOverlayVisible && RugbyTimerOverlay.isSpecialState(model);
     }
 
@@ -70,3 +74,4 @@ class RugbyTimerOverlay {
         WatchUi.requestUpdate();
     }
 }
+

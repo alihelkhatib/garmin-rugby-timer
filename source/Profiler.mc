@@ -1,7 +1,7 @@
 using Toybox.System;
 using Toybox.Lang;
 
-/**
+/**git r
  * Tiny, non-allocating profiler for quick hotspot measurement.
  *
  * Purpose: allow targeted local performance measurement without leaving
